@@ -15,4 +15,12 @@
     <ProjectReference Include="..\Shared\HIVE.Shared.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Authentication\" />
+    <Folder Include="Data\" />
+    <Folder Include="Controllers\" />
+    <Folder Include="Repository\Interface\" />
+    <Folder Include="Services\Interface\" />
+  </ItemGroup>
+
 </Project>
