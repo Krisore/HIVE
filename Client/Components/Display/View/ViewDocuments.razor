@@ -1,0 +1,66 @@
+﻿@inject IDocumentService DocumentService
+
+
+
+<MudTable Elevation="0" Class="my-4" ServerData="@(new Func<TableState, Task<TableData<Document>>>(ServerReload))" @ref="_table">
+    <HeaderContent>
+        <MudTh>
+
+        </MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd>
+            <ViewDocumentCard SearchTerm="@SearchTerm" Document="@context" />
+        </MudTd>
+    </RowTemplate>
+    <PagerContent>
+        <MudTablePager />
+    </PagerContent>
+    <NoRecordsContent>
+        <MudText>No matching records found</MudText>
+    </NoRecordsContent>
+    <LoadingContent>
+        <MudText>Loading...</MudText>
+    </LoadingContent>
+</MudTable>
+@code
+{
+    [Parameter]
+    public IEnumerable<Document>? Documents { get; set; }
+    [Parameter]
+    public string SearchTerm { get; set; } = string.Empty;
+
+    private MudTable<Document> _table = new();
+    private int _selectedRowNumber = -1;
+    private int _totalDocuments;
+    private IEnumerable<Document>? _pagedData;
+
+    private async Task<TableData<Document>> ServerReload(TableState state)
+    {
+        var result = await DocumentService.GetDocumentsAsync();
+        if (result.IsSuccessStatusCode)
+        {
+            if (DocumentService.Documents != null)
+            {
+                Documents = DocumentService.Documents;
+            }
+        }
+        _totalDocuments = Documents.Count();
+        await Task.Delay(300);
+        Documents = Documents.Where(document =>
+        {
+            if (string.IsNullOrWhiteSpace(SearchTerm))
+                return true;
+            if (document.Title.Contains(SearchTerm, StringComparison.CurrentCultureIgnoreCase))
+                return true;
+            return document.Abstract.Contains(SearchTerm, StringComparison.CurrentCultureIgnoreCase);
+        }).ToArray();
+        _pagedData = Documents.Skip(state.Page * state.PageSize).Take(state.PageSize).ToArray();
+        return new TableData<Document>() { TotalItems = _totalDocuments, Items = _pagedData };
+    }
+    private void OnSearch(string text)
+    {
+        SearchTerm = text;
+        _table.ReloadServerData();
+    }
+}

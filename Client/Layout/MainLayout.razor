@@ -1,0 +1,167 @@
+﻿
+@using Microsoft.AspNetCore.Authorization
+@inherits LayoutComponentBase
+@inject IDialogService DialogService
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager NavigationManager
+@attribute [Authorize(Roles = "User")]
+<MudThemeProvider Theme="_myCustomTheme" IsDarkMode="IsDarkMode"/>
+<MudDialogProvider />
+<MudSnackbarProvider />
+<MudLayout>
+    <MudAppBar Fixed="true" Dense="true" Color="Color.Default" Elevation="2">
+        <AuthorizeView Roles="User">
+            <Authorized>
+                <MudToggleIconButton Size="Size.Small" @bind-Toggled="@IsDrawerOpen" 
+                                     Color="Color.Default" Icon="@Icons.Material.Filled.Menu" 
+                                     Edge="Edge.Start"
+                                     ToggledIcon="@Icons.Material.Outlined.Close" 
+                                     ToggledSize="Size.Small"/>
+            </Authorized>
+        </AuthorizeView>
+        <a href="/">
+            <MudCardHeader>
+                <CardHeaderAvatar>
+                        <MudAvatar Size="Size.Medium" Elevation="2" Image="image/Pup_logo.jpg"/>
+                    </CardHeaderAvatar>
+                    <CardHeaderContent>
+                        @if (IsDarkMode)
+                        {
+                            <MudText Typo="Typo.body2" Color="Color.Default">
+                                Polytechnic University of the Philippines
+                            </MudText>
+                        }
+                        else
+                        {
+                            <MudText Typo="Typo.body2" Color="Color.Dark">
+                                Polytechnic University of the Philippines
+                            </MudText>
+                        }
+                    </CardHeaderContent>
+            </MudCardHeader>
+        </a>
+        <MudSpacer/>
+        <AuthorizeView Roles="User">
+            <Authorized>
+                <MudButton Size="Size.Small" Href="/upload-document" StartIcon="@Icons.Material.Filled.Add" Class="rounded-0 my-2 mx-2" Variant="Variant.Outlined" Disabled="false" DisableElevation="true">
+                    UPLOAD
+                </MudButton>
+                <MudMenu Dense="true" Class="my-2 mx-1">
+                    <ActivatorContent>
+                        <div class="d-inline">
+                            <MudChip Variant="Variant.Filled" Class="ml-2 rounded-0" Size="Size.Medium" Label="true" Color="Color.Primary">@context.User.Identity.Name </MudChip>
+                        </div>
+                    </ActivatorContent>
+                    <ChildContent>
+                        <MudMenuItem>My account</MudMenuItem>
+                        <MudMenuItem OnClick="Logout" >Sign Out</MudMenuItem>
+                    </ChildContent>
+                </MudMenu>
+            </Authorized>
+        </AuthorizeView>
+        <AuthorizeView>
+            <NotAuthorized>
+                <MudButton Href="/" Size="Size.Large" Class="rounded-0 mr-3 my-2" 
+                           Variant="Variant.Text" Color="Color.Default" 
+                           DisableElevation="true">
+                    Home
+                </MudButton>
+                <MudButton Href="/search" Size="Size.Large" Class="rounded-0 mr-4 my-2" Variant="Variant.Text" Color="Color.Default" DisableElevation="true">
+                    Search
+                </MudButton>
+                <MudButton OnClick="@((e) => BeginLogin(_logInDialog))" Size="Size.Small" Class="rounded-0" Variant="Variant.Filled" Color="Color.Primary" DisableElevation="true">
+                    SIGN IN
+                </MudButton>
+            </NotAuthorized>
+        </AuthorizeView>
+        <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.MoreVert"/>
+        <MudToggleIconButton @bind-Toggled="@IsDarkMode"
+                             Icon="@Icons.Material.Sharp.DarkMode"
+                             Color="Color.Dark"
+                             Title="Go to Dark Mode"
+                             ToggledIcon="@Icons.Material.Sharp.LightMode"
+                             ToggledColor="@Color.Success"
+                             Edge="Edge.End"
+                             Size="Size.Small"
+                             ToggledSize="Size.Small"
+                             ToggledTitle="Go to Light Mode"/>
+    </MudAppBar>
+    <MudDrawer @bind-Open="IsDrawerOpen" ClipMode="DrawerClipMode.Always" Elevation="1" Variant="DrawerVariant.Responsive">
+        <AuthorizeView Roles="User">
+            <Authorized>
+                <MudDivider DividerType="DividerType.Middle"/>
+                <div class="my-2 mx-4">
+                    <NavMenu/>
+                </div>
+                <MudDivider DividerType="DividerType.Middle"/>
+                <div class="my-2">
+                    <SortView/>
+                </div>
+                    <MudDivider DividerType="DividerType.Middle" />
+            </Authorized>
+        </AuthorizeView>
+    </MudDrawer>
+    <MudMainContent>
+        <MudContainer Class="my-12" MaxWidth="MaxWidth.ExtraExtraLarge">
+            <main>
+                @Body
+            </main>
+        </MudContainer>
+    </MudMainContent>
+    <MudScrollToTop>
+        <MudFab Color="Color.Primary" Icon="@Icons.Material.Filled.KeyboardArrowUp" Size="Size.Small" />
+    </MudScrollToTop>
+</MudLayout>
+@code
+{
+    private bool IsDrawerOpen { get; set; }
+    private bool IsDarkMode { get; set; }
+
+    private readonly DialogOptions _logInDialog = new()
+    {
+        Position = DialogPosition.TopCenter,
+        CloseButton = false,
+        NoHeader = true,
+        DisableBackdropClick = false,
+    };
+
+    private void BeginLogin(DialogOptions options) => DialogService.Show<LoginForm>("", options);
+
+    readonly MudTheme _myCustomTheme = new()
+    {
+        Palette = new Palette()
+        {
+                Primary = "#7c0d0d",
+                Secondary = "#f9c80e",
+                AppbarBackground = Colors.Shades.White
+        },
+        PaletteDark = new PaletteDark()
+        {
+            Primary = Colors.Blue.Lighten1
+        },
+
+        LayoutProperties = new LayoutProperties()
+        {
+            DrawerWidthLeft = "300px",
+            DrawerWidthRight = "380px"
+        },
+        Typography = new Typography()
+        {
+            Default = new Default()
+            {
+                    FontFamily = new[] {"Poppins","Helvetica", "Arial", "sans-serif" }
+            }
+        }
+    };
+    private async Task Logout()
+    {
+        var customAuthStateProvider = (CustomAuthenticationStateProvider)AuthenticationStateProvider;
+        await customAuthStateProvider.UpdateAuthenticationState(null);
+        NavigationManager.NavigateTo("/", true);
+    }
+
+    private void SignUp()
+    {
+        NavigationManager.NavigateTo("/register", true);
+    }
+}

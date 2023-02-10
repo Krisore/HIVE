@@ -1,3 +1,64 @@
 ﻿@page "/"
+@inject NavigationManager NavigationManager
+@inject IUserService UserService
+<PageTitle> Home 🗃️ </PageTitle>
+<AuthorizeView>
+    <Authorized>
+        <MudContainer MaxWidth="MaxWidth.Medium">
+            <MudCarousel Class="mud-width-full" Style="height:300px;" ShowArrows="true" ShowBullets="true" EnableSwipeGesture="true" AutoCycle="true" TData="object">
+                <MudCarouselItem Transition="transition" Color="@Color.Primary">
+                    <div class="d-flex justify-center align-center" style="height:100%">
+                        <MudImage Width="140" Height="140" Src="Image/Pup_logo.jpg" Alt="Pup logo" Elevation="25" Class="rounded-circle" />
+                    </div>
+                </MudCarouselItem>
+                <MudCarouselItem Transition="transition" Color="@Color.Secondary">
+                    <div class="d-flex justify-center align-center" style="height:100%">
+                        <MudImage Width="140" Height="140" Src="Image/Pup_logo.jpg" Alt="Pup logo" Elevation="25" Class="rounded-circle" />
+                    </div>
+                </MudCarouselItem>
+                <MudCarouselItem Transition="transition">
+                    <div class="d-flex justify-center align-center" style="height: 100%; width: 100%">
+                        <MudImage Width="140" Height="140" Src="Image/Pup_logo.jpg" Alt="Pup logo" Elevation="25" Class="rounded-circle" />
+                    </div>
+                </MudCarouselItem>
+            </MudCarousel>
+            <MudText Typo="Typo.h6" Align="Align.Center" Class="my-2 mt-8"> Welcome, @context.User.Identity?.Name 🌱 </MudText>
+            <MudText Typo="Typo.body1" Align="Align.Center"> Search for, or upload your documents 📦</MudText>
+            <SearchFunc OnSearch="HandleSearch"></SearchFunc>
+        </MudContainer>
+    </Authorized>
+    <NotAuthorized>
+        <MudContainer MaxWidth="MaxWidth.Medium" Class="mt-12">
+            <MudCarousel Class="mud-width-full" Style="height:300px;" ShowArrows="true" ShowBullets="true" EnableSwipeGesture="true" AutoCycle="true" TData="object">
+                <MudCarouselItem Transition="transition" Color="@Color.Primary">
+                    <div class="d-flex justify-center align-center" style="height:100%">
+                        <MudImage Width="140" Height="140" Src="Image/Pup_logo.jpg" Alt="Pup logo" Elevation="25" Class="rounded-circle" />
+                    </div>
+                </MudCarouselItem>
+                <MudCarouselItem Transition="transition" Color="@Color.Secondary">
+                    <div class="d-flex justify-center align-center" style="height:100%">
+                        <MudImage Width="140" Height="140" Src="Image/Pup_logo.jpg" Alt="Pup logo" Elevation="25" Class="rounded-circle" />
+                    </div>
+                </MudCarouselItem>
+                <MudCarouselItem Transition="transition">
+                    <div class="d-flex justify-center align-center" style="height: 100%; width: 100%">
+                        <MudImage Width="140" Height="140" Src="Image/Pup_logo.jpg" Alt="Pup logo" Elevation="25" Class="rounded-circle" />
+                    </div>
+                </MudCarouselItem>
+            </MudCarousel>
+            <MudText Typo="Typo.h6" Align="Align.Center" Class="my-2 mt-8"> Welcome to Pup Archive 🗃️</MudText>
+            <MudText Typo="Typo.body1" Align="Align.Center"> Search for, or upload your articles 📦</MudText>
+            <SearchFunc OnSearch="HandleSearch"/>
+        </MudContainer>
+    </NotAuthorized>
+</AuthorizeView>
+@code {
+    private string? _searchTerm;
+    private Transition transition = Transition.Slide;
+    private void HandleSearch(string? searchTerm)
+    {
+        this._searchTerm = searchTerm;
+        NavigationManager.NavigateTo($"/search/{searchTerm}");
+    }
 
-<h1>Hello, world!</h1>
+}

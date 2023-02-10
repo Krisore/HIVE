@@ -1,0 +1,180 @@
+﻿@using System.ComponentModel.DataAnnotations
+@using System.Text.RegularExpressions
+@using Microsoft.AspNetCore.Components
+@inject NavigationManager NavigationManager
+@inject ISnackbar Snack
+@inject IDialogService DialogService
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject IUserService UserService
+<AuthorizeView>
+    <Authorized>
+        <MudForm @ref="_form" Model="@User" @bind-IsValid="@_success" @bind-Errors="@_errors">
+            <MudCard>
+                <MudCardHeader>
+                    <CardHeaderAvatar>
+                        <MudAvatar Variant="Variant.Filled" Size="Size.Large" Elevation="2" Color="Color.Primary">
+                            @if (!string.IsNullOrWhiteSpace(User.LastName))
+                            {
+                                @User.LastName.ToUpper().ToCharArray()[0]
+                            }
+                        </MudAvatar>
+                    </CardHeaderAvatar>
+                    <CardHeaderContent>
+                        <MudText Typo="Typo.body2">@User.LastName , @User.FirstName</MudText>
+                        <MudText Typo="Typo.caption">@User.Email</MudText>
+                    </CardHeaderContent>
+                    <CardHeaderActions>
+                        <MudTooltip Text="Save Changes">
+                            <MudIconButton Icon="@Icons.Material.Rounded.Edit" OnClick="OnEdit" />
+                        </MudTooltip>
+                    </CardHeaderActions>
+                </MudCardHeader>
+                <MudDivider />
+                <MudCardContent>
+                    <MudTextField T="string"
+                                  Class="my-2"
+                                  Margin="Margin.Dense"
+                                  Label="Username"
+                                  Variant="Variant.Outlined"
+                                  Disabled="@_isEdit"
+                                  Required="true" @bind-Value="User.UserName"
+                                  RequiredError="User name is required!" />
+                    <div class="d-flex inline">
+                        <MudTextField T="string"
+                                      Class="my-2 mx-1"
+                                      Margin="Margin.Dense"
+                                      Disabled="@_isEdit"
+                                      Label="Firstname"
+                                      Variant="Variant.Outlined"
+                                      Required="true" @bind-Value="User.FirstName"
+                                      RequiredError="First name is required!" />
+                        <MudTextField T="string"
+                                      Class="my-2 mx-1"
+                                      Margin="Margin.Dense"
+                                      Disabled="@_isEdit"
+                                      Label="Lastname"
+                                      Variant="Variant.Outlined"
+                                      Required="true" @bind-Value="User.LastName"
+                                      RequiredError="Last name is required!" />
+                    </div>
+                    <MudButton Variant="Variant.Text" Color="Color.Info" Size="Size.Medium" StartIcon="@Icons.Material.Rounded.Password" OnClick="@(() => OnForgotPassword(_forgot))"> Password Reset</MudButton>
+                </MudCardContent>
+                <MudDivider Class="my-2" />
+                <MudCardActions>
+                    <div class="ml-auto">
+                        <MudButton OnClick="OnCancel" Variant="Variant.Outlined" Class="rounded-0">
+                            Cancel
+                        </MudButton>
+                        <MudTooltip Text="Save Changes">
+                            <MudButton OnClick="OnSave" Disabled="@(!_success)" ButtonType="ButtonType.Submit"
+                                       StartIcon="@Icons.Material.Rounded.Save"
+                                       Variant="Variant.Filled" Color="Color.Success"
+                                       Class="rounded-0 mx-2">
+                                Save
+                            </MudButton>
+                        </MudTooltip>
+                    </div>
+                </MudCardActions>
+            </MudCard>
+        </MudForm>
+    </Authorized>
+</AuthorizeView>
+@code {
+    [CascadingParameter]
+    public Task<AuthenticationState>? Authenticate { get; set; }
+    private User User { get; set; } = new();
+    private User ForReadUser { get; set; } = new User();
+    private List<string?> _emails = new();
+    private string? _email = String.Empty;
+    private string _info = string.Empty;
+    private string _token = string.Empty;
+    protected override async Task OnInitializedAsync()
+    {
+        var customAuthStateProvider = (CustomAuthenticationStateProvider)AuthenticationStateProvider;
+        Authenticate = customAuthStateProvider.GetAuthenticationStateAsync();
+        if (Authenticate != null)
+        {
+            var account = await Authenticate;
+            if (account.User.Identity?.Name != null)
+            {
+                var response = await UserService.MyAccount(account.User.Identity?.Name ?? throw new InvalidOperationException(message: "Authenticated User is null"));
+                User = response;
+                ForReadUser = response;
+                _emails = await UserService.UserEmails();
+                _emails.Remove(ForReadUser.Email);
+            }
+
+        }
+    }
+    bool _success;
+    bool _verification = false;
+    MudForm _form;
+    MudTextField<string>? _pwField1;
+    string[] _errors = { };
+    private char _character = 'A';
+    bool _isEdit = true;
+    private async void OnSave()
+    {
+        _email = ForReadUser.Email;
+        var updateUser = new UserRegisterRequest
+            {
+                FirstName = User.FirstName,
+                LastName = User.LastName,
+                UserName = User.UserName,
+                Email = User.Email,
+                PasswordHash = User.PasswordHash,
+                PasswordSalt = User.PasswordSalt,
+                Role = User.Role
+            };
+        var response = await UserService.UpdateUserAccount(User.Id, updateUser);
+        if (response.IsSuccessStatusCode)
+        {
+            _isEdit = true;
+            Snack.Add("Your account changes successfully", Severity.Success);
+        }
+        await Logout();
+    }
+    private async Task Logout()
+    {
+        var customAuthStateProvider = (CustomAuthenticationStateProvider)AuthenticationStateProvider;
+        await customAuthStateProvider.UpdateAuthenticationState(null);
+        NavigationManager.NavigateTo("/", true);
+    }
+    private void OnEdit()
+    {
+        _isEdit = false;
+        Snack.Add("Edit Account has been enabled", Severity.Info);
+    }
+
+    private void OnCancel()
+    {
+        _isEdit = true;
+        NavigationManager.NavigateTo("/");
+    }
+    private IEnumerable<string> PasswordStrength(string pw)
+    {
+        if (string.IsNullOrWhiteSpace(pw))
+        {
+            yield return "Password is required!";
+            yield break;
+        }
+        if (pw.Length < 8)
+            yield return "Password must be at least of length 8";
+        if (!Regex.IsMatch(pw, @"[A-Z]"))
+            yield return "Password must contain at least one capital letter";
+        if (!Regex.IsMatch(pw, @"[a-z]"))
+            yield return "Password must contain at least one lowercase letter";
+        if (!Regex.IsMatch(pw, @"[0-9]"))
+            yield return "Password must contain at least one digit";
+    }
+    private readonly DialogOptions _forgot = new()
+        {
+            Position = DialogPosition.TopCenter,
+            CloseButton = true,
+            FullWidth = false,
+            MaxWidth = MaxWidth.Medium,
+            NoHeader = false,
+            DisableBackdropClick = false,
+        };
+    private void OnForgotPassword(DialogOptions options) => DialogService.Show<ForgotPasswordForm>("Password Reset😶‍🌫️", _forgot);
+}
