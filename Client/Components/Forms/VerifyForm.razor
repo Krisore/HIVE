@@ -1,0 +1,47 @@
+﻿@inject IUserService UserService
+@inject ISnackbar Snack
+<MudDialog DisableSidePadding="true">
+    <DialogContent>
+        <MudContainer MaxWidth="MaxWidth.Medium">
+            <MudAlert Severity="Severity.Info" Dense="true"> Check your email for Verification code</MudAlert>
+            <MudDivider />
+            <MudTextField @bind-Value="@_token"
+                          @ref="_field"
+                          Margin="Margin.Dense"
+                          Variant="Variant.Outlined"
+                          AdornmentIcon="@Icons.Material.Rounded.GeneratingTokens"
+                          Adornment="Adornment.End" />
+        </MudContainer>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="OnOkay">
+            Verify
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+@code {
+
+    [CascadingParameter] MudDialogInstance? Dialog { get; set; }
+    MudTextField<string> _field;
+    private string _token = string.Empty;
+    private async void OnOkay()
+    {
+        if (!string.IsNullOrWhiteSpace(_token))
+        {
+            var result = await UserService.VerifyAsync(_token);
+            if (result.IsSuccessStatusCode)
+            {
+                Snack.Add("You can now Sign in your account!", Severity.Success);
+                Dialog.Close(DialogResult.Ok(true));
+            }
+            else
+            {
+                Snack.Add("Verification Code Invalid!", Severity.Error);
+            }
+        }
+
+
+
+    }
+
+}

@@ -1,0 +1,23 @@
+﻿<link href="https://use.fontawesome.com/releases/v5.14.0/css/all.css" rel="stylesheet">
+<MudNavMenu Color="Color.Primary" Dense="false" Bordered="true">
+    <MudNavLink Class="my-1" Href="/" Match="NavLinkMatch.All" Icon="@Icons.Material.Rounded.Home" >
+        Home
+    </MudNavLink>
+    <AuthorizeView>
+        <Authorized>
+            <MudNavLink Class="my-1" Href="/search" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Rounded.Search">
+                Search
+            </MudNavLink>
+        </Authorized>
+    </AuthorizeView>
+    <AuthorizeView>
+        <Authorized>
+            <MudNavLink Class="my-1" Match="NavLinkMatch.Prefix" Href="/profile" Disabled="false" Icon="@Icons.Material.Rounded.Book">
+                Profile
+            </MudNavLink>
+        </Authorized>
+    </AuthorizeView>
+</MudNavMenu>
+@code {
+
+}

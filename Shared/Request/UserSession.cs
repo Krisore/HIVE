@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace HIVE.Shared.Request
 {
-    internal class UserSession
+    public class UserSession
     {
         public string? Email { get; set; }
         public string? Token { get; set; }

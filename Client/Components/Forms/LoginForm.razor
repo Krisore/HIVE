@@ -1,0 +1,158 @@
+﻿@using System.Net
+@inject HttpClient HttpClient
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager NavigationManager
+@inject IUserService UserService
+@inject IDialogService DialogService
+@inject IActivityLog ActivityLog
+@inject ISnackbar Snack
+@inject NavigationManager Navigation
+<MudForm Model="_loginRequest">
+    <MudCardHeader>
+        <CardHeaderAvatar>
+            <MudAvatar Elevation="2" Style="height:70px; width:70px;" Image="image/Pup_logo.jpg"></MudAvatar>
+        </CardHeaderAvatar>
+        <CardHeaderContent>
+            <MudText Typo="Typo.body1"> Polytechnic University of the Philippines</MudText>
+            <MudText Typo="Typo.caption"> Biñan Campus</MudText>
+        </CardHeaderContent>
+    </MudCardHeader>
+    <MudDivider Class="mb-1" />
+    <MudCardMedia Style="height: 250px" Image="/image/pup12.jpg" />
+    <MudDivider Class="my-1" />
+    <MudCardContent Class="text-center">
+        <div class="d-flex block justify-center align-center">
+            <MudText Typo="Typo.body1" Class="mt-1" Align="Align.Center">
+                Sign in
+            </MudText>
+            <MudText Typo="Typo.caption" Class="mt-1 mx-2" Align="Align.Center">
+                to continue
+            </MudText>
+        </div>
+        <div>
+            <MudTextField @bind-Value="_loginRequest.Email"
+                          For="@(() => _loginRequest.Email)"
+                          Class="my-2"
+                          AdornmentIcon="@Icons.Material.Filled.AlternateEmail"
+                          Adornment="Adornment.End"
+                          Margin="Margin.Dense"
+                          IconSize="Size.Small"
+                          Immediate="true"
+                          Variant="Variant.Outlined"
+                          Label="Username" />
+
+            <MudTextField @bind-Value="_loginRequest.Password"
+                          For="@(() => _loginRequest.Password)"
+                          Margin="Margin.Dense"
+                          IconSize="Size.Small"
+                          InputType="@_passwordInput"
+                          Adornment="Adornment.End"
+                          AdornmentIcon="@_passwordInputIcon"
+                          OnAdornmentClick="ButtonTestClick"
+                          AdornmentAriaLabel="Show Password"
+                          Variant="Variant.Outlined"
+                          Class="my-2"
+                          Immediate="true"
+                          Label="Password" />
+        </div>
+        <MudChip Label="true" Variant="Variant.Text" Size="Size.Small" Color="Color.Info" OnClick="@(()=>OnForgotPassword(_forgot))">Forgot Password?</MudChip>
+    </MudCardContent>
+    <MudDivider />
+    <MudCardActions>
+        <div class="ml-auto">
+            <MudButton Variant="Variant.Outlined"
+                       Color="Color.Inherit"
+                       Size="Size.Medium"
+                       Class="mr-auto rounded-0"
+                       OnClick="@(() => BeginSingUp(_signUp))">Sign up</MudButton>
+            <MudButton DisableElevation="true"
+                       Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       Size="Size.Medium"
+                       Class="rounded-0"
+                       OnClick="Authenticate">Sign IN</MudButton>
+        </div>
+    </MudCardActions>
+</MudForm>
+<MudDivider Class="mt-1" />
+<MudText Class="d-flex inline justify-center align-center my-2" Color="Color.Warning" Typo="Typo.caption">
+
+</MudText>
+@code {
+    [CascadingParameter] MudDialogInstance? Dialog { get; set; }
+    private LoginRequest _loginRequest = new LoginRequest();
+    bool _isShow;
+    InputType _passwordInput = InputType.Password;
+    private bool Agreement { get; set; }
+    string _passwordInputIcon = Icons.Material.Filled.VisibilityOff;
+    private async Task Authenticate()
+    {
+        var loginResponse = await UserService.Login(_loginRequest);
+        if (loginResponse.IsSuccessStatusCode)
+        {
+            var userSession = await loginResponse.Content.ReadFromJsonAsync<UserSession>();
+            var customAuthStateProvider = (CustomAuthenticationStateProvider)AuthenticationStateProvider;
+            await customAuthStateProvider.UpdateAuthenticationState(userSession);
+            if (userSession is { Role: { } } && userSession.Role.ToLower().Equals("user"))
+            {
+                var log = await ActivityLog.WriteLog($"{userSession.Email}", "Sign in request", "SIGN IN", $"{userSession.Role}");
+                if (log.IsSuccessStatusCode)
+                {
+                    Snack.Add("Sign in Successful", Severity.Error, options => options.CloseAfterNavigation = true);
+                    Navigation.NavigateTo("/", true);
+                }
+            }
+            else
+            {
+                var log = await ActivityLog.WriteLog($"{userSession.Email}", "Sign in request", "SIGN IN", $"{userSession.Role}");
+                if (log.IsSuccessStatusCode)
+                {
+                    Snack.Add("Sign in Successful", Severity.Error, options => options.CloseAfterNavigation = true);
+                    Navigation.NavigateTo("/dashboard", true);
+                }
+            }
+        }
+        else if (loginResponse.StatusCode == HttpStatusCode.Unauthorized)
+        {
+            await DialogService.ShowAsync<VerifyForm>("Verify your account");
+        }
+        else
+        {
+            Snack.Add("Invalid Email or Password!", Severity.Error);
+            return;
+        }
+    }
+    private readonly DialogOptions _signUp = new()
+        {
+            Position = DialogPosition.TopCenter,
+            CloseButton = false,
+            NoHeader = true,
+            DisableBackdropClick = false,
+        };
+    private readonly DialogOptions _forgot = new()
+        {
+            Position = DialogPosition.TopCenter,
+            CloseButton = true,
+            FullWidth = false,
+            MaxWidth = MaxWidth.Medium,
+            NoHeader = false,
+            DisableBackdropClick = false,
+        };
+    void ButtonTestClick()
+    {
+        @if (_isShow)
+        {
+            _isShow = false;
+            _passwordInputIcon = Icons.Material.Filled.VisibilityOff;
+            _passwordInput = InputType.Password;
+        }
+        else
+        {
+            _isShow = true;
+            _passwordInputIcon = Icons.Material.Filled.Visibility;
+            _passwordInput = InputType.Text;
+        }
+    }
+    private void BeginSingUp(DialogOptions options) => DialogService.Show<RegisterForm>("", options);
+    private void OnForgotPassword(DialogOptions options) => DialogService.Show<ForgotPasswordForm>("Find Your Account 😶‍🌫️", _forgot);
+}
