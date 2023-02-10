@@ -7,18 +7,20 @@ using HIVE.Server.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using HIVE.Server.Repository.Interface;
+using HIVE.Server.Repository;
 
 var builder = WebApplication.CreateBuilder(args);
-
+builder.Services.AddDbContext<DataContext>(options =>
+{
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnections"));
+});
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IActivityLog, ActivityLog>();
 builder.Services.AddScoped<IEmailService, EmailService>();
-builder.Services.AddDbContext<DataContext>(options =>
-{
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnections"));
-});
+builder.Services.AddScoped<IDocumentRepository, DocumentRepository>();
 builder.Services.AddAuthentication(o =>
 {
     o.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;

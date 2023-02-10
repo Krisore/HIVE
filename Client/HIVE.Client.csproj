@@ -20,8 +20,4 @@
     <ProjectReference Include="..\Shared\HIVE.Shared.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Components\Display\" />
-  </ItemGroup>
-
 </Project>

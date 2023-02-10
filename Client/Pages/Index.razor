@@ -24,7 +24,7 @@
             </MudCarousel>
             <MudText Typo="Typo.h6" Align="Align.Center" Class="my-2 mt-8"> Welcome, @context.User.Identity?.Name 🌱 </MudText>
             <MudText Typo="Typo.body1" Align="Align.Center"> Search for, or upload your documents 📦</MudText>
-            <SearchComponent OnSearch="HandleSearch"></SearchComponent>
+            <SearchFunc OnSearch="HandleSearch"></SearchFunc>
         </MudContainer>
     </Authorized>
     <NotAuthorized>

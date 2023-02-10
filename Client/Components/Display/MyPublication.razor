@@ -1,0 +1,157 @@
+﻿@using HIVE.Client.Services
+@inject IDocumentService DocumentService
+@inject IDialogService DialogService
+@inject AuthenticationStateProvider AuthenticationStateProvider
+<MudTable ServerData="@(new Func<TableState, Task<TableData<Document>>>(ServerReload))">
+    <ToolBarContent>
+        <MudChip Label="true" T="Document" Class="d-block " Variant="Variant.Text"> <code> Selected Document: <strong> (@_selectedItems.Count) </strong></code></MudChip>
+        <div class="mx-5">
+            <MudTooltip Text="Reload Table" Arrow="true">
+                <MudIconButton OnClick="@(()=> _table.ReloadServerData())"
+                               Variant="Variant.Text"
+                               DisableElevation="true"
+                               Color="Color.Success"
+                               Size="Size.Medium"
+                               Icon="@Icons.Material.Filled.Sync" />
+            </MudTooltip>
+            <MudTooltip Text="Edit Selected Document" Arrow="true">
+                <MudIconButton Disabled="true"
+                               Variant="Variant.Text"
+                               DisableElevation="true"
+                               Size="Size.Medium"
+                               Icon="@Icons.Material.Filled.Edit" />
+            </MudTooltip>
+            <MudTooltip Text="Archived Selected Document" Arrow="true">
+                <MudIconButton Variant="Variant.Text"
+                               DisableElevation="true"
+                               Size="Size.Medium"
+                               Disabled="true"
+                               Icon="@Icons.Material.Filled.Archive" Color="Color.Info" />
+            </MudTooltip>
+            <MudTooltip Text="Delete Selected Document" Arrow="true">
+                <MudIconButton Disabled="true"
+                               Variant="Variant.Text"
+                               DisableElevation="true"
+                               Size="Size.Medium"
+                               Icon="@Icons.Material.Filled.Delete" Color="Color.Error" />
+            </MudTooltip>
+        </div>
+        <MudSpacer />
+        <MudButton Variant="Variant.Outlined" Href="/upload-document" Class="rounded-0 mx-2" StartIcon="@Icons.Material.Filled.Add" Size="Size.Medium"> Add New </MudButton>
+        <MudTextField Variant="Variant.Outlined" T="string" ValueChanged="@(OnSearch)" Placeholder="Search" Adornment="Adornment.End"
+                      AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0" Margin="Margin.Dense"></MudTextField>
+        @if (!string.IsNullOrWhiteSpace(searchTerm))
+        {
+            <MudChip Label="true" Variant="Variant.Text" Color="Color.Info" Size="Size.Large" Class="rounded-0">
+                result: @searchTerm (@_table.GetFilteredItemsCount())
+            </MudChip>
+        }
+    </ToolBarContent>
+    <HeaderContent>
+        <MudTh> Detail </MudTh>
+        <MudTh><MudTableSortLabel SortLabel="title" T="Document">Title</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel SortLabel="curriculum" T="Document">Academic program </MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel SortLabel="documentStatus" T="Document">Document status</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel SortLabel="year" T="Document">Year</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel SortLabel="status" T="Document">Status</MudTableSortLabel></MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        @*OnClick="@(() => OnReview(Data.Id))"*@
+        <MudTd> <MudTooltip Text="See the details"><MudButton Variant="Variant.Outlined" Size="Size.Small" Disabled="true"> 🗃️ </MudButton></MudTooltip></MudTd>
+        <MudTd DataLabel="Title">@context.Title</MudTd>
+        <MudTd DataLabel="Program">
+
+            <MudText Typo="Typo.body2"> <code> @(context.Curriculum.Alt)</code></MudText>
+
+        </MudTd>
+        <MudTd DataLabel="documentYear">
+            @if (context.ToReview)
+            {
+                <MudChip Variant="Variant.Filled" Color="Color.Info" Size="Size.Small"> To review </MudChip>
+            }
+            else
+            {
+                <MudChip Variant="Variant.Filled" Color="Color.Success" Size="Size.Small"> approved </MudChip>
+            }
+        </MudTd>
+        <MudTd DataLabel="Year">@context.DatePublished.Value.Year</MudTd>
+        <MudTd DataLabel="Status">
+            @if (context.IsActive)
+            {
+                <MudChip Variant="Variant.Text" Color="Color.Success" Size="Size.Small"> active </MudChip>
+            }
+            else
+            {
+                <MudChip Variant="Variant.Text" Color="Color.Error" Size="Size.Small"> in-active </MudChip>
+            }
+        </MudTd>
+    </RowTemplate>
+</MudTable>
+@code {
+
+    [Parameter]
+    public int UserId { get; set; }
+    [Parameter]
+    public IEnumerable<Document> Documents { get; set; } = new List<Document>();
+    private MudTable<Document> _table;
+    private HashSet<Document> _selectedItems = new();
+    public int id { get; set; }
+    private IEnumerable<Document> _pagedData;
+    private int _totalItems;
+    private string searchTerm = string.Empty;
+    [CascadingParameter]
+    public Task<AuthenticationState>? Authenticate { get; set; }
+    private async Task<TableData<Document>> ServerReload(TableState state)
+    {
+        var customAuthStateProvider = (CustomAuthenticationStateProvider)AuthenticationStateProvider;
+        Authenticate = customAuthStateProvider.GetAuthenticationStateAsync();
+        if (Authenticate != null)
+        {
+            var account = await Authenticate;
+            if (account.User.Identity?.Name != null)
+            {
+                var email = account.User.Identity?.Name;
+                if (email != null)
+                {
+                    var response = await DocumentService.GetMyDocumentsAsync(email);
+                    Documents = response;
+                }
+            }
+
+        }
+        await Task.Delay(300);
+        IEnumerable<Document> data = Documents;
+        await Task.Delay(300);
+        data = data.Where(document =>
+        {
+            if (string.IsNullOrWhiteSpace(searchTerm))
+                return true;
+            if (document.Title.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))
+                return true;
+            if (document.Abstract.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))
+                return true;
+            if (document.UploaderEmail.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))
+                return true;
+            //if ($"{document.Authors} {element.Topics} {element.AcademicProgram}".Contains(searchTerm))
+            //    return true;
+            return false;
+        }).ToArray();
+             _totalItems = Documents.Count();
+        data = state.SortLabel switch
+            {
+            "title" => data.OrderByDirection(state.SortDirection, o => o.Title),
+            "curriculum" => data.OrderByDirection(state.SortDirection, o => o.Curriculum.Alt),
+            "year" => data.OrderByDirection(state.SortDirection, o => o.DatePublished),
+            "status" => data.OrderByDirection(state.SortDirection, o => o.IsActive),
+            _ => data
+            };
+        _pagedData = data.Skip(state.Page * state.PageSize).Take(state.PageSize).ToArray();
+        return new TableData<Document>() { TotalItems = _totalItems, Items = _pagedData };
+    }
+    private void OnSearch(string text)
+    {
+         searchTerm = text;
+        _table.ReloadServerData();
+    }
+
+}

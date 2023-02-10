@@ -20,6 +20,7 @@ builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthenticationStat
 builder.Services.AddScoped<CustomAuthenticationStateProvider>();
 builder.Services.AddScoped<IActivityLog, ActivityLog>();
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IDocumentService, DocumentService>();
 builder.Services.AddMudServices();
 builder.Services.AddBlazoredSessionStorage();
 builder.Services.AddAuthorizationCore();

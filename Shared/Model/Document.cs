@@ -21,6 +21,7 @@ namespace HIVE.Shared.Model
         public int CurriculumId { get; set; }
         public int AdviserId { get; set; }
         public int ReferenceId { get; set; }
+        public string UploaderEmail { get; set; } = string.Empty;
         public Curriculum Curriculum { get; set; } = new();
         public Adviser Adviser { get; set; } = new();
         public Reference Reference { get; set; } = new();

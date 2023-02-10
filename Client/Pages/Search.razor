@@ -1,0 +1,16 @@
+﻿@page "/search"
+@page "/search/{searchterm}"
+<PageTitle>Search </PageTitle>
+<MudContainer MaxWidth="MaxWidth.Medium">
+    <SearchFunc OnSearch="HandleSearch"/>
+    <ViewDocuments SearchTerm="@SearchTerm"/>
+</MudContainer>
+@code {
+    [Parameter]
+    public string SearchTerm { get; set; } = string.Empty;
+    private void HandleSearch(string searchTerm)
+    {
+        this.SearchTerm = searchTerm;
+    }
+
+}
