@@ -1,0 +1,22 @@
+﻿@inject NavigationManager Navigation
+<MudDialog>
+    <DialogContent>
+        <MudText Typo="Typo.body2">
+            You will be navigate to your library 📑
+        </MudText>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Color="Color.Primary" OnClick="Submit">Okay</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] MudDialogInstance? MudDialog { get; set; }
+
+    void Submit()
+    {
+        Navigation.NavigateTo("/profile", true);
+        MudDialog?.Close(DialogResult.Ok(true));
+    }
+
+}

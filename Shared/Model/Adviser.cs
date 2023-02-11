@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
 namespace HIVE.Shared.Model
@@ -11,6 +12,6 @@ namespace HIVE.Shared.Model
         public int Id { get; set; }
         public string Name { get; set; } = string.Empty;
         public string Email { get; set; } = string.Empty;
-        private List<Document> Documents { get; set; } = new List<Document>();
+        [JsonIgnore] public List<Document> Documents { get; set; } = new();
     }
 }

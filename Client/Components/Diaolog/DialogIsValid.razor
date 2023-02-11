@@ -1,0 +1,30 @@
+﻿@inject IDialogService DialogService
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">
+            <MudIcon Icon="@Icons.Material.Filled.Warning" Color="Color.Warning" Class="mr-3 mb-n1" />
+            Document Publish Failed.
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudText Typo="Typo.caption">
+            Try again
+            @foreach (var error in Errors)
+            {
+                <strong> @error  🙈</strong>
+            }
+        </MudText>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Color="Color.Warning" OnClick="Submit">Ok</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    MudDialogInstance MudDialog { get; set; }
+
+    [Parameter]
+    public List<string> Errors { get; set; } = new();
+    void Submit() => MudDialog.Close(DialogResult.Ok(true));
+}

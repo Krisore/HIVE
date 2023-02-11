@@ -7,7 +7,7 @@
 @inject IUserService UserService
 <AuthorizeView Roles="User">
     <Authorized>
-        <MudContainer MaxWidth="MaxWidth.Medium">
+        <MudContainer MaxWidth="MaxWidth.Large">
             <MudTabs Centered="true">
                 <MudTabPanel Text="My Publication">
                     <MyPublication UserId="@_userId" />
@@ -27,21 +27,5 @@
     public Task<AuthenticationState>? Authenticate { get; set; }
     private User User { get; set; } = new();
     private int _userId;
-    protected override async Task OnInitializedAsync()
-    {
-         var customAuthStateProvider = (CustomAuthenticationStateProvider)AuthenticationStateProvider;
-        Authenticate = customAuthStateProvider.GetAuthenticationStateAsync();
-        if (Authenticate != null)
-        {
-            var account = await Authenticate;
-            if (account.User.Identity?.Name != null)
-            {
-                var response = await UserService.MyAccount(account.User.Identity?.Name ?? throw new InvalidOperationException(message: "Authenticated User is null"));
-                User = response;
-                _userId = User.Id;
-            }
-
-        }
-    }
 
 }

@@ -9,6 +9,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using HIVE.Server.Repository.Interface;
 using HIVE.Server.Repository;
+using Microsoft.Extensions.Azure;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<DataContext>(options =>
@@ -20,7 +21,12 @@ builder.Services.AddRazorPages();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IActivityLog, ActivityLog>();
 builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.AddScoped<IReferenceService, ReferenceService>();
+builder.Services.AddScoped<IFileManager, FileManager>();
 builder.Services.AddScoped<IDocumentRepository, DocumentRepository>();
+builder.Services.AddScoped<ICurriculumService, CurriculumService>();
+builder.Services.AddScoped<IAdviserService, AdviserService>();
 builder.Services.AddAuthentication(o =>
 {
     o.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -36,6 +42,11 @@ builder.Services.AddAuthentication(o =>
         ValidateIssuer = false,
         ValidateAudience = false
     };
+});
+builder.Services.AddAzureClients(clientBuilder =>
+{
+    clientBuilder.AddBlobServiceClient(builder.Configuration["ConnectionStrings:DefaultConnections:blob"], preferMsi: true);
+    clientBuilder.AddQueueServiceClient(builder.Configuration["ConnectionStrings:DefaultConnections:queue"], preferMsi: true);
 });
 var app = builder.Build();
 

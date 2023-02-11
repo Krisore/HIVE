@@ -1,0 +1,269 @@
+﻿@page "/document-author/{documentId:int}"
+@using HIVE.Client.Services
+@inject NavigationManager NavigationManager
+@inject IDocumentService DocumentService
+@inject IActivityLog ActivityLog
+@inject IAuthorService AuthorService
+@inject IDocumentReferenceService DocumentReferenceService
+@inject IAdviserService AdviserService
+@inject ICurriculumService CurriculumService
+@inject ITopicService TopicService
+@inject IDialogService DialogService
+<AuthorizeView>
+    <Authorized>
+        <MudDivider Class="my-4 mx-4"></MudDivider>
+            <MudText Class="my-4 mx-4" Typo="Typo.body2" Align="Align.Center">
+                Document Info
+            </MudText>
+        <MudDivider Class="my-4 mx-4"></MudDivider>
+        <MudCard Class="cursor-pointer" Elevation="1">
+            <MudCardHeader>
+                <CardHeaderAvatar>
+                    <MudAvatar Color="Color.Primary">
+                        @context.User.Identity.Name.ToUpper()[0]
+                    </MudAvatar>
+                </CardHeaderAvatar>
+                <CardHeaderContent>
+                    <MudText Typo="Typo.body1">@context.User.Identity.Name</MudText>
+                    <MudText Typo="Typo.body2">@_document.Curriculum.Name</MudText>
+                </CardHeaderContent>
+                <CardHeaderActions>
+                    <MudTooltip Text="Edit Publication">
+                        <MudIconButton Icon="@Icons.Material.Rounded.Edit" OnClick="Edit"/>
+                    </MudTooltip>
+                </CardHeaderActions>
+            </MudCardHeader>
+            <MudDivider DividerType="DividerType.FullWidth" />
+            <MudCardContent>
+                <MudText Typo="Typo.caption">
+                    Reference Type :
+                    <MudChip Size="Size.Small" Label="true" Variant="Variant.Outlined" Color="Color.Primary">
+                        @_reference.Name
+                    </MudChip>
+                </MudText>
+                <MudText Class="d-block" Typo="Typo.caption" Align="Align.Justify">
+                    Title :
+                    <strong>@_document.Title</strong>
+                    <cite>
+                        (
+                        @if (_document.DatePublished != null)
+                        {
+                            @(_document.DatePublished.Value.Year)
+                        }
+                        )
+                    </cite>
+                    <br />
+                    <MudText Typo="Typo.caption">
+                        Adviser : @_document.Adviser.Name
+                    </MudText>
+                    <br />
+                </MudText>
+                <MudText Typo="Typo.caption">
+                    Topic:
+                    @foreach (var topic in _document.Topics.ToList())
+                    {
+                        <MudChip Size="Size.Small" Variant="Variant.Text" Color="Color.Info">
+                            @topic.Name
+                        </MudChip>
+                    }
+                </MudText><br />
+                <MudText Typo="Typo.caption">
+                    Author :
+                    @foreach (var author in Authors)
+                    {
+                        @($"{author.Name} ,.")
+                    }
+                </MudText>
+                <MudDivider DividerType="DividerType.FullWidth" />
+                <MudText Class="my-2" Typo="Typo.caption">
+                    Abstract
+                </MudText>
+                <br />
+                <MudText Class="mt-2" Typo="Typo.caption" Align="Align.Justify">
+                    @_document.Abstract
+                </MudText>
+            </MudCardContent>
+            <MudDivider></MudDivider>
+            <MudCardActions>
+                <MudTooltip Text="Document will be publish">
+                    <MudButton Class="rounded-0"
+                               Color="Color.Primary"
+                               OnClick="HandleSubmit"
+                               Variant="Variant.Filled"
+                               DisableElevation="true">
+                        PUBLISH
+                    </MudButton>
+                </MudTooltip>
+                <MudButton Class="mx-2 rounded-0" Size="Size.Medium" OnClick="Cancel"
+                           ButtonType="ButtonType.Reset" Color="Color.Primary"
+                           Variant="Variant.Outlined"
+                           DisableElevation="true">
+                    CANCEL
+                </MudButton>
+            </MudCardActions>
+        </MudCard>
+        <MudDivider Class="my-4 mx-4"></MudDivider>
+        <MudText Class="my-4 mx-4" Typo="Typo.body2" Align="Align.Center">
+        Author / Author's
+        </MudText>
+        <MudDivider Class="my-4 mx-4"></MudDivider>
+        <MudCard>
+            <MudCardHeader>
+                
+            </MudCardHeader>
+                <MudDivider></MudDivider>
+            <MudCardContent>
+                @for (int i = 0; i < Authors.Count; i++)
+                {
+                    int index = i;
+                    <MudText Typo="Typo.caption">
+                        Author [@index] :
+                    </MudText>
+                    <MudTextField
+                        T="string"
+                        Clearable="true"
+                        OnClearButtonClick="@((e) => RemoveAuthor(index))"
+                        @bind-Value="@Authors[index].Name"
+                        Label="e.g (Dela cruz, Juan)"
+                        Variant="Variant.Outlined"
+                        Margin="Margin.Dense"
+                        Required="true"/>
+                }
+            </MudCardContent>
+                <MudDivider></MudDivider>
+            <MudCardActions>
+                <MudButton Class="my-2 mx-1 ml-auto rounded-0" Size="Size.Medium"
+                           StartIcon="@Icons.Material.Sharp.AddCircle"
+                           OnClick="AddAuthor" Color="Color.Primary"
+                           Variant="Variant.Outlined"
+                           DisableElevation="true">
+                    Add Author
+                </MudButton>
+                <MudButton OnClick="Cancel" Class="mx-2 rounded-0" Size="Size.Medium"
+                           ButtonType="ButtonType.Reset" Color="Color.Primary"
+                           Variant="Variant.Text"
+                           DisableElevation="true">
+                    CANCEL
+                </MudButton>
+            </MudCardActions>
+        </MudCard>
+    </Authorized>
+</AuthorizeView>
+
+@code {
+    [Parameter]
+    public int DocumentId { get; set; }
+
+    private Document _document = new ();
+    private Curriculum _curriculum = new Curriculum();
+    private Adviser _adviser = new Adviser();
+    private Reference _reference = new Reference();
+    private List<CreateAuthor> Authors { get; set; } = new();
+    private List<CreateAuthor> PostAuthors { get; set; } = new();
+    private List<string> _errors = new List<string>();
+    private List<Topic> _topics = new ();
+    protected override async Task OnParametersSetAsync()
+    {
+
+        try
+        {
+            var response = await DocumentService.GetDocumentAsyncById(DocumentId);
+            _document =  response;
+            _reference = await DocumentReferenceService.GetReferenceById(_document.ReferenceId);
+            _adviser = await AdviserService.GetAdviserAsync(_document.AdviserId);
+            _curriculum = await CurriculumService.GetCurriculumById(_document.CurriculumId);
+            _topics = await TopicService.GetTopics();
+            if (!_document.Authors.Any(a => string.IsNullOrWhiteSpace(a.Name)))
+            {
+                foreach (var author in _document.Authors)
+                {
+                    Authors.Add(new CreateAuthor
+                    {
+                        Name = author.Name,
+                        DocumentId = author.DocumentId
+                    });
+                    var result = await AuthorService.DeleteAuthor(author.Id);
+                    if (!result.IsSuccessStatusCode)
+                    {
+                        await DialogService.ShowMessageBox("INFO", "Something went wrong! try to reload", yesText: "Ok", cancelText: "cancel");
+                    }
+                }
+            }
+            if (Authors.Any(a => string.IsNullOrWhiteSpace(a.Name)) || Authors.Count == 0)
+            {
+                AddAuthor();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"{ex.Message}");
+        }
+    }
+
+        private void AddAuthor()
+    {
+        Authors.Add(new CreateAuthor()
+            {
+                Name = "",
+                DocumentId = DocumentId,
+            });
+    }
+    private void UpdateAuthor(int index, string? name)
+    {
+        Authors[index].Name = name;
+        Authors[index].DocumentId = DocumentId;
+
+    }
+    private void RemoveAuthor(int index)
+    {
+        Authors.RemoveAt(index);
+    }
+    private async Task HandleSubmit()
+    {
+        if (Authors.Any(a => string.IsNullOrWhiteSpace(a.Name)))
+        {
+            _errors.Clear();
+            _errors.Add("Author /Authors is required 🔥");
+            var parameters = new DialogParameters
+            {
+                ["Errors"] = _errors
+            };
+            await DialogService.ShowAsync<DialogIsValid>("", parameters);
+        }
+        else
+        {
+            PostAuthors = Authors;
+            await AuthorService.AddAuthor(PostAuthors);
+            var response = await ActivityLog.WriteLog($"{_document.UploaderEmail}", "Add Author", "INSERT", "USER");
+            if (response.IsSuccessStatusCode)
+            {
+                await DialogService.ShowAsync<DialogUploadSuccess>("Document Upload Successfully! 🚀");
+            }
+        }
+    }
+    private async void Cancel()
+    {
+        bool? message = await DialogService.ShowMessageBox("Warning ⚠️",
+            "Canceling can not be undone! ",
+            yesText: "YES!", cancelText: "no");
+        if (message == null) return;
+        if (!Authors.Any(a => string.IsNullOrWhiteSpace(a.Name)))
+        {
+            NavigationManager.NavigateTo(NavigationManager.BaseUri, true);
+        }
+        else
+        {
+            var result = await DocumentService.GetDeleteDocumentById(DocumentId);
+            if (result.IsSuccessStatusCode)
+            {
+                NavigationManager.NavigateTo("/", true);
+            }
+        }
+
+    }
+    private void Edit()
+    {
+        NavigationManager.NavigateTo($"/upload-document/{DocumentId}");
+    }
+
+}
