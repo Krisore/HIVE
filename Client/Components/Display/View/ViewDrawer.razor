@@ -1,0 +1,82 @@
+﻿
+<MudDrawer Class="mt-12 mb-12" @bind-Open="IsOpen" Anchor="Anchor.Right" Elevation="2" ClipMode="DrawerClipMode.Docked" Fixed="true">
+
+    <MudDrawerContainer>
+        <MudText Class="mt-4 mx-4" Typo="Typo.subtitle2" Align="Align.Left">
+            INFO
+        </MudText>
+        <MudDivider Class="my-3" DividerType="DividerType.FullWidth" />
+        <div class="mx-3 my-3">
+            <MudText Typo="Typo.body1" Align="Align.Justify">
+                @if (string.IsNullOrWhiteSpace(SearchTerm))
+                {
+                    @Document.Title
+                }
+                else
+                {
+                    <MudHighlighter Text="@Document.Title" UntilNextBoundary="true" HighlightedText="@SearchTerm" />
+                }
+            </MudText>
+            <cite>
+                <MudText Typo="Typo.caption" Align="Align.Justify">
+                    by
+                    @*@foreach (var author in Authors.Where(author => Document.Id == author.DocumentId))
+                    {
+                    <li class="d-inline">
+
+                    @author.Name .,
+                    </li>
+                    }*@
+                    @foreach (var author in Authors.Where(a => a.DocumentId == Document.Id))
+                    {
+                        <li class="d-inline">
+
+                            @author.Name .,
+                        </li>
+                    }
+                    @if (Document.DatePublished != null)
+                    {
+                        @($"({Document.DatePublished.Value.Year})")
+                    }
+                </MudText>
+            </cite>
+        </div>
+        <MudDivider Class="my-3" DividerType="DividerType.FullWidth" />
+        <MudText Class="mx-3 my-3" Typo="Typo.caption">
+            ABSTRACT
+        </MudText>
+        <div class="mx-3 my-3" id="unique_id_scroll_section" style="height: 600px; overflow: auto;">
+            @if (string.IsNullOrWhiteSpace(SearchTerm))
+            {
+                <MudText Align="Align.Justify" Typo="Typo.caption">@Document.Abstract</MudText>
+            }
+            else
+            {
+                <MudText Align="Align.Justify" Typo="Typo.caption">
+                    <MudHighlighter Text="@Document.Abstract" UntilNextBoundary="true" HighlightedText="@SearchTerm" />
+                </MudText>
+            }
+        </div>
+        <MudDivider Class="mb-12" DividerType="DividerType.FullWidth" />
+    </MudDrawerContainer>
+    <MudScrollToTop />
+</MudDrawer>
+
+@code {
+
+    [Parameter]
+    public Document Document { get; set; } = new();
+    [Parameter]
+    public List<Author> Authors { get; set; } = new();
+    [Parameter]
+    public bool IsOpen { get; set; } = true;
+    [Parameter]
+    public string SearchTerm { get; set; }
+
+
+    public void Back()
+    {
+        IsOpen = !IsOpen;
+    }
+
+}

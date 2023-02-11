@@ -1,0 +1,11 @@
+﻿@page "/document-author/{documentId:int}"
+
+<PageTitle> Document Author </PageTitle>
+<MudContainer>
+    <AddAuthorForm DocumentId="DocumentId" />
+</MudContainer>
+
+@code {
+    [Parameter]
+    public int DocumentId { get; set; }
+}

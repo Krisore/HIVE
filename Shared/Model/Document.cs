@@ -18,7 +18,7 @@ namespace HIVE.Shared.Model
         public bool IsArchived { get; set; } = false;
         public bool IsDeleted { get; set; } = false;
         public DateTime DateUploaded { get; set; } = DateTime.Now;
-        public DateTime? DatePublished { get; set; } = DateTime.Now;
+        public DateTime? DatePublished { get; set; }
         public int CurriculumId { get; set; }
         public int AdviserId { get; set; }
         public int ReferenceId { get; set; }

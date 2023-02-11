@@ -40,6 +40,7 @@
         <MudTh> Detail </MudTh>
         <MudTh><MudTableSortLabel SortLabel="title" T="Document">Title</MudTableSortLabel></MudTh>
         <MudTh><MudTableSortLabel SortLabel="curriculum" T="Document">Academic program </MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel SortLabel="adviser" T="Document">Adviser </MudTableSortLabel></MudTh>
         <MudTh><MudTableSortLabel SortLabel="documentStatus" T="Document">Document status</MudTableSortLabel></MudTh>
         <MudTh><MudTableSortLabel SortLabel="year" T="Document">Year</MudTableSortLabel></MudTh>
         <MudTh><MudTableSortLabel SortLabel="status" T="Document">Status</MudTableSortLabel></MudTh>
@@ -49,6 +50,7 @@
         
         <MudTd> <MudTooltip Text="See the details"><MudButton Variant="Variant.Outlined" Size="Size.Small" OnClick="@(() => OnReview(context.Id))"> 🗃️ </MudButton></MudTooltip></MudTd>
         <MudTd DataLabel="Title">@context.Title</MudTd>
+        <MudTd DataLabel="Adviser"> @context.Adviser.Name</MudTd>
         <MudTd DataLabel="Program">
 
             <MudText Typo="Typo.body2"> <code> @(context.Curriculum.Alt)</code></MudText>
@@ -85,6 +87,12 @@
             </MudTooltip>
         </MudTd>
     </RowTemplate>
+    <NoRecordsContent>
+        <MudText Typo="Typo.body1"> No Item 📂 </MudText>
+    </NoRecordsContent>
+    <PagerContent>
+        <MudTablePager/>
+    </PagerContent>
 </MudTable>
 @code {
 
@@ -143,6 +151,7 @@
         data = state.SortLabel switch
             {
             "title" => data.OrderByDirection(state.SortDirection, o => o.Title),
+            "c" => data.OrderByDirection(state.SortDirection, o => o.Adviser.Name),
             "curriculum" => data.OrderByDirection(state.SortDirection, o => o.Curriculum.Alt),
             "year" => data.OrderByDirection(state.SortDirection, o => o.DatePublished),
             "status" => data.OrderByDirection(state.SortDirection, o => o.IsActive),
