@@ -107,10 +107,8 @@ namespace HIVE.Client.Services
 
 
         public async Task<HttpResponseMessage> RequestUploadDocumentAsync(UploadDocumentRequest request)
-        {
-            var accessToken = await _customAuthenticationStateProvider.GetToken();
-            _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
-            var response = await _client.PostAsJsonAsync("api/Document/upload", request);
+        { ;
+            var response = await _client.PostAsJsonAsync("api/Document", request);
             var result = await response.Content.ReadFromJsonAsync<Document>();
             if (result != null)
             {

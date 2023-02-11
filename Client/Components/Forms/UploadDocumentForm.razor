@@ -1,6 +1,4 @@
-﻿@page "/upload-document"
-@page "/upload-document/{id:int}"
-@using Microsoft.AspNetCore.Components.Forms
+﻿@using Microsoft.AspNetCore.Components.Forms
 @inject IDocumentService DocumentService
 @inject IDocumentReferenceService DocumentReferenceService
 @inject ICurriculumService CurriculumService
@@ -153,22 +151,24 @@
                     </MudCardContent>
                     <MudDivider></MudDivider>
                     <MudCardActions>
-                        <MudButton Class="mx-2 my-2 rounded-0"
-                                   Disabled="@(!_success)"
-                                   Variant="Variant.Filled"
-                                   Color="Color.Primary"
-                                   OnClick="HandleSubmit"
-                                   DisableElevation="true">
-                            @_buttonText
-                        </MudButton>
-                        <MudButton Class="mx-2 my-2 rounded-0"
-                                   ButtonType="ButtonType.Reset"
-                                   Variant="Variant.Outlined"
-                                   Color="Color.Default"
-                                   DisableElevation="true"
-                                   Disabled="false">
-                            Clear
-                        </MudButton>
+                        <div class="mx-auto">
+                            <MudButton Class="mx-2 my-2 rounded-0"
+                                       ButtonType="ButtonType.Reset"
+                                       Variant="Variant.Outlined"
+                                       Color="Color.Default"
+                                       DisableElevation="true"
+                                       Disabled="false">
+                                Clear
+                            </MudButton>
+                            <MudButton Class="mx-2 my-2 rounded-0"
+                                       Disabled="@(!_success)"
+                                       Variant="Variant.Filled"
+                                       Color="Color.Primary"
+                                       OnClick="HandleSubmit"
+                                       DisableElevation="true">
+                                @_buttonText
+                            </MudButton>
+                        </div>
                     </MudCardActions>
                 </MudForm>
             </MudCard>
@@ -256,6 +256,7 @@
     }
     protected override async Task OnInitializedAsync()
     {
+        _buttonText = Id == null ? "Proceed" : "Update document";
         var customAuthStateProvider = (CustomAuthenticationStateProvider)AuthenticationStateProvider;
         Authenticate = customAuthStateProvider.GetAuthenticationStateAsync();
         if (Authenticate != null)
@@ -325,7 +326,7 @@
                 {
                     var response = await DocumentService.UpdateDocumentAsync(((int)Id), RequestDocument);
                     Snack.Add("Processing to Author Form", Severity.Info);
-                    _text = "Successfully";
+                    await DialogService.ShowMessageBox("Uploaded Successful! ✔️", "You will be navigate to your Profile", "Ok");
                     var log =  await ActivityLog.WriteLog($"{RequestDocument.UploaderEmail}", $"Upload a Document Titled: {RequestDocument.Title}", "UPLOAD", "USER");
                     if (log.IsSuccessStatusCode)
                     {

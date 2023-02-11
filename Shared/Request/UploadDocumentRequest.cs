@@ -25,10 +25,5 @@ namespace HIVE.Shared.Request
         public int FileId { get; set; }
         public string UploaderEmail { get; set; } = string.Empty;
         public List<CreateTopic> Topics { get; set; } = new List<CreateTopic>();
-        public FileEntry File { get; set; } = new FileEntry();
-        public Reference Reference { get; set; } = new Reference();
-        public Curriculum Curriculum { get; set; } = new Curriculum();
-        public Adviser Adviser { get; set; } = new Adviser();
-        public List<Author> Authors { get; set; } = new List<Author>();
     }
 }

@@ -1,7 +1,12 @@
-﻿
+﻿@page "/upload-document"
+@page "/upload-document/{id:int}"
+
+
 "<MudContainer MaxWidth="MaxWidth.Large">
-    <UploadDocumentForm/>
+    <UploadDocumentForm Id="Id"/>
 </MudContainer>
 @code {
-    
+    [Parameter]
+    public int? Id { get; set; }
+
 }

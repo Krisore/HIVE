@@ -27,13 +27,23 @@ namespace HIVE.Client.Services
         }
         public async Task<List<Curriculum>> GetProgramsAsync()
         {
-            var response = await _client.GetFromJsonAsync<List<Curriculum>>("api/Academic");
 
-            if (response != null)
+            try
             {
-                Curriculums = response;
+                var response = await _client.GetFromJsonAsync<List<Curriculum>>("api/Curriculums");
+
+                if (response != null)
+                {
+                    Curriculums = response;
+                }
+
+                return Curriculums;
             }
-            return Curriculums;
+            catch (Exception ex)
+            {
+                Console.WriteLine($"{ex.Message}");
+                throw;
+            }
         }
     }
 }

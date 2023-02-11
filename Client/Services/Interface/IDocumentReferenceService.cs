@@ -6,6 +6,7 @@ namespace HIVE.Client.Services.Interface
     {
         Task<IEnumerable<Reference>> GetReferencesAsync(string value);
         Task<Reference> GetReferenceById(int id);
+        Task<List<Reference>> GetReferences();
 
 
     }

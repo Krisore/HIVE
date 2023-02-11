@@ -1,5 +1,77 @@
-﻿<h3>SortTree</h3>
+﻿@inject IDocumentService DocumentService
+@inject ITopicService TopicService
+@inject ICurriculumService CurriculumService
+@inject IDocumentReferenceService DocumentReferenceService
+<div class="mx-2 my-2">
+    <MudNavMenu Bordered="true" Color="Color.Primary" Dense="true">
+        <MudNavGroup Disabled="false" Title="Year" @bind-Expanded="_folderFourExpanded">
+            @foreach (var year in Years)
+            {
+                <MudNavLink Href=@($"/search/{year}")>
+                    <MudText Typo="Typo.caption">
+                        @year <cite>(@Documents.Count(d => d.DatePublished.Value.Year.ToString() == year)) </cite>
+                    </MudText>
+                </MudNavLink>
+            }
+        </MudNavGroup>
+        <MudNavGroup Disabled="false" Title="Topic" @bind-Expanded="_folderOneExpanded" IconColor="Color.Primary">
+            @foreach (var topic in Topics)
+            {
+                <MudNavLink Href=@($"/search/{topic.Name}")>
+                    <MudText Typo="Typo.caption">
+                        @topic.Name <cite> (@Documents.Count(d => d.Topics.Any(t => t.Name == topic.Name) || d.Title.Contains(topic.Name, StringComparison.OrdinalIgnoreCase) || d.Abstract.Contains(topic.Name, StringComparison.OrdinalIgnoreCase))) </cite>
+                    </MudText>
+                </MudNavLink>
+            }
+        </MudNavGroup>
+        <MudNavGroup Disabled="false" Title="Program" @bind-Expanded="_folderTwoExpanded">
+            @foreach (var program in Programs)
+            {
+                <MudNavLink Href=@($"/search/{program.Name}")>
+                    <MudText Typo="Typo.caption">
+                        @program.Alt <cite>(@Documents.Count(d => d.CurriculumId == program.Id))</cite>
+                    </MudText>
+                </MudNavLink>
+            }
+        </MudNavGroup>
+        <MudNavGroup Disabled="false" Title="Document Type" @bind-Expanded="_folderThreeExpanded">
+            @foreach (var type in Types)
+            {
+                <MudNavLink Href=@($"/search/{type.Name}")>
+                    <MudText Typo="Typo.caption">
+                        @type.Name <cite>(@Documents.Count(d => d.ReferenceId == type.Id)) </cite>
+                    </MudText>
+                </MudNavLink>
+            }
+        </MudNavGroup>
+    </MudNavMenu>
+</div>
 
 @code {
+    private HashSet<string>? SelectedValues { get; set; }
+    private List<Document>? Documents { get; set; } = new();
+    private List<Topic> Topics { get; set; } = new();
+    private List<Reference> Types { get; set; } = new();
+    private List<Curriculum> Programs { get; set; } = new();
+
+    private List<string> Years = new();
+    bool _folderOneExpanded;
+    bool _folderTwoExpanded;
+    bool _folderThreeExpanded;
+    bool _folderFourExpanded;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Topics = await TopicService.GetTopics();
+        Documents = await DocumentService.GetAllDocuments();
+        Programs = await CurriculumService.GetProgramsAsync();
+        Types = await DocumentReferenceService.GetReferences();
+
+        foreach (var year in Documents.Select(d => d.DatePublished.Value.Year.ToString()).Distinct())
+        {
+            Years.Add(year);
+        }
+        Years.Reverse();
+    }
 
 }
