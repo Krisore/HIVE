@@ -1,0 +1,95 @@
+﻿@inject IDocumentService DocumentService
+@inject ICurriculumService CurriculumService
+@inject IDialogService DialogService
+<AuthorizeView>
+    <Authorized>
+        <MudDialog DisableSidePadding="true">
+            <DialogContent>
+                <MudCardHeader>
+                    <CardHeaderAvatar>
+                        <MudAvatar Color="Color.Primary" Size="Size.Medium" Elevation="2">
+                           @context.User.Identity.Name.ToUpper().ToCharArray()[0];
+                        </MudAvatar>
+                    </CardHeaderAvatar>
+                    <CardHeaderContent>
+                        <MudText Typo="Typo.body2">@context.User.Identity.Name</MudText>
+                        <MudText Typo="Typo.caption"> Uploaded in @_document.DateUploaded.ToLongDateString()</MudText>
+                    </CardHeaderContent>
+                    <CardHeaderActions>
+                        <MudChip Label="true" Variant="Variant.Text" Color="Color.Primary">
+                            @_document.Reference.Name
+                        </MudChip>
+                    </CardHeaderActions>
+                </MudCardHeader>
+                <MudDivider Class="my-1" />
+                <MudContainer Style="max-height: 500px; overflow-y: scroll">
+                    <MudCardContent>
+                        <MudText Typo="Typo.caption" Align="Align.Center">[ TITLE ]</MudText>
+                        <MudText Class="mx-2 my-2" Typo="Typo.body2" Align="Align.Justify">@_document.Title (@_document.DatePublished.Value.Year.ToString())</MudText>
+                        @foreach (var topic in _document.Topics)
+                        {
+                            <MudChip Size="Size.Small" Color="Color.Info" Variant="Variant.Text">@topic.Name</MudChip>
+                        }
+                        <MudDivider Class="my-2" DividerType="DividerType.Middle" />
+                        <MudText Typo="Typo.caption" Align="Align.Center">[ Adviser ]</MudText> <br />
+                        <MudText Class="mx-2" Typo="Typo.caption" Style="font-size: 80%">
+                            @_document.Adviser.Name
+                        </MudText> <br />
+                        <MudDivider Class="my-2" DividerType="DividerType.Middle" />
+                        <MudText Typo="Typo.caption" Align="Align.Center">[ Author ]</MudText> <br />
+                        <MudText Class="mx-2" Typo="Typo.caption" Style="font-size: 80%">
+                            @foreach (var author in _document.Authors)
+                            {
+                                @($"{author.Name} ,.")
+                            }
+                        </MudText> <br />
+                        @if (!string.IsNullOrWhiteSpace(_program.Name))
+                        {
+                            <MudChip Label="true" Color="Color.Info" Size="Size.Small" Variant="Variant.Outlined">@_program.Name</MudChip>
+                        }
+                        <MudDivider Class="my-2" DividerType="DividerType.Middle" />
+                        <MudText Typo="Typo.caption" Align="Align.Center">[ ABSTRACT ]</MudText> <br />
+                        <MudText Class="mx-2 my-2" Typo="Typo.caption" Align="Align.Justify">@_document.Abstract</MudText>
+                        <MudDivider Class="my-2" DividerType="DividerType.Middle" />
+                        @if (!string.IsNullOrWhiteSpace(_document.File.FileName))
+                        {
+                            <MudChip Icon="@Icons.Material.Rounded.Download" OnClick="@(()=> DownloadFileAsync(_document.File.FileName, _document.File.StoreFileName, _document.Title))" Class="rounded-0 ml-auto" Color="Color.Primary" Size="Size.Small" Label="true">@_document.File.StoreFileName.ToUpper()</MudChip>
+                        }
+                    </MudCardContent>
+                </MudContainer>
+                <MudDivider Class="my-2" />
+            </DialogContent>
+            <DialogActions>
+                <MudButton OnClick="OnOkay" Color="Color.Success" Size="Size.Small" Variant="Variant.Filled"> Ok </MudButton>
+            </DialogActions>
+        </MudDialog>
+    </Authorized>
+</AuthorizeView>
+@code {
+    [CascadingParameter] MudDialogInstance Dialog { get; set; } = new();
+    [Parameter] public int DocumentId { get; set; }
+    [Parameter] public string UserName { get; set; }
+    private Document _document = new();
+    private Curriculum _program = new();
+    protected override async Task OnParametersSetAsync()
+    {
+        _document = await DocumentService.GetDocumentAsyncById(DocumentId);
+        _program = await CurriculumService.GetCurriculumById(_document.CurriculumId);
+    }
+
+    private async Task DownloadFileAsync(string fileName, string storeFileName, string documentTitle)
+    {
+        var parameters = new DialogParameters
+        {
+            { "ContentText", $"{documentTitle}" },
+            { "ButtonText", "Download" },
+            { "StoreFileName", storeFileName },
+            { "FileName", fileName },
+            {"UserName", UserName}
+        };
+
+
+        await DialogService.ShowAsync<DialogDownload>("Download a copy 📦", parameters);
+    }
+    private void OnOkay() => Dialog.Close(DialogResult.Ok(true));
+}

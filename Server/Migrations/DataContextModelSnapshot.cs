@@ -86,6 +86,28 @@ namespace HIVE.Server.Migrations
                     b.ToTable("Advisers");
                 });
 
+            modelBuilder.Entity("HIVE.Shared.Model.Author", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("DocumentId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DocumentId");
+
+                    b.ToTable("Authors");
+                });
+
             modelBuilder.Entity("HIVE.Shared.Model.Curriculum", b =>
                 {
                     b.Property<int>("Id")
@@ -131,6 +153,9 @@ namespace HIVE.Server.Migrations
                     b.Property<DateTime>("DateUploaded")
                         .HasColumnType("datetime2");
 
+                    b.Property<int>("FileId")
+                        .HasColumnType("int");
+
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
@@ -163,9 +188,39 @@ namespace HIVE.Server.Migrations
 
                     b.HasIndex("CurriculumId");
 
+                    b.HasIndex("FileId");
+
                     b.HasIndex("ReferenceId");
 
                     b.ToTable("Documents");
+                });
+
+            modelBuilder.Entity("HIVE.Shared.Model.FileEntry", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ContentType")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("FileName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<long?>("Size")
+                        .HasColumnType("bigint");
+
+                    b.Property<bool>("Status")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("StoreFileName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("FileEntries");
                 });
 
             modelBuilder.Entity("HIVE.Shared.Model.Reference", b =>
@@ -275,6 +330,15 @@ namespace HIVE.Server.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("HIVE.Shared.Model.Author", b =>
+                {
+                    b.HasOne("HIVE.Shared.Model.Document", null)
+                        .WithMany("Authors")
+                        .HasForeignKey("DocumentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("HIVE.Shared.Model.Document", b =>
                 {
                     b.HasOne("HIVE.Shared.Model.Adviser", "Adviser")
@@ -289,6 +353,12 @@ namespace HIVE.Server.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("HIVE.Shared.Model.FileEntry", "File")
+                        .WithMany()
+                        .HasForeignKey("FileId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("HIVE.Shared.Model.Reference", "Reference")
                         .WithMany()
                         .HasForeignKey("ReferenceId")
@@ -299,7 +369,14 @@ namespace HIVE.Server.Migrations
 
                     b.Navigation("Curriculum");
 
+                    b.Navigation("File");
+
                     b.Navigation("Reference");
+                });
+
+            modelBuilder.Entity("HIVE.Shared.Model.Document", b =>
+                {
+                    b.Navigation("Authors");
                 });
 #pragma warning restore 612, 618
         }

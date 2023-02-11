@@ -20,7 +20,13 @@ builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthenticationStat
 builder.Services.AddScoped<CustomAuthenticationStateProvider>();
 builder.Services.AddScoped<IActivityLog, ActivityLog>();
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IDocumentReferenceService, DocumentReferenceService>();
 builder.Services.AddScoped<IDocumentService, DocumentService>();
+builder.Services.AddScoped<ICurriculumService, CurriculumService>();
+builder.Services.AddScoped<IAdviserService, AdviserService>();
+builder.Services.AddScoped<IFileService, FileService>();
+builder.Services.AddScoped<IAuthorService, AuthorService>();
+builder.Services.AddScoped<ITopicService, TopicService>();
 builder.Services.AddMudServices();
 builder.Services.AddBlazoredSessionStorage();
 builder.Services.AddAuthorizationCore();

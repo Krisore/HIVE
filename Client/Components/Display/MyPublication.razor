@@ -1,8 +1,10 @@
 ﻿@using HIVE.Client.Services
 @inject IDocumentService DocumentService
 @inject IDialogService DialogService
+@inject IActivityLog ActivityLog
 @inject AuthenticationStateProvider AuthenticationStateProvider
-<MudTable ServerData="@(new Func<TableState, Task<TableData<Document>>>(ServerReload))">
+@inject NavigationManager NavigationManager
+<MudTable MultiSelection="true" @bind-SelectedItems="_selectedItems" @ref="_table" ServerData="@(new Func<TableState, Task<TableData<Document>>>(ServerReload))">
     <ToolBarContent>
         <MudChip Label="true" T="Document" Class="d-block " Variant="Variant.Text"> <code> Selected Document: <strong> (@_selectedItems.Count) </strong></code></MudChip>
         <div class="mx-5">
@@ -14,13 +16,6 @@
                                Size="Size.Medium"
                                Icon="@Icons.Material.Filled.Sync" />
             </MudTooltip>
-            <MudTooltip Text="Edit Selected Document" Arrow="true">
-                <MudIconButton Disabled="true"
-                               Variant="Variant.Text"
-                               DisableElevation="true"
-                               Size="Size.Medium"
-                               Icon="@Icons.Material.Filled.Edit" />
-            </MudTooltip>
             <MudTooltip Text="Archived Selected Document" Arrow="true">
                 <MudIconButton Variant="Variant.Text"
                                DisableElevation="true"
@@ -29,7 +24,7 @@
                                Icon="@Icons.Material.Filled.Archive" Color="Color.Info" />
             </MudTooltip>
             <MudTooltip Text="Delete Selected Document" Arrow="true">
-                <MudIconButton Disabled="true"
+                <MudIconButton OnClick="OnDeleteAsync"
                                Variant="Variant.Text"
                                DisableElevation="true"
                                Size="Size.Medium"
@@ -54,6 +49,7 @@
         <MudTh><MudTableSortLabel SortLabel="documentStatus" T="Document">Document status</MudTableSortLabel></MudTh>
         <MudTh><MudTableSortLabel SortLabel="year" T="Document">Year</MudTableSortLabel></MudTh>
         <MudTh><MudTableSortLabel SortLabel="status" T="Document">Status</MudTableSortLabel></MudTh>
+        <MudTh>Edit</MudTh>
     </HeaderContent>
     <RowTemplate>
         @*OnClick="@(() => OnReview(Data.Id))"*@
@@ -85,6 +81,15 @@
                 <MudChip Variant="Variant.Text" Color="Color.Error" Size="Size.Small"> in-active </MudChip>
             }
         </MudTd>
+        <MudTd>
+            <MudTooltip Text="Edit Selected Document" Arrow="true">
+                <MudIconButton Variant="Variant.Text"
+                               DisableElevation="false"
+                               Size="Size.Medium"
+                               Icon="@Icons.Material.Filled.Edit"
+                               OnClick="@(() => OnEditAsync(context.Id))"/>
+            </MudTooltip>
+        </MudTd>
     </RowTemplate>
 </MudTable>
 @code {
@@ -99,8 +104,11 @@
     private IEnumerable<Document> _pagedData;
     private int _totalItems;
     private string searchTerm = string.Empty;
+    private string _userName = string.Empty;
     [CascadingParameter]
     public Task<AuthenticationState>? Authenticate { get; set; }
+
+
     private async Task<TableData<Document>> ServerReload(TableState state)
     {
         var customAuthStateProvider = (CustomAuthenticationStateProvider)AuthenticationStateProvider;
@@ -113,6 +121,7 @@
                 var email = account.User.Identity?.Name;
                 if (email != null)
                 {
+                    _userName = email;
                     var response = await DocumentService.GetMyDocumentsAsync(email);
                     Documents = response;
                 }
@@ -153,5 +162,20 @@
          searchTerm = text;
         _table.ReloadServerData();
     }
-
+    private async void OnDeleteAsync()
+    {
+        foreach (var document in _selectedItems)
+        {
+            await DocumentService.GetDeleteDocumentById(document.Id);
+            await _table.ReloadServerData();
+        }
+    }
+    private async void OnEditAsync(int id)
+    {
+        var log = await ActivityLog.WriteLog($"{_userName}", "Modified His/Her publication", "MODIFIED", "USER");
+        if (log.IsSuccessStatusCode)
+        {
+            NavigationManager.NavigateTo($"/upload-document/{id}");
+        }
+    }
 }

@@ -21,10 +21,25 @@ namespace HIVE.Shared.Model
         public int CurriculumId { get; set; }
         public int AdviserId { get; set; }
         public int ReferenceId { get; set; }
+        public int FileId { get; set; }
+        public FileEntry File { get; set; } = new FileEntry();
         public string UploaderEmail { get; set; } = string.Empty;
         public Curriculum Curriculum { get; set; } = new();
         public Adviser Adviser { get; set; } = new();
         public Reference Reference { get; set; } = new();
         public List<Topic> Topics { get; set; } = new List<Topic>();
+        public List<Author> Authors { get; set; } = new List<Author>();
+        public Document()
+        {
+            UpdateIsActive();
+        }
+        private void UpdateIsActive()
+        {
+            var tenYearsAgo = DateTime.Now.AddYears(-10);
+            if (DatePublished.HasValue && DatePublished < tenYearsAgo)
+            {
+                IsActive = false;
+            }
+        }
     }
 }

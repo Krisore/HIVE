@@ -26,7 +26,7 @@ namespace HIVE.Server.Authentication
             }
             //TODO: Validating the user credentials || DONE ✔️
             var userAccount = await _userService.GetUserAccountByEmail(email);
-            if (!VerifyPasswordHash(password, userAccount.PasswordHash, userAccount.PasswordSalt) || userAccount.VerifiedAt == null)
+            if (!VerifyPasswordHash(password, userAccount.PasswordHash, userAccount.PasswordSalt))
             {
                 return null;
             }

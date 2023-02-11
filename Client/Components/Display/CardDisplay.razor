@@ -1,0 +1,171 @@
+﻿@inject IDialogService DialogService
+@inject NavigationManager Navigation
+@inject AuthenticationStateProvider AuthenticationStateProvider;
+@inject IUserService UserService
+<MudCard Class="cursor-pointer" Elevation="1">
+    <MudCardHeader>
+        <CardHeaderAvatar>
+            <MudAvatar Image="image/Pup_logo.jpg" Size="Size.Large">
+
+            </MudAvatar>
+        </CardHeaderAvatar>
+        <CardHeaderContent>
+            <MudText Typo="Typo.caption">Polytechnic University of the Philippines </MudText> <br />
+            <MudText Style="font-size: 70%"><i>posted on </i> @Document.DateUploaded.ToLongDateString()</MudText>
+        </CardHeaderContent>
+        <CardHeaderActions>
+            <MudChip Label="true" Size="Size.Small" Color="Color.Primary" Class="rounded-l-xl" Variant="Variant.Filled"> @Document.Curriculum.Name</MudChip>
+            <MudChip Color="Color.Info" Size="Size.Small" Label="true" Class="rounded-0" Variant="Variant.Filled">@_program.Alt</MudChip>
+        </CardHeaderActions>
+    </MudCardHeader>
+    <MudDivider DividerType="DividerType.FullWidth" />
+    <MudCardContent>
+        <div class="d-inline">
+            <MudText Class="d-block" Typo="Typo.subtitle2" Align="Align.Justify">
+
+                @if (string.IsNullOrWhiteSpace(SearchTerm))
+                {
+                    <MudText Typo="Typo.subtitle2">
+                        @Document.Title <code> (@(Document.DatePublished.Value.Year)) </code>
+                    </MudText>
+                }
+                else
+                {
+                    <MudHighlighter Text="@Document.Title" UntilNextBoundary="true" HighlightedText="@SearchTerm" />
+                    <code> (@(Document.DatePublished.Value.Year)) </code>
+                }
+            </MudText>
+        </div>
+        @foreach (var topic in _topics)
+        {
+            @if (string.IsNullOrWhiteSpace(SearchTerm))
+            {
+                <MudChip Color="Color.Primary" Size="Size.Small" Variant="Variant.Text">@topic.Name</MudChip>
+            }
+            else
+            {
+                <MudChip Color="Color.Primary" Size="Size.Small" Variant="Variant.Text"><MudHighlighter Class="mud-secondary-text" Style="background-color:transparent;font-weight:bold" Text="@topic.Name" UntilNextBoundary="true" HighlightedText="@SearchTerm" /></MudChip>
+            }
+        }
+    </MudCardContent>
+    <MudDivider DividerType="DividerType.FullWidth" />
+    <MudCardActions>
+        @foreach (var file in Files.Where(f => f.Id == Document.FileId))
+        {
+            <MudButton Class="rounded-0" OnClick="@(() => DownloadFileAsync(file.FileName, file.StoreFileName, Document.Title))"
+                   Size="Size.Small"
+                   StartIcon="@Icons.Material.Filled.Download"
+                   Variant="@Variant.Filled"
+                   Color="@Color.Primary"
+                   DisableElevation="@true"
+                   Disabled="@_isAuthenticated">
+                Download
+            </MudButton>
+        }
+        <MudButton Class="rounded-0 mx-2"
+                   Size="Size.Small"
+                   Variant="@Variant.Outlined"
+                   Color="@Color.Default"
+                   DisableElevation="true"
+                   OnClick="ViewDetailedAsync">
+            View
+        </MudButton>
+    </MudCardActions>
+</MudCard>
+@code
+{
+    [Parameter] public Document Document { get; set; } = new();
+    [Parameter] public List<FileEntry> Files { get; set; } = new();
+    [Parameter] public List<Adviser> Advisers { get; set; } = new();
+    [Parameter] public List<Curriculum> Programs { get; set; } = new();
+    [Parameter] public string SearchTerm { get; set; }
+    private string _owner = "";
+    private List<Topic> _topics = new();
+    private FileEntry _file = new();
+    private List<Author> _authors = new();
+    private Curriculum _program = new();
+    private Adviser _adviser = new();
+    private Reference _documentType = new();
+    private string sample = "";
+    [CascadingParameter] public Task<AuthenticationState> Authenticate { get; set; }
+    bool _isAuthenticated = true;
+    protected override async Task OnParametersSetAsync()
+    {
+        var authenticate = await Authenticate;
+        if (authenticate.User.Identity is { IsAuthenticated: true })
+        {
+            _isAuthenticated = false;
+        }
+        _topics = Document.Topics;
+        //_authors = Document.Authors;
+        _documentType = Document.Reference;
+        _adviser = Advisers.FirstOrDefault(a => a.Id == Document.AdviserId)!;
+        _program = Programs.FirstOrDefault(a => a.Id == Document.CurriculumId)!;
+        _file = Files.FirstOrDefault(a => a.Id == Document.FileId)!;
+        var customAuthStateProvider = (CustomAuthenticationStateProvider)AuthenticationStateProvider;
+        Authenticate = customAuthStateProvider.GetAuthenticationStateAsync();
+        if (Authenticate != null)
+        {
+            var account = await Authenticate;
+            if (account.User.Identity?.Name != null)
+            {
+                _owner = account.User.Identity.Name;
+            }
+        }
+    }
+
+
+    private string Format(string name)
+    {
+        return name;
+    }
+    private async Task DownloadFileAsync(string fileName, string storeFileName, string documentTitle)
+    {
+        var parameters = new DialogParameters
+        {
+            { "ContentText", $"{documentTitle}" },
+            { "ButtonText", "Download" },
+            { "StoreFileName", storeFileName },
+            { "FileName", fileName }
+        };
+
+
+        await DialogService.ShowAsync<DialogDownload>("Download a copy 📦", parameters);
+
+    }
+    private string Trim(string context)
+    {
+        var modifyContext = "";
+        const int maxLength = 150;
+        if (context.Length > 150)
+        {
+            modifyContext = context.Substring(0, maxLength);
+        }
+        return modifyContext;
+    }
+
+    private async void ViewDetailedAsync()
+    {
+        var documentId = Document.Id;
+        var option = new DialogOptions
+            {
+                NoHeader = true,
+                MaxWidth = MaxWidth.Medium,
+                CloseOnEscapeKey = false,
+                Position = DialogPosition.TopCenter
+
+            };
+        var parameter = new DialogParameters
+            {
+                ["DocumentId"] = documentId
+            };
+        try
+        {
+            var result = await DialogService.ShowAsync<ViewDocumentDetail>("", parameter, option);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"{ex.Message}");
+        }
+    }
+}

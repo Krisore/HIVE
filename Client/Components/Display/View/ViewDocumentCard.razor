@@ -1,77 +1,81 @@
-﻿<MudCard Class="cursor-pointer" Elevation="1">
-    <MudCardHeader>
-        <CardHeaderAvatar>
-            <MudAvatar Image="image/Pup_logo.jpg" Size="Size.Large" />
-        </CardHeaderAvatar>
-        <CardHeaderContent>
-            <MudText Typo="Typo.caption">Polytechnic University of the Philippines </MudText> <br />
-            <MudText Style="font-size: 70%"><i>posted on </i> @Document.DateUploaded.ToLongDateString()</MudText>
-        </CardHeaderContent>
-        <CardHeaderActions>
-            <MudChip Label="true" Size="Size.Small" Color="Color.Primary" Class="rounded-l-xl" Variant="Variant.Filled">@Document.Reference.Name </MudChip>
-            <MudChip Color="Color.Info" Size="Size.Small" Label="true" Class="rounded-0" Variant="Variant.Filled">@Document.Curriculum.Alt</MudChip>
-        </CardHeaderActions>
-    </MudCardHeader>
-    <MudDivider DividerType="DividerType.FullWidth" />
-    <MudCardContent>
-        <div class="d-inline">
-            <MudText Class="d-block" Typo="Typo.subtitle2" Align="Align.Justify">
+﻿<AuthorizeView>
+    <Authorized>
+        <MudCard Class="cursor-pointer" Elevation="1">
+            <MudCardHeader>
+                <CardHeaderAvatar>
+                    <MudAvatar Image="image/Pup_logo.jpg" Size="Size.Large" />
+                </CardHeaderAvatar>
+                <CardHeaderContent>
+                    <MudText Typo="Typo.caption">Polytechnic University of the Philippines </MudText> <br />
+                    <MudText Style="font-size: 70%"><i>posted on </i> @Document.DateUploaded.ToLongDateString()</MudText>
+                </CardHeaderContent>
+                <CardHeaderActions>
+                    <MudChip Label="true" Size="Size.Small" Color="Color.Primary" Class="rounded-l-xl" Variant="Variant.Filled">@Document.Reference.Name </MudChip>
+                    <MudChip Color="Color.Info" Size="Size.Small" Label="true" Class="rounded-0" Variant="Variant.Filled">@Document.Curriculum.Alt</MudChip>
+                </CardHeaderActions>
+            </MudCardHeader>
+            <MudDivider DividerType="DividerType.FullWidth" />
+            <MudCardContent>
+                <div class="d-inline">
+                    <MudText Class="d-block" Typo="Typo.subtitle2" Align="Align.Justify">
 
-                @if (string.IsNullOrWhiteSpace(SearchTerm))
-                {
-                    <MudText Typo="Typo.subtitle2">
-                        @Document.Title <code> (@(Document.DatePublished.Value.Year)) </code>
+                        @if (string.IsNullOrWhiteSpace(SearchTerm))
+                        {
+                            <MudText Typo="Typo.subtitle2">
+                                @Document.Title <code> (@(Document.DatePublished.Value.Year)) </code>
+                            </MudText>
+                        }
+                        else
+                        {
+                            <MudHighlighter Text="@Document.Title" UntilNextBoundary="true" HighlightedText="@SearchTerm" />
+                            <code> (@(Document.DatePublished.Value.Year)) </code>
+                        }
                     </MudText>
-                }
-                else
+                </div>
+                @foreach (var topic in Document.Topics)
                 {
-                    <MudHighlighter Text="@Document.Title" UntilNextBoundary="true" HighlightedText="@SearchTerm" />
-                    <code> (@(Document.DatePublished.Value.Year)) </code>
+                    @if (string.IsNullOrWhiteSpace(SearchTerm))
+                    {
+                        <MudChip Color="Color.Primary" Size="Size.Small" Variant="Variant.Text">@topic.Name</MudChip>
+                    }
+                    else
+                    {
+                        <MudChip Color="Color.Primary" Size="Size.Small" Variant="Variant.Text"><MudHighlighter Class="mud-secondary-text" Style="background-color:transparent;font-weight:bold" Text="@topic.Name" UntilNextBoundary="true" HighlightedText="@SearchTerm" /></MudChip>
+                    }
                 }
-            </MudText>
-        </div>
-        @foreach (var topic in Document.Topics)
-        {
-            @if (string.IsNullOrWhiteSpace(SearchTerm))
-            {
-                <MudChip Color="Color.Primary" Size="Size.Small" Variant="Variant.Text">@topic.Name</MudChip>
-            }
-            else
-            {
-                <MudChip Color="Color.Primary" Size="Size.Small" Variant="Variant.Text"><MudHighlighter Class="mud-secondary-text" Style="background-color:transparent;font-weight:bold" Text="@topic.Name" UntilNextBoundary="true" HighlightedText="@SearchTerm" /></MudChip>
-            }
-        }
-    </MudCardContent>
-    <MudDivider DividerType="DividerType.FullWidth" />
-    <MudCardActions>
-        @* @foreach (var file in Files.Where(f => f.Id == Document.FileId))
-        {
-        <MudButton Class="rounded-0" OnClick="@(() => DownloadFileAsync(file.FileName, file.StoreFileName, Document.Title))"
-        Size="Size.Small"
-        StartIcon="@Icons.Material.Filled.Download"
-        Variant="@Variant.Filled"
-        Color="@Color.Primary"
-        DisableElevation="@true"
-        Disabled="@_isAuthenticated">
-        Download
-        </MudButton>
-        }
-        <MudButton Class="rounded-0 mx-2"
-        Size="Size.Small"
-        Variant="@Variant.Outlined"
-        Color="@Color.Default"
-        DisableElevation="true"
-        OnClick="ViewDetailedAsync">
-        View
-        </MudButton>*@
-    </MudCardActions>
-</MudCard>
+            </MudCardContent>
+            <MudDivider DividerType="DividerType.FullWidth" />
+            <MudCardActions>
+                @*@foreach (var file in Files.Where(f => f.Id == Document.FileId))
+                {
+                    <MudButton Class="rounded-0" OnClick="@(() => DownloadFileAsync(file.FileName, file.StoreFileName, Document.Title))"
+                           Size="Size.Small"
+                           StartIcon="@Icons.Material.Filled.Download"
+                           Variant="@Variant.Filled"
+                           Color="@Color.Primary"
+                           DisableElevation="@true"
+                           Disabled="@_isAuthenticated">
+                        Download
+                    </MudButton>
+                }
+                <MudButton Class="rounded-0 mx-2"
+                           Size="Size.Small"
+                           Variant="@Variant.Outlined"
+                           Color="@Color.Default"
+                           DisableElevation="true"
+                           OnClick="ViewDetailedAsync">
+                    View
+                </MudButton>*@
+            </MudCardActions>
+        </MudCard>
+    </Authorized>
+</AuthorizeView>
 @code {
 
     [Parameter]
-    public Document Document { get; set; } = new();
+    public Document Document { get; set; }
 
     [Parameter]
-    public string SearchTerm { get; set; } = string.Empty;
+    public string SearchTerm { get; set; }
 
 }

@@ -16,5 +16,7 @@ namespace HIVE.Server.Data
         public DbSet<Adviser> Advisers => Set<Adviser>();
         public DbSet<Reference> References => Set<Reference>();
         public DbSet<Topic> Topics => Set<Topic>();
+        public DbSet<Author> Authors => Set<Author>();
+        public DbSet<FileEntry> FileEntries => Set<FileEntry>();
     }
 }
