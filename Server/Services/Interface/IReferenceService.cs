@@ -7,5 +7,6 @@ namespace HIVE.Server.Services.Interface
     {
         Task<IEnumerable> GetReferenceBySearch(string search);
         Task<Reference> GetReference(int value);
+        Task<List<Reference>> GetReferences();
     }
 }

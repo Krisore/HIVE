@@ -24,5 +24,11 @@ namespace HIVE.Server.Services
             var result = await _context.References.FirstOrDefaultAsync(d => d.Id == value);
             return result;
         }
+
+        public async Task<List<Reference>> GetReferences()
+        {
+            var result = await _context.References.ToListAsync();
+            return result;
+        }
     }
 }

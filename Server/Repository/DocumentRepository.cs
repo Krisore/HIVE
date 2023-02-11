@@ -75,6 +75,7 @@ namespace HIVE.Server.Repository
                             && d.IsArchived == false
                             && d.IsDeleted == false)
                 .Include(t => t.Topics)
+                .Include(a => a.Authors).Include(f => f.File)
                 .Include(a => a.Curriculum)
                 .Include(d => d.Reference)
                 .Include(a => a.Authors)
@@ -105,7 +106,6 @@ namespace HIVE.Server.Repository
             {
                 throw new Exception("Adviser, curriculum, reference, or file not found");
             }
-
             var document = new Document
             {
                 Title = request.Title,
@@ -135,7 +135,6 @@ namespace HIVE.Server.Repository
                     document.Topics.Add(addTopic);
                 }
             }
-
             await _context.Documents.AddAsync(document);
             await _context.SaveChangesAsync();
             return document;

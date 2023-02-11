@@ -1,18 +1,18 @@
 ﻿@inject IDocumentService DocumentService
 @inject ICurriculumService CurriculumService
 @inject IDialogService DialogService
+
 <AuthorizeView>
     <Authorized>
         <MudDialog DisableSidePadding="true">
             <DialogContent>
                 <MudCardHeader>
                     <CardHeaderAvatar>
-                        <MudAvatar Color="Color.Primary" Size="Size.Medium" Elevation="2">
-                           @context.User.Identity.Name.ToUpper().ToCharArray()[0];
+                        <MudAvatar Color="Color.Primary" Size="Size.Large" Image="Image/Pup_logo.jpg" Elevation="2">
                         </MudAvatar>
                     </CardHeaderAvatar>
                     <CardHeaderContent>
-                        <MudText Typo="Typo.body2">@context.User.Identity.Name</MudText>
+                        <MudText Typo="Typo.body2">Polytechnic University of The Philippines </MudText>
                         <MudText Typo="Typo.caption"> Uploaded in @_document.DateUploaded.ToLongDateString()</MudText>
                     </CardHeaderContent>
                     <CardHeaderActions>
@@ -64,6 +64,62 @@
             </DialogActions>
         </MudDialog>
     </Authorized>
+    <NotAuthorized>
+        <MudDialog DisableSidePadding="true">
+            <DialogContent>
+                <MudCardHeader>
+                    <CardHeaderAvatar>
+                        <MudAvatar Color="Color.Primary" Size="Size.Large" Image="Image/Pup_logo.jpg" Elevation="2">
+                        </MudAvatar>
+                    </CardHeaderAvatar>
+                    <CardHeaderContent>
+                        <MudText Typo="Typo.body2">Polytechnic University of The Philippines </MudText>
+                        <MudText Typo="Typo.caption"> Uploaded in @_document.DateUploaded.ToLongDateString()</MudText>
+                    </CardHeaderContent>
+                    <CardHeaderActions>
+                        <MudChip Label="true" Variant="Variant.Text" Color="Color.Primary">
+                            @_document.Reference.Name
+                        </MudChip>
+                    </CardHeaderActions>
+                </MudCardHeader>
+                <MudDivider Class="my-1" />
+                <MudContainer Style="max-height: 500px; overflow-y: scroll">
+                    <MudCardContent>
+                        <MudText Typo="Typo.caption" Align="Align.Center">[ TITLE ]</MudText>
+                        <MudText Class="mx-2 my-2" Typo="Typo.body2" Align="Align.Justify">@_document.Title (@_document.DatePublished.Value.Year.ToString())</MudText>
+                        @foreach (var topic in _document.Topics)
+                        {
+                            <MudChip Size="Size.Small" Color="Color.Info" Variant="Variant.Text">@topic.Name</MudChip>
+                        }
+                        <MudDivider Class="my-2" DividerType="DividerType.Middle" />
+                        <MudText Typo="Typo.caption" Align="Align.Center">[ Adviser ]</MudText> <br />
+                        <MudText Class="mx-2" Typo="Typo.caption" Style="font-size: 80%">
+                            @_document.Adviser.Name
+                        </MudText> <br />
+                        <MudDivider Class="my-2" DividerType="DividerType.Middle" />
+                        <MudText Typo="Typo.caption" Align="Align.Center">[ Author ]</MudText> <br />
+                        <MudText Class="mx-2" Typo="Typo.caption" Style="font-size: 80%">
+                            @foreach (var author in _document.Authors)
+                            {
+                                @($"{author.Name} ,.")
+                            }
+                        </MudText> <br />
+                        @if (!string.IsNullOrWhiteSpace(_program.Name))
+                        {
+                            <MudChip Label="true" Color="Color.Info" Size="Size.Small" Variant="Variant.Outlined">@_program.Name</MudChip>
+                        }
+                        <MudDivider Class="my-2" DividerType="DividerType.Middle" />
+                        <MudText Typo="Typo.caption" Align="Align.Center">[ ABSTRACT ]</MudText> <br />
+                        <MudText Class="mx-2 my-2" Typo="Typo.caption" Align="Align.Justify">@_document.Abstract</MudText>
+                    </MudCardContent>
+                </MudContainer>
+                <MudDivider Class="my-2" />
+            </DialogContent>
+            <DialogActions>
+                <MudButton OnClick="OnOkay" Color="Color.Success" Size="Size.Small" Variant="Variant.Filled"> Ok </MudButton>
+            </DialogActions>
+        </MudDialog>
+    </NotAuthorized>
 </AuthorizeView>
 @code {
     [CascadingParameter] MudDialogInstance Dialog { get; set; } = new();

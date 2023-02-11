@@ -5,7 +5,7 @@
 <PageTitle>Search </PageTitle>
 <MudContainer MaxWidth="MaxWidth.Medium">
     <SearchFunc OnSearch="HandleSearch"/>
-    <ViewDocuments SearchTerm="SearchTerm"/>
+    <ViewDocuments SearchTerm="@SearchTerm"/>
 </MudContainer>
 @code {
     [Parameter]

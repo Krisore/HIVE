@@ -29,5 +29,12 @@ namespace HIVE.Server.Controllers
             return Ok(result);
 
         }
+        [HttpGet]
+        public async Task<ActionResult<List<Reference>>> GetReferences()
+        {
+            var result = await _referenceService.GetReferences();
+            return Ok(result);
+
+        }
     }
 }

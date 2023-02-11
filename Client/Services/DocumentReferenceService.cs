@@ -24,5 +24,10 @@ namespace HIVE.Client.Services
             var response = await _client.GetFromJsonAsync<Reference>($"api/References/{id}");
             return response;
         }
+        public async Task<List<Reference>> GetReferences()
+        {
+            var response = await _client.GetFromJsonAsync<List<Reference>>("api/References");
+            return response;
+        }
     }
 }

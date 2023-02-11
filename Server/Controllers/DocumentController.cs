@@ -49,7 +49,6 @@ namespace HIVE.Server.Controllers
             return Ok(result);
         }
         [HttpPost]
-        [Route("upload")]
         public async Task<IActionResult> UploadDocumentAsync(UploadDocumentRequest request)
         {
             try
@@ -61,7 +60,6 @@ namespace HIVE.Server.Controllers
             {
                 Console.WriteLine($"{ex.Message}");
             }
-
             return NotFound();
         }
         [HttpPut]

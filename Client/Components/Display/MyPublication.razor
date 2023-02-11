@@ -4,7 +4,7 @@
 @inject IActivityLog ActivityLog
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject NavigationManager NavigationManager
-<MudTable MultiSelection="true" @bind-SelectedItems="_selectedItems" @ref="_table" ServerData="@(new Func<TableState, Task<TableData<Document>>>(ServerReload))">
+<MudTable MultiSelection="true"  @bind-SelectedItems="_selectedItems"  Elevation="1" Dense="true" @ref="_table" ServerData="@(new Func<TableState, Task<TableData<Document>>>(ServerReload))">
     <ToolBarContent>
         <MudChip Label="true" T="Document" Class="d-block " Variant="Variant.Text"> <code> Selected Document: <strong> (@_selectedItems.Count) </strong></code></MudChip>
         <div class="mx-5">
@@ -16,13 +16,7 @@
                                Size="Size.Medium"
                                Icon="@Icons.Material.Filled.Sync" />
             </MudTooltip>
-            <MudTooltip Text="Archived Selected Document" Arrow="true">
-                <MudIconButton Variant="Variant.Text"
-                               DisableElevation="true"
-                               Size="Size.Medium"
-                               Disabled="true"
-                               Icon="@Icons.Material.Filled.Archive" Color="Color.Info" />
-            </MudTooltip>
+
             <MudTooltip Text="Delete Selected Document" Arrow="true">
                 <MudIconButton OnClick="OnDeleteAsync"
                                Variant="Variant.Text"
@@ -52,8 +46,8 @@
         <MudTh>Edit</MudTh>
     </HeaderContent>
     <RowTemplate>
-        @*OnClick="@(() => OnReview(Data.Id))"*@
-        <MudTd> <MudTooltip Text="See the details"><MudButton Variant="Variant.Outlined" Size="Size.Small" Disabled="true"> 🗃️ </MudButton></MudTooltip></MudTd>
+        
+        <MudTd> <MudTooltip Text="See the details"><MudButton Variant="Variant.Outlined" Size="Size.Small" OnClick="@(() => OnReview(context.Id))"> 🗃️ </MudButton></MudTooltip></MudTd>
         <MudTd DataLabel="Title">@context.Title</MudTd>
         <MudTd DataLabel="Program">
 
@@ -176,6 +170,30 @@
         if (log.IsSuccessStatusCode)
         {
             NavigationManager.NavigateTo($"/upload-document/{id}");
+        }
+    }
+
+    private async void OnReview(int id)
+    {
+        var option = new DialogOptions
+        {
+            NoHeader = true,
+            MaxWidth = MaxWidth.Medium,
+            CloseOnEscapeKey = false,
+            Position = DialogPosition.TopCenter
+
+        };
+        var parameter = new DialogParameters
+        {
+                ["DocumentId"] = id
+        };
+        try
+        {
+            var result = await DialogService.ShowAsync<ViewDocumentDetail>("", parameter, option);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"{ex.Message}");
         }
     }
 }
