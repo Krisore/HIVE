@@ -105,6 +105,12 @@ namespace HIVE.Server.Services
             return "User Verified!";
         }
 
+        public async Task<List<User>> GetUsers()
+        {
+            var result = await _context.Users.ToListAsync();
+            return result;
+        }
+
         public async Task<string> ForgotPasswordAsync(string email)
         {
             var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);

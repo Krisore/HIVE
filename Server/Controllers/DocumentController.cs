@@ -85,5 +85,23 @@ namespace HIVE.Server.Controllers
             if (response == null) throw new ArgumentNullException(nameof(response));
             return Ok(response);
         }
+
+        [HttpGet]
+        [Route("archivist")]
+        public async Task<ActionResult<List<Document>>> GetDocumentsForArchivist()
+        {
+            //TODO: GET ARCHIVIST DOCUMENT || Done ✔️
+            try
+            {
+                var result = await _repository.GetDocumentsForArchivist();
+                return result;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"{ex.Message}");
+                throw;
+            }
+
+        }
     }
 }

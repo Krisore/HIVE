@@ -27,6 +27,25 @@ namespace HIVE.Client.Services
             var response = await _client.GetAsync("api/Document");
             return response;
         }
+
+        public async Task<List<Document>> GetDocumentsForArchivistAsync()
+        {
+            try
+            {
+                var result = await _client.GetFromJsonAsync<List<Document>>($"api/Document/archivist");
+                if (result == null)
+                {
+                    Documents = result;
+                }
+                return Documents!;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"{ex.Message}");
+                throw;
+            }
+        }
+
         public async Task<Document> UpdateDocumentAsync(int id, UploadDocumentRequest document)
         {
 

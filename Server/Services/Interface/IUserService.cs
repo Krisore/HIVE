@@ -9,6 +9,7 @@ namespace HIVE.Server.Services.Interface
         Task<string> RegisterUser(UserRegisterRequest request);
         Task<string?> UpdateUser(int id, UserRegisterRequest request);
         Task<string> Verify(string token);
+        Task<List<User>> GetUsers();
         Task<string> ForgotPasswordAsync(string email);
         Task<string> ResetPassword(ResetPasswordRequest request);
         Task<List<string>> UsersEmail();

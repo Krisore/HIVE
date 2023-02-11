@@ -9,8 +9,9 @@ namespace HIVE.Client.Services.Interface
         List<string?> Emails { get; set; }
         UserRegisterRequest UserRequest { get; set; }
         List<UserRegisterRequest> Users { get; set; }
-        User User { get; set; }
+        List<User> UsersCount { get; set; }
         Task<User> MyAccount(string email);
+        Task<List<User>> GetUserCount();
         Task<HttpResponseMessage> UpdateUserAccount(int id, UserRegisterRequest user);
         Task<HttpResponseMessage> Login(LoginRequest request);
         Task<HttpResponseMessage> RegisterAsync(UserRegisterRequest request);

@@ -20,7 +20,17 @@ namespace HIVE.Server.Repository
             _context = context;
             _fileManager = fileManager;
         }
-
+        public async Task<List<Document>> GetDocumentsForArchivist()
+        {
+            var response = await _context.Documents.Where(d => d.IsArchived == false && d.IsDeleted == false)
+                .Include(a => a.Adviser)
+                .Include(t => t.Topics)
+                .Include(a => a.Curriculum)
+                .Include(d => d.Reference)
+                .Include(a => a.Authors)
+                .ToListAsync();
+            return response;
+        }
         public UploadDocumentRequest DataTransferObjectDocument { get; set; }
 
         public async Task<Document> GetDocumentAsyncById(int id)

@@ -1,0 +1,91 @@
+﻿@using System.Globalization
+@using MudBlazor
+@using System.Linq
+@using System.Linq.Expressions
+@inject IFileService FileService
+@inject IDocumentService DocumentService
+@inject ICurriculumService CurriculumService
+
+<MudGrid Spacing="3" Justify="Justify.FlexStart">
+    <MudItem sm="3">
+        <MudCard Class="mb-4">
+            <MudChart Class="mx-4" ChartType="ChartType.Donut" Width="200px" Height="300px" InputData="@_data.ToArray()" InputLabels="@_labels.ToArray()" LegendPosition="Position.Bottom">
+                <CustomGraphics>
+                    <text class="donut-inner-text align-center justify-center" x="50%" y="40%" dominant-baseline="middle" text-anchor="middle" fill="gray" font-family="Poppins" font-size="2"> Total Active Document :</text>
+                    <text class="donut-inner-text" x="50%" y="55%" dominant-baseline="middle" text-anchor="middle" fill="gray" font-family="Poppins" font-size="6">
+                        @_data.Sum().ToString(CultureInfo.InvariantCulture)
+                    </text>
+                </CustomGraphics>
+            </MudChart>
+        </MudCard>
+    </MudItem>
+    <MudItem sm="3">
+        <div>
+            <MudChart ChartOptions="options" ChartType="ChartType.Line" LegendPosition="Position.Top"
+                      ChartSeries="@Series"
+                      XAxisLabels="@XAxisLabels"
+                      Width="200%" Height="350" />
+        </div>
+    </MudItem>
+</MudGrid>
+@code {
+    //TODO: Line Chart
+    private ChartOptions options = new();
+    private List<ChartSeries> Series = new();
+    private readonly string[] XAxisLabels = { "2015", "2016", "2017", "2018", "2019", "2021", "2022", "2023" };
+    //TODO: Do nut Chart
+    List<string> _labels = new();
+    List<double> _data = new();
+    private bool _hidePosition;
+    private bool _loading;
+    private IEnumerable<FileEntry> _files = new List<FileEntry>();
+    private IEnumerable<Document> _documents = new List<Document>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var label = new List<string>();
+        var data = new List<double>();
+        _files = await FileService.GetAllFiles();
+        _documents = await DocumentService.GetDocumentsForArchivistAsync();
+        _documents = _documents.Where(d => d.IsActive);
+        var _program = await CurriculumService.GetProgramsAsync();
+        var size = _program.Select(p => p.Alt).Distinct().Count();
+        foreach (var document in _documents.Select(d => d.Curriculum.Alt).Distinct())
+        {
+            label.Add(document);
+            var count = double.Parse(_documents.Count(d => d.Curriculum.Alt.Contains(document, StringComparison.OrdinalIgnoreCase)).ToString());
+            data.Add(count);
+        }
+        //TODO: Chart
+        _data = data;
+        _labels = label;
+        //TODO: Line Graph
+        List<double> datas = new List<double>();
+        foreach (var curriculum in _documents.Select(d => d.Curriculum.Alt).Distinct())
+        {
+            foreach (var xaxis in XAxisLabels)
+            {
+                double count = _documents.Count(d => d.DatePublished != null && d.DatePublished.Value.Year.ToString().Equals(xaxis) && d.Curriculum.Alt.Equals(curriculum));
+                if (count > 0)
+                {
+                    datas.Add(count);
+                }
+                else
+                {
+                    datas.Add(0);
+                }
+            }
+            Series.Add(new ChartSeries
+                {
+                    Name = curriculum,
+                    Data = datas.ToArray()
+                });
+            datas.Clear();
+        }
+        options.InterpolationOption = InterpolationOption.EndSlope;
+    }
+
+
+
+
+}

@@ -108,5 +108,23 @@ namespace HIVE.Server.Controllers
             var emails = await _userService.UsersEmail();
             return Ok(emails);
         }
+
+        //TODO: Call USERS || Done ✔️
+        [HttpGet]
+        [Route("count")]
+        [Authorize(Roles = "Administrator")]
+        public async Task<ActionResult<List<User>>> GetUsers()
+        {
+            try
+            {
+                var response = await _userService.GetUsers();
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"{ex.Message}");
+                throw;
+            }
+        }
     }
 }

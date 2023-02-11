@@ -1,0 +1,107 @@
+﻿@using Microsoft.AspNetCore.Authorization
+@layout ArchivistLayout
+@inject IUserService UserService
+@inject IDocumentService DocumentService
+@attribute [Authorize(Roles = "Administrator")]
+
+<MudGrid Spacing="1" Justify="Justify.FlexStart">
+    <MudItem sm="3">
+        <a href="/users">
+            <MudCard Elevation="1">
+                <MudCardHeader>
+                    <CardHeaderAvatar>
+                        <MudIcon Icon="fas fa-users" Size="Size.Large" Color="Color.Primary" />
+                    </CardHeaderAvatar>
+                    <CardHeaderContent>
+                        <div class="d-flex block">
+                            <MudChip Color="Color.Primary" Label="true" Variant="Variant.Text" Size="Size.Medium">
+                                <code>
+                                    Users @_users.Count(u => u.Role.Equals("User"))
+
+                                </code>
+                            </MudChip>
+                            <MudChip Color="Color.Primary" Label="true" Variant="Variant.Text" Size="Size.Medium">
+                                <code>
+                                    Archivist @_users.Count(u => u.Role.Equals("Administrator"))
+                                </code>
+                            </MudChip>
+                        </div>
+                    </CardHeaderContent>
+                </MudCardHeader>
+            </MudCard>
+        </a>
+    </MudItem>
+    <MudItem sm="3">
+        <a href="/documents">
+            <MudCard Elevation="1">
+                <MudCardHeader>
+                    <CardHeaderAvatar>
+                        <MudIcon Icon="fas fa-book" Size="Size.Large" Color="Color.Primary" />
+                    </CardHeaderAvatar>
+                    <CardHeaderContent>
+                        <MudChip Color="Color.Primary" Variant="Variant.Text" Label="true" Size="Size.Medium">
+                            <code>
+                                Total  Document @_documents.Count()
+                            </code>
+                        </MudChip>
+                    </CardHeaderContent>
+                </MudCardHeader>
+            </MudCard>
+        </a>
+    </MudItem>
+    <MudItem sm="3">
+        <a href="/archives">
+            <MudCard Elevation="1">
+                <MudCardHeader>
+                    <CardHeaderAvatar>
+                        <MudIcon Icon="fas fa-archive" Size="Size.Large" Color="Color.Primary" />
+                    </CardHeaderAvatar>
+                    <CardHeaderContent>
+                        <MudChip Color="Color.Primary" Variant="Variant.Text" Label="true" Size="Size.Medium">
+                            <code>
+                                Total Archive @_totalArchive
+                            </code>
+                        </MudChip>
+                    </CardHeaderContent>
+                </MudCardHeader>
+            </MudCard>
+        </a>
+    </MudItem>
+    <MudItem sm="3">
+        <a href="/reviews">
+            <MudCard Elevation="1">
+                <MudCardHeader>
+                    <CardHeaderAvatar>
+                        <MudIcon Icon="fas fa-bell" Size="Size.Large" Color="Color.Primary" />
+                    </CardHeaderAvatar>
+                    <CardHeaderContent>
+                        <MudChip Color="Color.Primary" Variant="Variant.Text" Label="true" Size="Size.Medium">
+                            <code>
+                                To review
+                                @if (_documents.Count > 0)
+                                {
+                                    @_documents.Count(d => d.ToReview == true)
+                                }
+                            </code>
+                        </MudChip>
+                    </CardHeaderContent>
+                </MudCardHeader>
+            </MudCard>
+        </a>
+    </MudItem>
+</MudGrid>
+@code {
+    private int _totalUser;
+    private int _totalArchivist;
+    private List<User> _users = new();
+    private List<Document>? _documents = new();
+    private List<Document>? _archiveDocuments = new();
+    private int _totalArchive;
+    protected override async Task OnInitializedAsync()
+    {
+        _users = await UserService.GetUserCount();
+        _documents = await DocumentService.GetDocumentsForArchivistAsync();
+        //_archiveDocuments = await DocumentService.GetArchivedDocuments();
+        //if (_archiveDocuments != null) _totalArchive = _archiveDocuments.Count();
+    }
+}

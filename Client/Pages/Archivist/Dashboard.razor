@@ -1,0 +1,15 @@
+﻿@page "/dashboard"
+@layout ArchivistLayout
+<PageTitle> Dashboard </PageTitle>
+<MudContainer MaxWidth="MaxWidth.ExtraExtraLarge">
+    <MudChip Class="my-3" Icon="@Icons.Material.Filled.Topic" Label="true" Color="Color.Primary"> Total Summary </MudChip>
+    <MudDivider Class="my-1" DividerType="DividerType.Middle"/>
+    <SummaryCardComponent/>
+    <MudDivider Class="my-3" DividerType="DividerType.FullWidth"/>
+    <div class="my-2 d-block flex justify-center align-center">
+        <MudChip Icon="@Icons.Material.Filled.FilePresent" Label="true" Color="Color.Primary"> File's Summary </MudChip>
+        <MudDivider Class="my-3" DividerType="DividerType.Middle"/>
+        <FilesGraphSummary/>
+    </div>
+    <MudDivider Class="my-2" DividerType="DividerType.Middle"/>
+</MudContainer>
