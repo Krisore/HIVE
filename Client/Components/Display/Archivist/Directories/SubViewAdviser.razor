@@ -1,0 +1,204 @@
+﻿@using HIVE.Client.Components.Diaolog.CurriculumDialog
+@using HIVE.Client.Components.Diaolog.AdviserDialog
+
+@inject ICurriculumService CurriculumService
+@inject IAdviserService AdviserService
+@inject IDocumentService DocumentService
+@inject IFileService FileService
+@inject IDialogService DialogService
+@inject ISnackbar Snack
+@inject NavigationManager NavigationManager
+<MudTable @ref="_table"
+          ServerData="@(new Func<TableState, Task<TableData<Adviser>>>(ServerReload))"
+          Dense="true"
+          Bordered="false"
+          MultiSelection="true" @bind-SelectedItems="_selectedItems"
+          Hover="true">
+    <ToolBarContent>
+        <MudTextField T="string" ValueChanged="@(OnSearch)"
+                      Placeholder="Search" Adornment="Adornment.Start"
+                      Variant="Variant.Outlined" Margin="Margin.Dense"
+                      AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0" />
+        @if (!string.IsNullOrWhiteSpace(_searchTerm))
+        {
+            <MudChip Label="true" Variant="Variant.Text" Color="Color.Info" Size="Size.Large" Class="rounded-0">
+                result: @_searchTerm (@_table.GetFilteredItemsCount())
+            </MudChip>
+        }
+        <MudSpacer />
+        <MudTooltip Text="Reload" Arrow="true">
+            <MudIconButton Icon="@Icons.Material.Rounded.Sync" OnClick="@(() => _table.ReloadServerData())"></MudIconButton>
+        </MudTooltip>
+        <MudText>
+            <MudChip Class="rounded-0" IconColor="Color.Primary" Variant="Variant.Outlined" Label="true">
+                Selected Curriculum:<MudChip Size="Size.Small"> @_selectedItems.Count </MudChip>
+            </MudChip>
+        </MudText>
+        <MudTooltip Text="Add" Arrow="true">
+            <MudIconButton Icon="@Icons.Material.Outlined.Add" Color="Color.Success" OnClick="AddCurriculum" />
+        </MudTooltip>
+        <MudTooltip Text="Delete" Arrow="true">
+            <MudIconButton Icon="@Icons.Material.Outlined.Remove" Color="Color.Error" OnClick="DeleteCurriculum" />
+        </MudTooltip>
+    </ToolBarContent>
+    <HeaderContent>
+        <MudTh></MudTh>
+        <MudTh><MudTableSortLabel SortLabel="name" T="Adviser"> Name </MudTableSortLabel></MudTh>
+        <MudTh> <MudTableSortLabel SortLabel="email" T="Adviser"> Email </MudTableSortLabel></MudTh>
+        <MudTh>Total Documents</MudTh>
+        <MudTh></MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd>
+            <MudButton Class="rounded-0" Size="Size.Small" Variant="Variant.Outlined" OnClick="@(() => ShowBtnPress(context.Id))">  🗃️@((context.ShowDocuments == true) ? "Hide" : "Show")</MudButton>
+            </MudTd>
+            <MudTd DataLabel="Name"> @context.Name </MudTd>
+            <MudTd DataLabel="Email"><MudChip Label="true" Variant="Variant.Text" Color="Color.Primary" Class="rounded-0">@context.Email</MudChip></MudTd>
+            <MudTd>
+                @if (_documents != null)
+            {
+                <MudChip Variant="Variant.Text" Size="Size.Large" Color="Color.Error"> @_documents.Count(d => d.Curriculum.Id == context.Id)</MudChip>
+            }
+        </MudTd>
+        <MudTd>
+            <MudTooltip Text="Edit" Arrow="true">
+                <MudIconButton Icon="@Icons.Material.Outlined.Edit" OnClick="@(() => EditCurriculumAsync(context.Id))" />
+            </MudTooltip>
+        </MudTd>
+    </RowTemplate>
+    <NoRecordsContent>
+        <MudText>No matching records found</MudText>
+    </NoRecordsContent>
+    <LoadingContent>
+        <MudText>Loading...</MudText>
+    </LoadingContent>
+    <PagerContent>
+        <MudTablePager />
+    </PagerContent>
+    <ChildRowContent>
+        @if (context.ShowDocuments)
+        {
+            <MudTr>
+                <td colspan="6">
+                    <MudCard Elevation="0">
+                        <MudCardHeader>
+                            <CardHeaderAvatar>
+                                <MudAvatar Elevation="2" Size="Size.Large" Image="/image/Pup_logo.jpg"></MudAvatar>
+                            </CardHeaderAvatar>
+                            <CardHeaderContent>
+                                <MudText Typo="Typo.body2"> @context.Name </MudText>
+                                <MudChip Label="true" Variant="Variant.Text"> @context.Email</MudChip>
+                            </CardHeaderContent>
+                            <CardHeaderActions>
+                                <MudChip Label="true" IconColor="Color.Success" Size="Size.Medium" Icon="@Icons.Custom.FileFormats.FileExcel">
+                                    Generate report
+                                </MudChip>
+                            </CardHeaderActions>
+                        </MudCardHeader>
+                        <MudDivider />
+                        <MudCardContent>
+                            <SubViewDocuments Role="@_role" AdviserId="context.Id" />
+                        </MudCardContent>
+                    </MudCard>
+                </td>
+            </MudTr>
+        }
+    </ChildRowContent>
+
+</MudTable>
+@code {
+    string _role = "Adviser";
+    string _searchTerm = string.Empty;
+    private IEnumerable<Adviser> _advisers;
+    private MudTable<Adviser> _table;
+    private HashSet<Adviser> _selectedItems = new();
+    private List<Document>? _documents;
+    private int _totalItems = 0;
+    private IEnumerable<Adviser>? _pagedData;
+    private List<string> _errors = new();
+    private async Task<TableData<Adviser>> ServerReload(TableState state)
+    {
+        _advisers = await AdviserService.GetAdvisersAsync();
+        _documents = await DocumentService.GetDocumentsForArchivistAsync();
+        await Task.Delay(300);
+        _advisers = _advisers.Where(adviser =>
+        {
+            if (string.IsNullOrWhiteSpace(_searchTerm))
+                return true;
+            if (adviser.Name.Contains(_searchTerm, StringComparison.OrdinalIgnoreCase))
+                return true;
+            return adviser.Email.Contains(_searchTerm, StringComparison.OrdinalIgnoreCase);
+        }).ToArray();
+        _totalItems = _advisers.Count();
+
+        _advisers = state.SortLabel switch
+        {
+            "name" => _advisers.OrderByDirection(state.SortDirection, o => o.Name),
+            "alt" => _advisers.OrderByDirection(state.SortDirection, o => o.Email),
+            _ => _advisers
+        };
+
+        _pagedData = _advisers.Skip(state.Page * state.PageSize).Take(state.PageSize).ToArray();
+        return new TableData<Adviser>() { TotalItems = _totalItems, Items = _pagedData };
+    }
+
+    private void OnSearch(string text)
+    {
+        _searchTerm = text;
+        _table.ReloadServerData();
+    }
+
+    private void ShowBtnPress(int nr)
+    {
+        var program = _advisers.First(a => a.Id == nr);
+        program.ShowDocuments = !program.ShowDocuments;
+    }
+
+    private async void EditCurriculumAsync(int id )
+    {
+        var parameter = new DialogParameters
+            {
+                ["AdviserId"] = id,
+            };
+        var dialog = await DialogService.ShowAsync<AddAdviserDialog>("Edit Adviser?", parameter);
+        var result = await dialog.Result;
+        if (!result.Canceled)
+        {
+            await _table.ReloadServerData();
+        }
+        _errors.Clear();
+    }
+
+    private async void AddCurriculum()
+    {
+        var dialog = await DialogService.ShowAsync<AddAdviserDialog>("Add Adviser?");
+        var result = await dialog.Result;
+        if (!result.Canceled)
+        {
+            await _table.ReloadServerData();
+        }
+        await _table.ReloadServerData();
+        _errors.Clear();
+    }
+
+    private async void DeleteCurriculum()
+    {
+        var parameter = new DialogParameters
+            {
+                ["Advisers"] = _selectedItems
+            };
+        var dialog = await DialogService.ShowAsync<DeleteAdviserDialog>("Delete this Selected Adviser?", parameter);
+        var result = await dialog.Result;
+        if (!result.Canceled)
+        {
+            await _table.ReloadServerData();
+        }
+        _errors.Clear();
+    }
+
+    private void Reload()
+    {
+        _table.ReloadServerData();
+    }
+
+}

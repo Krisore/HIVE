@@ -1,0 +1,18 @@
+﻿@page "/users"
+@inject IDocumentService DocumentService
+@layout ArchivistLayout
+<PageTitle> Archivist | Users 👥</PageTitle>
+<MudContainer>
+    <MudTabs>
+        <MudTabPanel Text="Student" Icon="@Icons.Material.Filled.AttachFile">
+            <SubViewUser/>
+        </MudTabPanel>
+        <MudTabPanel Text="Admin" Icon="@Icons.Material.Filled.Reviews">
+        </MudTabPanel>
+    </MudTabs>
+</MudContainer>
+
+@code {
+   
+
+}

@@ -1,0 +1,24 @@
+﻿@page "/curriculum"
+@using Microsoft.AspNetCore.Authorization
+@layout ArchivistLayout
+@attribute [Authorize(Roles = "Administrator")]
+<PageTitle></PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.ExtraExtraLarge" Class="my-12">
+    <MudTabs Outlined="false" Centered="false">
+        <MudTabPanel Text="Program" Icon="@Icons.Material.Filled.Apartment">
+            <SubViewCurriculum/>
+        </MudTabPanel>
+        <MudTabPanel Text="Adviser" Icon="@Icons.Material.Filled.SupervisorAccount">
+            <SubViewAdviser/>
+        </MudTabPanel>
+        <MudTabPanel Text="Author" Icon="@Icons.Material.Filled.People">
+            <ViewAuthorInServer/>
+        </MudTabPanel>
+    </MudTabs>
+</MudContainer>
+
+
+@code {
+
+}

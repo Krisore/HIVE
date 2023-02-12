@@ -7,6 +7,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Content Remove="Components\Display\Archivist\Directories\SubViewAuthor.razor" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Blazored.SessionStorage" Version="2.3.0" />
     <PackageReference Include="Microsoft.AspNetCore.Components.Authorization" Version="7.0.2" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="7.0.2" />
@@ -21,7 +25,20 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="Components\Diaolog\UserDialog\" />
     <Folder Include="Components\Forms\EditForm\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <UpToDateCheckInput Remove="Components\Display\Archivist\Directories\SubViewAuthor.razor" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <_ContentIncludedByDefault Remove="Components\Display\Archivist\Directories\SubViewAuthor.razor" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="Components\Display\Archivist\Directories\SubViewAuthor.razor" />
   </ItemGroup>
 
 </Project>

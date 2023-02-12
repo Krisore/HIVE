@@ -1,91 +1,84 @@
 ﻿@using System.Globalization
-@using MudBlazor
 @using System.Linq
 @using System.Linq.Expressions
 @inject IFileService FileService
 @inject IDocumentService DocumentService
 @inject ICurriculumService CurriculumService
+<link href="https://use.fontawesome.com/releases/v5.14.0/css/all.css" rel="stylesheet">
 
 <MudGrid Spacing="3" Justify="Justify.FlexStart">
     <MudItem sm="3">
-        <MudCard Class="mb-4">
-            <MudChart Class="mx-4" ChartType="ChartType.Donut" Width="200px" Height="300px" InputData="@_data.ToArray()" InputLabels="@_labels.ToArray()" LegendPosition="Position.Bottom">
-                <CustomGraphics>
-                    <text class="donut-inner-text align-center justify-center" x="50%" y="40%" dominant-baseline="middle" text-anchor="middle" fill="gray" font-family="Poppins" font-size="2"> Total Active Document :</text>
-                    <text class="donut-inner-text" x="50%" y="55%" dominant-baseline="middle" text-anchor="middle" fill="gray" font-family="Poppins" font-size="6">
-                        @_data.Sum().ToString(CultureInfo.InvariantCulture)
-                    </text>
-                </CustomGraphics>
-            </MudChart>
-        </MudCard>
+        <MudChart Class="mx-4" ChartType="ChartType.Donut" Width="200px" Height="300px" InputData="@_data.ToArray()" InputLabels="@_labels.ToArray()" LegendPosition="Position.Bottom">
+            <CustomGraphics>
+                <text class="donut-inner-text align-center justify-center" x="50%" y="40%" dominant-baseline="middle" text-anchor="middle" fill="gray" font-family="Poppins" font-size="2"> Total Active Document :</text>
+                <text class="donut-inner-text" x="50%" y="55%" dominant-baseline="middle" text-anchor="middle" fill="gray" font-family="Poppins" font-size="6">
+                    @_data.Sum().ToString(CultureInfo.InvariantCulture)
+                </text>
+            </CustomGraphics>
+        </MudChart>
     </MudItem>
     <MudItem sm="3">
         <div>
-            <MudChart ChartOptions="options" ChartType="ChartType.Line" LegendPosition="Position.Top"
-                      ChartSeries="@Series"
-                      XAxisLabels="@XAxisLabels"
+            <MudChart ChartOptions="_options" ChartType="ChartType.Line" LegendPosition="Position.Top"
+                      ChartSeries="@_series"
+                      XAxisLabels="@_xAxisLabels"
                       Width="200%" Height="350" />
         </div>
     </MudItem>
 </MudGrid>
 @code {
-    //TODO: Line Chart
-    private ChartOptions options = new();
-    private List<ChartSeries> Series = new();
-    private readonly string[] XAxisLabels = { "2015", "2016", "2017", "2018", "2019", "2021", "2022", "2023" };
-    //TODO: Do nut Chart
+
     List<string> _labels = new();
     List<double> _data = new();
-    private bool _hidePosition;
-    private bool _loading;
-    private IEnumerable<FileEntry> _files = new List<FileEntry>();
-    private IEnumerable<Document> _documents = new List<Document>();
+    private List<ChartSeries> _series = new();
+    private List<Document> _documents = new ();
+    private ChartOptions _options = new();
+    private readonly string[] _xAxisLabels = { "2015", "2016", "2017", "2018", "2019", "2021", "2022", "2023" };
 
     protected override async Task OnInitializedAsync()
     {
-        var label = new List<string>();
-        var data = new List<double>();
-        _files = await FileService.GetAllFiles();
         _documents = await DocumentService.GetDocumentsForArchivistAsync();
-        _documents = _documents.Where(d => d.IsActive);
-        var _program = await CurriculumService.GetProgramsAsync();
-        var size = _program.Select(p => p.Alt).Distinct().Count();
-        foreach (var document in _documents.Select(d => d.Curriculum.Alt).Distinct())
+        DoChart(_documents);
+        DoLineGraph(_documents);
+    }
+
+    private  void DoChart(List<Document> documents )
+    {
+        if (!documents.Any()) return;
+        foreach (var course in documents.Select(d => d.Curriculum.Alt).Distinct())
         {
-            label.Add(document);
-            var count = double.Parse(_documents.Count(d => d.Curriculum.Alt.Contains(document, StringComparison.OrdinalIgnoreCase)).ToString());
-            data.Add(count);
+            if (string.IsNullOrEmpty(course)) continue;
+            _labels.Add(course);
+            _data.Add(documents.Count(d => d.Curriculum.Alt.Contains(course, StringComparison.OrdinalIgnoreCase)));
         }
-        //TODO: Chart
-        _data = data;
-        _labels = label;
-        //TODO: Line Graph
-        List<double> datas = new List<double>();
-        foreach (var curriculum in _documents.Select(d => d.Curriculum.Alt).Distinct())
+
+    }
+
+    private void DoLineGraph(List<Document> documents)
+    {
+        List<double> totalCount = new List<double>();
+        foreach (var curriculum in documents.Select(d => d.Curriculum.Alt).Distinct())
         {
-            foreach (var xaxis in XAxisLabels)
+            foreach (var axis in _xAxisLabels)
             {
-                double count = _documents.Count(d => d.DatePublished != null && d.DatePublished.Value.Year.ToString().Equals(xaxis) && d.Curriculum.Alt.Equals(curriculum));
+                double count = documents.Count(d => d.DatePublished != null && d.DatePublished.Value.Year.ToString().Equals(axis) && d.Curriculum.Alt.Equals(curriculum));
                 if (count > 0)
                 {
-                    datas.Add(count);
+                    totalCount.Add(count);
                 }
                 else
                 {
-                    datas.Add(0);
+                    totalCount.Add(0);
                 }
             }
-            Series.Add(new ChartSeries
+            _series.Add(new ChartSeries
                 {
                     Name = curriculum,
-                    Data = datas.ToArray()
+                    Data = totalCount.ToArray()
                 });
-            datas.Clear();
+            totalCount.Clear();
         }
-        options.InterpolationOption = InterpolationOption.EndSlope;
+        _options.InterpolationOption = InterpolationOption.EndSlope;
+
     }
-
-
-
-
 }

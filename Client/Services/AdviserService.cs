@@ -39,5 +39,25 @@ namespace HIVE.Client.Services
             }
             return Advisers;
         }
+
+        public async Task<HttpResponseMessage> AddAdviserAsync(Adviser adviser)
+        {
+            var response = await _client.PostAsJsonAsync($"api/Adviser", adviser);
+            return response;
+        }
+
+
+        public async Task<HttpResponseMessage> DeleteAdviserAsync(int adviserId)
+        {
+            var result = await _client.DeleteAsync($"api/Adviser/{adviserId}");
+            return result;
+        }
+
+        public async Task<HttpResponseMessage> UpdateAdviserAsync(Adviser adviser)
+        {
+            var request = await _client.PutAsJsonAsync($"api/Adviser/{adviser.Id}", adviser);
+            return request;
+        }
+
     }
 }

@@ -1,0 +1,29 @@
+﻿<MudNavMenu Color="Color.Primary" Bordered="true" Dense="true" Margin="Margin.Dense">
+    <MudNavLink Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Rounded.Dashboard" Href="/dashboard" IconColor="Color.Primary"> Dashboard </MudNavLink>
+    <MudNavGroup Title="Directories" Icon="@Icons.Material.Rounded.Storage" IconColor="Color.Primary">
+        <MudNavLink Match="NavLinkMatch.Prefix"
+                    Icon="@Icons.Material.Rounded.FilePresent"
+                    Href="/documents"> Documents </MudNavLink>
+        <MudNavLink Match="NavLinkMatch.Prefix"
+                    Icon="@Icons.Material.Rounded.School"
+                    Href="/curriculum"> Curriculum </MudNavLink>
+        <MudNavLink Match="NavLinkMatch.Prefix"
+                    Icon="@Icons.Material.Rounded.Category"
+                    Href="/category" Disabled="false"> Category </MudNavLink>
+    </MudNavGroup>
+</MudNavMenu>
+<MudNavMenu Rounded="true" Margin="Margin.Dense" Dense="true" Color="Color.Primary" Class="pa-2">
+    <MudDivider Class="my-2" />
+    <MudNavLink Icon="@Icons.Material.Rounded.SupervisedUserCircle" Href="/users">Users</MudNavLink>
+    <MudNavLink Icon="@Icons.Material.Filled.Notes" Disabled="false" Href="/logs"> Logs </MudNavLink>
+
+    <MudDivider Class="my-2" />
+    <MudNavLink Icon="@Icons.Material.Filled.Archive" Href="/archives"> Archived </MudNavLink>
+    <MudNavLink Icon="@Icons.Material.Filled.Delete" Href="/trash"> Trash </MudNavLink>
+</MudNavMenu>
+
+@code {
+    public string SelectedValue { get; set; }
+    bool folderOneExpanded;
+    bool folderTwoExpanded;
+}

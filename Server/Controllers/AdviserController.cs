@@ -36,6 +36,27 @@ namespace HIVE.Server.Controllers
             var advisers = await _adviserService.GetAllAdviserAsync();
             return Ok(advisers);
         }
+        //TODO: Functions that ADD Adviser in Archivist / Student Done ✔️
+        [HttpPost]
+        public async Task<ActionResult<Adviser>> AddAdviserAsync(Adviser adviser)
+        {
+            var result = await _adviserService.AddAdviserAsync(adviser);
+            return Ok(adviser);
+
+        }
+        [HttpPut("{id:int}")]
+        public async Task<ActionResult> EditAdviserAsync(int id, Adviser adviser)
+        {
+           await _adviserService.EditAdviserAsync(id, adviser);
+            return Ok();
+        }
+        //TODO: Functions that DELETE the Adviser || Done ✔️
+        [HttpDelete("{adviserId:int}")]
+        public async Task<ActionResult> DeleteAdviserAsync(int adviserId)
+        {
+           await _adviserService.DeleteAdviserAsync(adviserId);
+            return Ok();
+        }
 
     }
 }

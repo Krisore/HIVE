@@ -1,0 +1,134 @@
+﻿
+@inject ICurriculumService CurriculumService
+@inject IActivityLog ActivityLog
+@inject ISnackbar Snack
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<MudForm Model="@_curriculum">
+    <MudCardContent>
+        <MudTextField @bind-Value="@_curriculum.Name"
+                      T="string"
+                      Class="my-2"
+                      AdornmentIcon="@Icons.Material.Filled.Title"
+                      Adornment="Adornment.End"
+                      Margin="Margin.Dense"
+                      IconSize="Size.Small"
+                      Immediate="true"
+                      Variant="Variant.Outlined"
+                      Label="Name"
+                      Required="true"
+                      RequiredError="Adviser name is required!">
+        </MudTextField>
+        <MudTextField @bind-Value="@_curriculum.Alt"
+                      T="string"
+                      Class="my-2"
+                      AdornmentIcon="@Icons.Material.Filled.Abc"
+                      Adornment="Adornment.End"
+                      Margin="Margin.Dense"
+                      IconSize="Size.Small"
+                      Immediate="true"
+                      Variant="Variant.Outlined"
+                      Label="Acronym"
+                      Required="true"
+                      RequiredError="Adviser name is required!">
+        </MudTextField>
+    </MudCardContent>
+    <MudDivider DividerType="DividerType.FullWidth" />
+    <MudCardActions>
+        <div class="ml-auto ">
+            <MudButton Variant="Variant.Outlined"
+                       Color="Color.Inherit"
+                       Size="Size.Medium"
+                       Class="rounded-0"
+                       OnClick="Cancel">
+                Cancel
+            </MudButton>
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       Size="Size.Medium"
+                       Class="rounded-0"
+                       OnClick="OnHandleSubmit">
+                @(CurriculumId is not 0 ? "Edit" : "Add")
+            </MudButton>
+        </div>
+    </MudCardActions>
+</MudForm>
+@code {
+    [CascadingParameter] public MudDialogInstance Dialog { get; set; }
+    [CascadingParameter]
+    Task<AuthenticationState>? Authenticate { get; set; }
+    [Parameter] public string? Username { get; set; }
+    [Parameter] public int CurriculumId { get; set; } = new();
+    private Curriculum _curriculum = new();
+    private string? Actor { get; set; }
+    private string? Role { get; set; }
+    protected override async Task OnParametersSetAsync()
+    {
+        if (CurriculumId is not 0)
+        {
+            var response = await CurriculumService.GetCurriculumById(CurriculumId);
+            _curriculum = response;
+        }
+        var customAuthStateProvider = (CustomAuthenticationStateProvider)AuthenticationStateProvider;
+        Authenticate = customAuthStateProvider.GetAuthenticationStateAsync();
+        if (Authenticate != null)
+        {
+            var account = await Authenticate;
+            if (account.User.Identity?.Name != null)
+            {
+                Actor = account.User.Identity.Name;
+                Role = account.User.IsInRole("Administrator") ? "Administrator" : "User";
+            }
+        }
+    }
+
+    private async Task OnHandleSubmit()
+    {
+        if (CurriculumId is not 0)
+        {
+            var response = await CurriculumService.UpdateAcademicProgram(_curriculum);
+            if (response.IsSuccessStatusCode)
+            {
+                var log = await ActivityLog.WriteLog($"{Actor}", $"Add a curriculum name: [{_curriculum.Name}]", "INSERT", $"{Role}");
+                if (log.IsSuccessStatusCode)
+                {
+                    Snack.Add("Curriculum  Edited", Severity.Info);
+                    Dialog.Close(DialogResult.Ok(true));
+                }
+
+            }
+            Dialog.Close(DialogResult.Ok(true));
+        }
+        else
+        {
+            bool valid = await IsValidAsync();
+            if (!valid)
+            {
+                var response = await CurriculumService.AddCurriculum(_curriculum); // Make it this to update
+                if (response.IsSuccessStatusCode)
+                {
+                    var log = await ActivityLog.WriteLog($"{Actor}", $"Add a curriculum name: [{_curriculum.Name}]", "INSERT", $"{Role}");
+                    if (log.IsSuccessStatusCode)
+                    {
+                        Snack.Add("Curriculum program added", Severity.Success);
+                        Dialog.Close(DialogResult.Ok(true));
+                    }
+                }
+            }
+            else
+            {
+                Snack.Add("Error Curriculum already exist", Severity.Error);
+                Dialog.Close(DialogResult.Ok(true));
+            }
+        }
+    }
+
+    void Cancel() => Dialog.Cancel();
+
+    private async Task<bool> IsValidAsync()
+    {
+        var programs = await CurriculumService.GetProgramsAsync();
+        return programs.Any(c => c.Name.ToLower().Equals(_curriculum.Name.ToLower()) 
+                                 || c.Alt.ToLower().Equals(_curriculum.Alt.ToLower()));
+    }
+}

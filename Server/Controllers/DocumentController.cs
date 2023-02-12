@@ -18,8 +18,9 @@ namespace HIVE.Server.Controllers
         {
             _repository = repository;
         }
-        public Document Document { get; set; }
-        public List<Document> Documents { get; set; } = new List<Document>();
+
+        private Document Document { get; set; } = new();
+        private List<Document> Documents { get; set; } = new();
         [HttpGet]
         public async Task<ActionResult<List<Document>>> GetDocumentsAsync()
         {
@@ -82,15 +83,14 @@ namespace HIVE.Server.Controllers
         public async Task<ActionResult<UserRegisterRequest>> GetDocumentByDataTransferAsync(int id)
         {
             var response = await _repository.GetDocumentDataTransferAsync(id);
-            if (response == null) throw new ArgumentNullException(nameof(response));
             return Ok(response);
         }
 
         [HttpGet]
         [Route("archivist")]
+        [Authorize(Roles = "Administrator")]
         public async Task<ActionResult<List<Document>>> GetDocumentsForArchivist()
         {
-            //TODO: GET ARCHIVIST DOCUMENT || Done ✔️
             try
             {
                 var result = await _repository.GetDocumentsForArchivist();
@@ -102,6 +102,41 @@ namespace HIVE.Server.Controllers
                 throw;
             }
 
+        }
+        [HttpGet]
+        [Route("archivist/document/archived/{id:int}")]
+        public async Task<ActionResult> ArchiveDocument(int id)
+        {
+            await _repository.ArchiveDocument(id);
+            return Ok();
+        }
+        [HttpGet]
+        [Route("archivist/document/trash/{id:int}")]
+        public async Task<ActionResult> MoveToTrash(int id)
+        {
+            await _repository.MoveToTrashAsync(id);
+            return Ok();
+        }
+        [HttpGet]
+        [Route("archivist/document/unarchived/{id:int}")]
+        public async Task<ActionResult> UnArchiveDocument(int id)
+        {
+            await _repository.UnArchiveDocument(id);
+            return Ok();
+        }
+        [HttpGet]
+        [Route("archivist/document/trash/restore/{id:int}")]
+        public async Task<ActionResult> Restore(int id)
+        {
+            await _repository.RestoreDocument(id);
+            return Ok();
+        }
+        [HttpGet]
+        [Route("archivist/document/update/review/{id:int}")]
+        public async Task<ActionResult> UpdateStatusAsync(int id)
+        {
+            await _repository.UpdateDocumentStatus(id);
+            return Ok();
         }
     }
 }

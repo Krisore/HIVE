@@ -1,0 +1,133 @@
+﻿@inject IAdviserService AdviserService
+@inject IActivityLog ActivityLog
+@inject ISnackbar Snack
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<MudForm Model="@_adviser">
+    <MudCardContent>
+        <MudTextField @bind-Value="@_adviser.Name"
+                      T="string"
+                      Class="my-2"
+                      AdornmentIcon="@Icons.Material.Filled.Title"
+                      Adornment="Adornment.End"
+                      Margin="Margin.Dense"
+                      IconSize="Size.Small"
+                      Immediate="true"
+                      Variant="Variant.Outlined"
+                      Label="Name"
+                      Required="true"
+                      RequiredError="Adviser name is required!">
+        </MudTextField>
+        <MudTextField @bind-Value="@_adviser.Email"
+                      T="string"
+                      Class="my-2"
+                      AdornmentIcon="@Icons.Material.Filled.Abc"
+                      Adornment="Adornment.End"
+                      Margin="Margin.Dense"
+                      IconSize="Size.Small"
+                      Immediate="true"
+                      Variant="Variant.Outlined"
+                      Label="Email"
+                      Required="true"
+                      RequiredError="Adviser name is required!">
+        </MudTextField>
+    </MudCardContent>
+    <MudDivider DividerType="DividerType.FullWidth" />
+    <MudCardActions>
+        <div class="ml-auto ">
+            <MudButton Variant="Variant.Outlined"
+                       Color="Color.Inherit"
+                       Size="Size.Medium"
+                       Class="rounded-0"
+                       OnClick="Cancel">
+                Cancel
+            </MudButton>
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       Size="Size.Medium"
+                       Class="rounded-0"
+                       OnClick="OnHandleSubmit">
+                @(AdviserId is not 0 ? "Edit" : "Add")
+            </MudButton>
+        </div>
+    </MudCardActions>
+</MudForm>
+@code {
+    [CascadingParameter] public MudDialogInstance Dialog { get; set; }
+    [CascadingParameter]
+    Task<AuthenticationState>? Authenticate { get; set; }
+    [Parameter] public string? Username { get; set; }
+    [Parameter] public int AdviserId { get; set; } = new();
+    private Adviser _adviser = new();
+    private string? Actor { get; set; }
+    private string? Role { get; set; }
+    protected override async Task OnParametersSetAsync()
+    {
+        if (AdviserId is not 0)
+        {
+            var response = await AdviserService.GetAdviserAsync(AdviserId);
+            _adviser = response;
+        }
+        var customAuthStateProvider = (CustomAuthenticationStateProvider)AuthenticationStateProvider;
+        Authenticate = customAuthStateProvider.GetAuthenticationStateAsync();
+        if (Authenticate != null)
+        {
+            var account = await Authenticate;
+            if (account.User.Identity?.Name != null)
+            {
+                Actor = account.User.Identity.Name;
+                Role = account.User.IsInRole("Administrator") ? "Administrator" : "User";
+            }
+        }
+    }
+
+    private async Task OnHandleSubmit()
+    {
+        if (AdviserId is not 0)
+        {
+            var response = await AdviserService.UpdateAdviserAsync(_adviser);
+            if (response.IsSuccessStatusCode)
+            {
+                var log = await ActivityLog.WriteLog($"{Actor}", $"Add a adviser name: [{_adviser.Name}]", "INSERT", $"{Role}");
+                if (log.IsSuccessStatusCode)
+                {
+                    Snack.Add("Adviser  Edited", Severity.Info);
+                    Dialog.Close(DialogResult.Ok(true));
+                }
+
+            }
+            Dialog.Close(DialogResult.Ok(true));
+        }
+        else
+        {
+            bool valid = await IsValidAsync();
+            if (!valid)
+            {
+                var response = await AdviserService.AddAdviserAsync(_adviser); // Make it this to update
+                if (response.IsSuccessStatusCode)
+                {
+                    var log = await ActivityLog.WriteLog($"{Actor}", $"Add a curriculum name: [{_adviser.Name}]", "INSERT", $"{Role}");
+                    if (log.IsSuccessStatusCode)
+                    {
+                        Snack.Add("Adviser program added", Severity.Success);
+                        Dialog.Close(DialogResult.Ok(true));
+                    }
+                }
+            }
+            else
+            {
+                Snack.Add("Error Adviser already exist", Severity.Error);
+                Dialog.Close(DialogResult.Ok(true));
+            }
+        }
+    }
+
+    void Cancel() => Dialog.Cancel();
+
+    private async Task<bool> IsValidAsync()
+    {
+        var advisers = await AdviserService.GetAdvisersAsync();
+        return advisers.Any(c => c.Name.ToLower().Equals(_adviser.Name.ToLower())
+                                 || c.Email.ToLower().Equals(_adviser.Email.ToLower()));
+    }
+}

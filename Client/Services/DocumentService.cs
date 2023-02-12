@@ -32,12 +32,16 @@ namespace HIVE.Client.Services
         {
             try
             {
+                var accessToken = await _customAuthenticationStateProvider.GetToken();
+                _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
                 var result = await _client.GetFromJsonAsync<List<Document>>($"api/Document/archivist");
-                if (result == null)
+                if (result != null)
                 {
                     Documents = result;
                 }
+
                 return Documents!;
+                throw new Exception(message: "Documents are null!");
             }
             catch (Exception ex)
             {
@@ -61,8 +65,8 @@ namespace HIVE.Client.Services
             catch (Exception ex)
             {
                 Console.WriteLine($"{ex.Message}");
+                throw;
             }
-            return Document;
         }
 
         public async Task<UploadDocumentRequest> GetDocumentByDataTransfer(int id)
@@ -134,6 +138,40 @@ namespace HIVE.Client.Services
                 Document = result;
             }
             return response;
+        }
+        public async Task<HttpResponseMessage> ArchiveDocumentAsync(int id)
+        {
+            var result = await _client.GetAsync($"api/Document/archivist/document/archived/{id}");
+            return result;
+        }
+
+        public async Task<HttpResponseMessage> UnArchiveDocumentAsync(int id)
+        {
+            var response = await _client.GetAsync($"api/Document/archivist/document/unarchived/{id}");
+            return response;
+        }
+
+        public async Task<HttpResponseMessage> RestoreDocument(int id)
+        {
+            var response = await _client.GetAsync($"api/Document/archivist/document/restore/{id}");
+            return response;
+        }
+
+        public async Task<HttpResponseMessage> MoveToTrash(int id)
+        {
+            var response = await _client.GetAsync($"api/Document/archivist/document/trash/{id}");
+            return response;
+        }
+
+        public async Task<HttpResponseMessage> UpdateStatusDocumentAsync(int id)
+        {
+            var response = await _client.GetAsync($"api/Document/archivist/document/update/review/{id}");
+            return response;
+        }
+
+        public Task<HttpResponseMessage> UpdateActiveStatusDocumentAsync()
+        {
+            throw new NotImplementedException();
         }
     }
 }

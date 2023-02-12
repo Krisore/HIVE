@@ -38,5 +38,40 @@ namespace HIVE.Server.Controllers
             var academics = await _context.Curriculums.ToListAsync();
             return Ok(academics);
         }
+        [HttpPost]
+        public async Task<ActionResult> AddAcademicProgramAsync(Curriculum curriculum)
+        {
+            var newProgram = new Curriculum()
+            {
+                Name = curriculum.Name,
+                Alt = curriculum.Alt
+            };
+            _context.Curriculums.Add(newProgram);
+            await _context.SaveChangesAsync();
+            return Ok();
+        }
+        [HttpPut("{id:int}")]
+        public async Task<ActionResult> UpdateAcademicProgramAsync(int id, Curriculum program)
+        {
+            var result = await _context.Curriculums
+                .FirstOrDefaultAsync(a => a.Id == id);
+            if (result != null)
+            {
+                result.Name = program.Name;
+                result.Alt = program.Alt;
+            }
+            await _context.SaveChangesAsync();
+            return Ok();
+
+        }
+        //TODO: Add a DELETE method in AcademicController | Done ✔️
+        [HttpDelete("{id:int}")]
+        public async Task<ActionResult> DeleteAcademicProgramAsync(int id)
+        {
+            var result = await _context.Curriculums.FirstOrDefaultAsync(ap => ap.Id == id);
+            if (result != null) _context.Curriculums.Remove(result);
+            await _context.SaveChangesAsync();
+            return Ok();
+        }
     }
 }

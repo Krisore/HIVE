@@ -14,6 +14,12 @@ namespace HIVE.Server.Repository.Interface
         Task<Document> EditDocumentAsync(int id, UploadDocumentRequest document);
         Task<UploadDocumentRequest> GetDocumentDataTransferAsync(int id);
         Task<List<Document>> GetDocumentsForArchivist();
+        Task ArchiveDocument(int id);
+        Task MoveToTrashAsync(int id);
+        Task UnArchiveDocument(int id);
+        Task RestoreDocument(int id);
+        Task UpdateDocumentStatus(int id);
+
 
 
 

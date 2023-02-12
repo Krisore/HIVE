@@ -19,5 +19,12 @@ namespace HIVE.Client.Services.Interface
         Task<HttpResponseMessage> GetDeleteDocumentById(int id);
         Task<IEnumerable<Document>> GetMyDocumentsAsync(string owner);
         Task<HttpResponseMessage> RequestUploadDocumentAsync(UploadDocumentRequest request);
+        Task<HttpResponseMessage> ArchiveDocumentAsync(int id);
+        Task<HttpResponseMessage> UnArchiveDocumentAsync(int id);
+        Task<HttpResponseMessage> RestoreDocument(int id);
+        Task<HttpResponseMessage> MoveToTrash(int id);
+        Task<HttpResponseMessage> UpdateStatusDocumentAsync(int id);
+        Task<HttpResponseMessage> UpdateActiveStatusDocumentAsync();
+
     }
 }

@@ -15,6 +15,7 @@ namespace HIVE.Shared.Model
         public bool IsOpenAccess { get; set; } = true;
         public bool IsActive { get; set; } = true;
         public bool ToReview { get; set; } = true;
+        public bool UnApproved { get; set; } = false;
         public bool IsArchived { get; set; } = false;
         public bool IsDeleted { get; set; } = false;
         public DateTime DateUploaded { get; set; } = DateTime.Now;
