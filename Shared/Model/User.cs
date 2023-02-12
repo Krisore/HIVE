@@ -23,6 +23,9 @@ namespace HIVE.Shared.Model
         public string PasswordResetToken { get; set; } = string.Empty;
         public DateTime? ResetTokenExpires { get; set; }
         [JsonIgnore]
-        public bool ShowDocument = false;
+        public bool ShowDocuments;
+        [JsonIgnore]
+        public string Password = string.Empty;
+        public string ConfirmPassword = string.Empty;
     }
 }

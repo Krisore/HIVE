@@ -118,17 +118,13 @@
         if (Authenticate != null)
         {
             var account = await Authenticate;
-            if (account.User.Identity?.Name != null)
+            var email = account.User.Identity?.Name;
+            if (email != null)
             {
-                var email = account.User.Identity?.Name;
-                if (email != null)
-                {
-                    _userName = email;
-                    var response = await DocumentService.GetMyDocumentsAsync(email);
-                    Documents = response;
-                }
+                _userName = email;
+                var response = await DocumentService.GetMyDocumentsAsync(email);
+                Documents = response;
             }
-
         }
         await Task.Delay(300);
         IEnumerable<Document> data = Documents;

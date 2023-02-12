@@ -29,5 +29,23 @@ namespace HIVE.Client.Services
             var response = await _client.GetFromJsonAsync<List<Reference>>("api/References");
             return response;
         }
+
+        public async Task<HttpResponseMessage> AddReferenceAsync(Reference reference)
+        {
+            var response = await _client.PostAsJsonAsync("api/References", reference);
+            return response;
+        }
+
+        public async Task<HttpResponseMessage> EditReferenceAsync(int id, Reference reference)
+        {
+            var response = await _client.PutAsJsonAsync($"api/References/{id}", reference);
+            return response;
+        }
+
+        public async Task<HttpResponseMessage> DeleteReferenceAsync(int id)
+        {
+            var response = await _client.DeleteAsync($"api/References/{id}");
+            return response;
+        }
     }
 }

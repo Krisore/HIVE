@@ -13,5 +13,6 @@ namespace HIVE.Shared.Model
         public string Name { get; set; } = string.Empty;
         [JsonIgnore]
         public List<Document> Documents { get; set; } = new List<Document>();
+        public bool ShowDocuments;
     }
 }

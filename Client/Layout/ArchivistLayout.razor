@@ -1,0 +1,105 @@
+﻿
+@using Microsoft.AspNetCore.Authorization
+@inherits LayoutComponentBase
+@inject IDialogService DialogService
+@inject ICurriculumService ProgramService
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager Navigation
+@attribute [Authorize(Roles = "Administrator")]
+<MudThemeProvider Theme="_myCustomTheme" @bind-IsDarkMode="IsDarkMode" />
+<MudDialogProvider />
+<MudSnackbarProvider />
+<MudLayout>
+    <AuthorizeView>
+         <MudAppBar Dense="false" Elevation="1">
+            <a href="/dashboard">
+                <MudAvatar Variant="Variant.Filled" Color="Color.Primary"
+                           Size="Size.Large" Elevation="2" Image="image/Pup_logo.jpg" />
+            </a>
+             <MudSpacer/>
+             <MudMenu Dense="true" Class="my-2 mx-1">
+                 <ActivatorContent>
+                     <div class="d-inline">
+                        <MudTooltip Text="@context.User.Identity.Name">
+                            <MudAvatar Variant="Variant.Filled" Color="Color.Primary" Elevation="2">
+                                @context.User.Identity.Name.ToUpper()[0]
+                            </MudAvatar>
+                        </MudTooltip>
+                     </div>
+                 </ActivatorContent>
+                 <ChildContent>
+                     <MudMenuItem>My account</MudMenuItem>
+                     <MudMenuItem OnClick="Logout" >Sign Out</MudMenuItem>
+                 </ChildContent>
+             </MudMenu>
+            <MudIconButton Icon="@Icons.Material.Filled.MoreVert" />
+            <MudToggleIconButton @bind-Toggled="@IsDarkMode"
+                                 Size="Size.Small"
+                                 Icon="@Icons.Material.Sharp.DarkMode"
+                                 Color="Color.Dark"
+                                 Title="Go to Dark Mode"
+                                 ToggledIcon="@Icons.Material.Sharp.LightMode"
+                                 ToggledColor="@Color.Success"
+                                 Edge="Edge.End"
+                                 ToggledSize="Size.Small" />
+         </MudAppBar>
+    <MudDrawer PreserveOpenState="true" @bind-Open="@IsDrawerOpen" ClipMode="DrawerClipMode.Docked" Elevation="1">
+        <MudDivider DividerType="DividerType.Middle"/>
+        <div class="my-2 mx-4">
+            <ArchivistNavMenu/>
+            <MudDivider DividerType="DividerType.Middle" />
+            <MudDivider DividerType="DividerType.Middle" />
+        </div>
+    </MudDrawer>
+    <MudMainContent >
+        <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="my-8">
+            @Body
+        </MudContainer>
+    </MudMainContent>
+    <MudScrollToTop>
+        <MudTooltip Text="Scroll to top">
+            <MudFab Color="Color.Secondary" Icon="@Icons.Material.Filled.KeyboardArrowUp" Size="Size.Small"/>
+        </MudTooltip>
+    </MudScrollToTop>
+    </AuthorizeView>
+</MudLayout>
+
+@code {
+    private bool IsDrawerOpen { get; set; } = true;
+    private bool IsDarkMode { get; set; } = false;
+    readonly MudTheme _myCustomTheme = new ()
+    {
+            Palette = new Palette()
+            {
+                Primary = "#7c0d0d",
+                Secondary = "#F5F21F",
+                AppbarBackground = Colors.Shades.White,
+            },
+            PaletteDark = new PaletteDark()
+            {
+                Primary = Colors.Blue.Lighten1
+            },
+
+            LayoutProperties = new LayoutProperties()
+            {
+                DrawerWidthLeft = "260px",
+                DrawerWidthRight = "350px",
+                DrawerMiniWidthLeft = "78px"
+            },
+            Typography = new Typography()
+            {
+                Default = new Default()
+                {
+                    FontFamily = new[] { "Poppins", "Helvetica", "Arial", "sans-serif" }
+                }
+            }
+
+    };
+    private async Task Logout()
+    {
+        var customAuthStateProvider = (CustomAuthenticationStateProvider)AuthenticationStateProvider;
+        await customAuthStateProvider.UpdateAuthenticationState(null);
+        Navigation.NavigateTo("/", true);
+    }
+   
+}

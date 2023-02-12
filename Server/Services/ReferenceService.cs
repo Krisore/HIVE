@@ -30,5 +30,35 @@ namespace HIVE.Server.Services
             var result = await _context.References.ToListAsync();
             return result;
         }
+
+        public async Task AddReferenceAsync(Reference reference)
+        {
+            var request = new Reference
+            {
+                Name = reference.Name
+            };
+            _context.References.Add(request);
+           await _context.SaveChangesAsync();
+        }
+
+        public async Task EditReferencesAsync(int id, Reference reference)
+        {
+            var request = await _context.References.FirstOrDefaultAsync(r => r.Id == id);
+            if (request != null)
+            {
+                request.Name = reference.Name;
+            }
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task DeleteReferenceAsync(int id)
+        {
+            var response = await _context.References.FirstOrDefaultAsync(r => r.Id == id);
+            if (response != null)
+            {
+                _context.References.Remove(response);
+            }
+            await _context.SaveChangesAsync();
+        }
     }
 }

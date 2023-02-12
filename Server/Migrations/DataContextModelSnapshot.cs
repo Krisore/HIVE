@@ -178,9 +178,15 @@ namespace HIVE.Server.Migrations
                     b.Property<bool>("ToReview")
                         .HasColumnType("bit");
 
+                    b.Property<bool>("UnApproved")
+                        .HasColumnType("bit");
+
                     b.Property<string>("UploaderEmail")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
@@ -360,7 +366,7 @@ namespace HIVE.Server.Migrations
                         .IsRequired();
 
                     b.HasOne("HIVE.Shared.Model.Reference", "Reference")
-                        .WithMany("Documents")
+                        .WithMany()
                         .HasForeignKey("ReferenceId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -382,11 +388,6 @@ namespace HIVE.Server.Migrations
             modelBuilder.Entity("HIVE.Shared.Model.Document", b =>
                 {
                     b.Navigation("Authors");
-                });
-
-            modelBuilder.Entity("HIVE.Shared.Model.Reference", b =>
-                {
-                    b.Navigation("Documents");
                 });
 #pragma warning restore 612, 618
         }

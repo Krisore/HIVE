@@ -1,0 +1,205 @@
+﻿@using HIVE.Client.Components.Diaolog.ReferenceDiaolog
+@inject ICurriculumService CurriculumService
+@inject IDocumentService DocumentService
+@inject IFileService FileService
+@inject IDialogService DialogService
+@inject IDocumentReferenceService DocumentReferenceService
+@inject ISnackbar Snack
+@inject NavigationManager NavigationManager
+<MudTable @ref="_table"
+          ServerData="@(new Func<TableState, Task<TableData<Reference>>>(ServerReload))"
+          Dense="true"
+          Bordered="false"
+          MultiSelection="true" @bind-SelectedItems="_selectedItems"
+          Hover="true">
+    <ToolBarContent>
+        <MudTextField T="string" ValueChanged="@(OnSearch)"
+                      Placeholder="Search" Adornment="Adornment.Start"
+                      Variant="Variant.Outlined" Margin="Margin.Dense"
+                      AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0" />
+        @if (!string.IsNullOrWhiteSpace(_searchTerm))
+        {
+            <MudChip Label="true" Variant="Variant.Text" Color="Color.Info" Size="Size.Large" Class="rounded-0">
+                result: @_searchTerm (@_table.GetFilteredItemsCount())
+            </MudChip>
+        }
+        <MudSpacer />
+        <MudTooltip Text="Reload" Arrow="true">
+            <MudIconButton Icon="@Icons.Material.Rounded.Sync" OnClick="@(() => _table.ReloadServerData())"></MudIconButton>
+        </MudTooltip>
+        <MudText>
+            <MudChip Class="rounded-0" IconColor="Color.Primary" Variant="Variant.Outlined" Label="true">
+                Selected Curriculum:<MudChip Size="Size.Small"> @_selectedItems.Count </MudChip>
+            </MudChip>
+        </MudText>
+        <MudTooltip Text="Add" Arrow="true">
+            <MudIconButton Icon="@Icons.Material.Outlined.Add" Color="Color.Success" OnClick="AddCurriculum" />
+        </MudTooltip>
+        <MudTooltip Text="Delete" Arrow="true">
+            <MudIconButton Icon="@Icons.Material.Outlined.Remove" Color="Color.Error" OnClick="DeleteCurriculum" />
+        </MudTooltip>
+    </ToolBarContent>
+    <HeaderContent>
+        <MudTh></MudTh>
+        <MudTh><MudTableSortLabel SortLabel="name" T="Reference"> Name </MudTableSortLabel></MudTh>
+        <MudTh> <MudTableSortLabel SortLabel="acronym" T="Reference"> </MudTableSortLabel></MudTh>
+        <MudTh>Total Documents</MudTh>
+        <MudTh></MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd>
+            <MudButton Class="rounded-0" Size="Size.Small" Variant="Variant.Outlined" OnClick="@(() => ShowBtnPress(context.Id))">  🗃️@((context.ShowDocuments == true) ? "Hide" : "Show")</MudButton>
+            </MudTd>
+            <MudTd DataLabel="Name"> @context.Name </MudTd>
+            <MudTd DataLabel="Acronym"><MudChip Label="true" Variant="Variant.Text" Color="Color.Primary" Class="rounded-0">@context.Name</MudChip></MudTd>
+            <MudTd>
+            @if (_documents != null)
+            {
+                <MudChip Variant="Variant.Text" Size="Size.Large" Color="Color.Error"> @_documents.Count(d => d.ReferenceId == context.Id)</MudChip>
+            }
+        </MudTd>
+        <MudTd>
+            <MudTooltip Text="Edit" Arrow="true">
+                <MudIconButton Icon="@Icons.Material.Outlined.Edit" OnClick="@(() => EditCurriculumAsync(context.Id))" />
+            </MudTooltip>
+        </MudTd>
+    </RowTemplate>
+    <NoRecordsContent>
+        <MudText>No matching records found</MudText>
+    </NoRecordsContent>
+    <LoadingContent>
+        <MudText>Loading...</MudText>
+    </LoadingContent>
+    <PagerContent>
+        <MudTablePager />
+    </PagerContent>
+    <ChildRowContent>
+        @if (context.ShowDocuments)
+        {
+            <MudTr>
+                <td colspan="6">
+                    <MudCard Elevation="0">
+                        <MudCardHeader>
+                            <CardHeaderAvatar>
+                                <MudAvatar Elevation="2" Size="Size.Large" Image="/image/Pup_logo.jpg"></MudAvatar>
+                            </CardHeaderAvatar>
+                            <CardHeaderContent>
+                                <MudText Typo="Typo.body2"> @context.Name </MudText>
+                            </CardHeaderContent>
+                            <CardHeaderActions>
+                                <MudChip Label="true" IconColor="Color.Success" Size="Size.Medium" Icon="@Icons.Custom.FileFormats.FileExcel">
+                                    Generate report
+                                </MudChip>
+                            </CardHeaderActions>
+                        </MudCardHeader>
+                        <MudDivider />
+                        <MudCardContent>
+                            <SubViewDocuments Role="@_role" ReferenceId="@context.Id" />
+                        </MudCardContent>
+                    </MudCard>
+                </td>
+            </MudTr>
+        }
+    </ChildRowContent>
+
+</MudTable>
+@code {
+    string _searchTerm = string.Empty;
+    string _role = "Reference";
+    private IEnumerable<Reference> _references;
+    private MudTable<Reference> _table;
+    private HashSet<Reference> _selectedItems = new();
+    private List<Document>? _documents;
+    private int _totalItems = 0;
+    private IEnumerable<Reference>? _pagedData;
+    private List<string> _errors = new();
+    private async Task<TableData<Reference>> ServerReload(TableState state)
+    {
+        _references = await DocumentReferenceService.GetReferences();
+        _documents = await DocumentService.GetAllDocuments();
+        await Task.Delay(300);
+        _references = _references.Where(reference =>
+        {
+            if (!string.IsNullOrWhiteSpace(_searchTerm))
+            {
+                if (reference.Name.Contains(_searchTerm, StringComparison.OrdinalIgnoreCase))
+                    return true;
+            }
+            else
+            {
+                return true;
+            }
+            return false;
+        }).ToArray();
+        _totalItems = _references.Count();
+
+        _references = state.SortLabel switch
+        {
+            "name" => _references.OrderByDirection(state.SortDirection, o => o.Name),
+            _ => _references
+        };
+
+        _pagedData = _references.Skip(state.Page * state.PageSize).Take(state.PageSize).ToArray();
+        return new TableData<Reference>() { TotalItems = _totalItems, Items = _pagedData };
+    }
+
+    private void OnSearch(string text)
+    {
+        _searchTerm = text;
+        _table.ReloadServerData();
+    }
+
+    private void ShowBtnPress(int nr)
+    {
+        var program = _references.First(a => a.Id == nr);
+        program.ShowDocuments = !program.ShowDocuments;
+    }
+
+    private async void EditCurriculumAsync(int id)
+    {
+        var parameter = new DialogParameters
+            {
+                ["ReferenceId"] = id,
+            };
+        var dialog = await DialogService.ShowAsync<AddDocumentType>("Edit Reference?", parameter);
+        var result = await dialog.Result;
+        if (!result.Canceled)
+        {
+            await _table.ReloadServerData();
+        }
+        _errors.Clear();
+    }
+
+    private async void AddCurriculum()
+    {
+        var dialog = await DialogService.ShowAsync<AddDocumentType>("Add Reference?");
+        var result = await dialog.Result;
+        if (!result.Canceled)
+        {
+            await _table.ReloadServerData();
+        }
+        await _table.ReloadServerData();
+        _errors.Clear();
+    }
+
+    private async void DeleteCurriculum()
+    {
+        var parameter = new DialogParameters
+            {
+                ["References"] = _selectedItems
+            };
+        var dialog = await DialogService.ShowAsync<DeleteReferenceDialog>("Delete this Selected Curriculum?", parameter);
+        var result = await dialog.Result;
+        if (!result.Canceled)
+        {
+            await _table.ReloadServerData();
+        }
+        _errors.Clear();
+    }
+
+    private void Reload()
+    {
+        _table.ReloadServerData();
+    }
+
+}

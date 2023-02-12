@@ -1,0 +1,137 @@
+﻿@inject IDocumentService DocumentService
+@inject IFileService FileService
+@inject IDialogService DialogService
+@inject IActivityLog ActivityLog
+<MudTable T="FileEntry" ServerData="@(new Func<TableState, Task<TableData<FileEntry>>>(ServerReload))"
+          Dense="true" Hover="true" @ref="_table" Bordered="true" Striped="true">
+    <ToolBarContent>
+        <MudTextField Variant="Variant.Outlined" T="string" ValueChanged="@(OnSearch)" Placeholder="Search" Adornment="Adornment.End"
+                      AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0" Margin="Margin.Dense"></MudTextField>
+        @if (!string.IsNullOrWhiteSpace(_documentSearch))
+        {
+            <MudChip Label="true" Variant="Variant.Text" Color="Color.Info" Size="Size.Large" Class="rounded-0">
+                result: @_documentSearch (@_table.GetFilteredItemsCount())
+            </MudChip>
+        }
+        <MudSpacer />
+        <MudIconButton Icon="@Icons.Material.Rounded.Sync"
+                       Color="Color.Info"
+                       OnClick="@(()=> _table.ReloadServerData())" />
+        <MudChip Class="d-block" Variant="Variant.Outlined">
+            Total Files :
+            <MudChip Size="Size.Small" Color="Color.Primary" Variant="Variant.Text">
+                @_totalDocuments
+            </MudChip>
+        </MudChip>
+    </ToolBarContent>
+    <HeaderContent>
+        <MudTh><MudTableSortLabel SortLabel="storedFile" T="FileEntry">Trusted File Name</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel SortLabel="fileName" T="FileEntry">File Name</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel SortLabel="status" T="FileEntry">Status </MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel SortLabel="size" T="FileEntry">Size</MudTableSortLabel></MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd DataLabel="Trusted File Name">
+            <MudChip Text="@context.StoreFileName" Class="rounded-0" Label="true" Variant="Variant.Filled" Size="Size.Small" Color="Color.Primary"/>
+        </MudTd>
+        <MudTd DataLabel="File Name">
+            <MudText>
+                @context.FileName
+            </MudText>
+        </MudTd>
+        <MudTd DataLabel="Status">
+            @if (context.Status)
+            {
+                <MudChip Text="active" Variant="Variant.Outlined" Size="Size.Small" Color="Color.Success" />
+            }
+            else
+            {
+                <MudChip Text="un-active" Variant="Variant.Outlined" Size="Size.Small" Color="Color.Warning" />
+            }
+        </MudTd>
+        <MudTd DataLabel="Size">
+            <MudChip Text="@context.Size.ToString()" Variant="Variant.Text" Size="Size.Small" Color="Color.Info" />
+        </MudTd>
+    </RowTemplate>
+    <NoRecordsContent>
+        <MudText>No matching records found</MudText>
+    </NoRecordsContent>
+    <LoadingContent>
+        <MudText>Loading...</MudText>
+    </LoadingContent>
+    <PagerContent>
+        <MudTablePager />
+    </PagerContent>
+</MudTable>
+
+
+
+@code {
+    [CascadingParameter] Task<AuthenticationState>? AuthenticationState { get; set; }
+    [Parameter] public string Role { get; set; }
+    [Parameter] public int ReferenceId { get; set; }
+    IEnumerable<FileEntry>? fileEntries = new List<FileEntry>();
+    private string? _userName = string.Empty;
+    private IEnumerable<FileEntry> _pagedData;
+    private MudTable<FileEntry> _table;
+    private HashSet<FileEntry> _selectedItems = new();
+    private HashSet<FileEntry> _selectedFiles = new();
+    private List<FileEntry> _files = new();
+    private string _documentSearch = string.Empty;
+    private int _totalItems;
+    private int _totalDocuments;
+    string awit = "";
+    private List<string> _errors = new();
+    private List<string> _archiveList = new();
+
+
+    private async Task<TableData<FileEntry>> ServerReload(TableState state)
+    {
+        IEnumerable<FileEntry> files = await FileService.GetAllFiles();
+        IEnumerable<FileEntry> data = files;
+        data = data.OrderByDescending(d => d.Status);
+        _totalDocuments = data.Count(d => d.Status);
+        await Task.Delay(300);
+        data = data.Where(element =>
+        {
+            if (string.IsNullOrWhiteSpace(_documentSearch))
+                return true;
+            if (element.FileName.Contains(_documentSearch, StringComparison.OrdinalIgnoreCase))
+                return true;
+            return element.StoreFileName.Contains(_documentSearch, StringComparison.OrdinalIgnoreCase) || element.ContentType.Contains(_documentSearch, StringComparison.OrdinalIgnoreCase);
+        }).ToArray();
+        _totalItems = data.Count();
+        data = state.SortLabel switch
+        {
+            "filename" => data.OrderByDirection(state.SortDirection, o => o.FileName),
+            "storedFile" => data.OrderByDirection(state.SortDirection, o => o.StoreFileName),
+            "status" => data.OrderByDirection(state.SortDirection, o => o.Status),
+            "size" => data.OrderByDirection(state.SortDirection, o => o.Size),
+            _ => data
+        };
+        _pagedData = data.Skip(state.Page * state.PageSize).Take(state.PageSize).ToArray();
+        return new TableData<FileEntry>() { TotalItems = _totalItems, Items = _pagedData };
+
+    }
+    private void OnSearch(string text)
+    {
+        _documentSearch = text;
+        _table.ReloadServerData();
+    }
+    private async void MoveToTrash()
+    {
+        var parameter = new DialogParameters
+            {
+                ["Documents"] = _selectedItems
+            };
+
+        var dialog = await DialogService.ShowAsync<DialogMoveToTrash>("Are you really want to move  these to trash?", parameter);
+        var result = await dialog.Result;
+        if (!result.Canceled)
+        {
+            await _table.ReloadServerData();
+        }
+        _errors.Clear();
+        _archiveList.Clear();
+    }
+}

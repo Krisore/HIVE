@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using System.Diagnostics;
 using System.Reflection.Metadata;
 using System.Transactions;
+using HIVE.Server.Services.Interface;
 using Document = HIVE.Shared.Model.Document;
 
 namespace HIVE.Server.Repository
@@ -14,15 +15,83 @@ namespace HIVE.Server.Repository
     {
         private readonly DataContext _context;
         private readonly IFileManager _fileManager;
+        private readonly IDocumentService _documentService;
 
-        public DocumentRepository(DataContext context, IFileManager fileManager)
+        public DocumentRepository(DataContext context, IFileManager fileManager, IDocumentService documentService)
         {
             _context = context;
             _fileManager = fileManager;
+            _documentService = documentService;
+        }
+        public UploadDocumentRequest DataTransferObjectDocument { get; set; } = new UploadDocumentRequest();
+        public async Task<List<Document>> GetDocumentsForArchivist()
+        {
+            var response = await _context.Documents.Where(d => d.IsArchived == false && d.IsDeleted == false)
+                .Include(a => a.Adviser)
+                .Include(t => t.Topics)
+                .Include(a => a.Curriculum)
+                .Include(d => d.Reference)
+                .Include(a => a.Authors)
+                .Include(f => f.File)
+                .ToListAsync();
+            return response;
+        }
+        public async Task ArchiveDocument(int id)
+        {
+            await _documentService.ArchiveDocument(id);
         }
 
-        public UploadDocumentRequest DataTransferObjectDocument { get; set; }
+        public async Task UnArchiveDocument(int id)
+        {
+            await _documentService.UnArchiveDocument(id);
+        }
+        public async Task DeleteAsync(int id)
+        {
+            var response = await _context.Documents.FirstOrDefaultAsync(D => D.Id == id);
+            if (response is not null)
+            {
+                _context.Documents.Remove(response);
+                await _fileManager.DeleteFileAsync(response.Id);
+            }
+            await  _context.SaveChangesAsync();
+        }
+        public async Task MoveToTrashAsync(int id)
+        {
+            await _documentService.MoveToTrash(id);
+        }
 
+        public async Task RestoreDocument(int id)
+        {
+            await _documentService.Restore(id);
+
+        }
+        public async Task<List<Document>> GetArchivedDocumentsAsync()
+        {
+            var result = await _context.Documents.Where(d => d.IsArchived == true && d.IsDeleted == false)
+                .Include(d => d.Adviser)
+                .Include(d => d.Reference)
+                .Include(t => t.Topics)
+                .Include(a => a.Curriculum)
+                .Include(a => a.Authors)
+                .ToListAsync();
+            return result;
+        }
+
+        public async Task<List<Document>> GetTrashedDocumentsAsync()
+        {
+            var result = await _context.Documents.Where(d => d.IsDeleted == true)
+                .Include(d => d.Adviser)
+                .Include(t => t.Topics)
+                .Include(a => a.Curriculum)
+                .Include(d => d.Reference)
+                .Include(a => a.Authors)
+                .ToListAsync();
+            return result;
+        }
+        public async Task UpdateDocumentStatus(int id)
+        {
+            await _documentService.UpdateDocumentStatusAsync(id);
+        }
         public async Task<Document> GetDocumentAsyncById(int id)
         {
             try
@@ -71,6 +140,7 @@ namespace HIVE.Server.Repository
         {
             var response = await _context.Documents
                 .Where(d => d.ToReview == false
+                            && d.UnApproved == false
                             && d.IsActive == true
                             && d.IsArchived == false
                             && d.IsDeleted == false)
@@ -82,6 +152,8 @@ namespace HIVE.Server.Repository
                 .ToListAsync();
             return response;
         }
+
+       
 
         public async Task<IEnumerable<Document>> GetMyDocumentsAsync(string owner)
         {

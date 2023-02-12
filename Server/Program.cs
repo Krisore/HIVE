@@ -21,12 +21,12 @@ builder.Services.AddRazorPages();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IActivityLog, ActivityLog>();
 builder.Services.AddScoped<IEmailService, EmailService>();
-builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IReferenceService, ReferenceService>();
 builder.Services.AddScoped<IFileManager, FileManager>();
 builder.Services.AddScoped<IDocumentRepository, DocumentRepository>();
 builder.Services.AddScoped<ICurriculumService, CurriculumService>();
 builder.Services.AddScoped<IAdviserService, AdviserService>();
+builder.Services.AddScoped<IDocumentService, DocumentService>();
 builder.Services.AddAuthentication(o =>
 {
     o.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;

@@ -43,5 +43,11 @@ namespace HIVE.Server.Controllers
             await _fileManager.DeleteFileAsync(id);
             return Ok();
         }
+        [HttpGet("{id:int}")]
+        public async Task<ActionResult<FileEntry>> GetFileById(int id)
+        {
+            var file = await _fileManager.GetFileId(id);
+            return Ok(file);
+        }
     }
 }

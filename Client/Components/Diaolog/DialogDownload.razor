@@ -1,6 +1,8 @@
 ﻿@inject IFileService FileService
 @inject IJSRuntime JsRuntime
 @inject IActivityLog ActivityLog
+@inject ISnackbar Snack
+@inject AuthenticationStateProvider AuthenticationStateProvider
 <MudDialog>
     <DialogContent>
         <MudText> You want to download a copy of ? </MudText>
@@ -15,15 +17,28 @@
 </MudDialog>
 @code {
     [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+    [CascadingParameter]
+    Task<AuthenticationState>? Authenticate { get; set; }
     [Parameter] public Color Color { get; set; }
     [Parameter] public string? ContentText { get; set; }
     [Parameter] public string? ButtonText { get; set; }
     [Parameter] public string? StoreFileName { get; set; }
     [Parameter] public string? FileName { get; set; }
-    [Parameter] public string? UserName { get; set; }
-   
+    [Parameter] public string? Actor { get; set; }
+    [Parameter] public string? Role { get; set; }
     private async Task Submit()
     {
+        var customAuthStateProvider = (CustomAuthenticationStateProvider)AuthenticationStateProvider;
+        Authenticate = customAuthStateProvider.GetAuthenticationStateAsync();
+        if (Authenticate != null)
+        {
+            var account = await Authenticate;
+            if (account.User.Identity?.Name != null)
+            {
+                Actor = account.User.Identity.Name;
+                Role = account.User.IsInRole("Administrator") ? "Administrator" : "User";
+            }
+        }
         if (StoreFileName != null)
         {
             var response = await FileService.GetStoredFileNameAsync(StoreFileName);
@@ -37,14 +52,14 @@
                 var fileStream = await response.Content.ReadAsStreamAsync();
                 using var streamRef = new DotNetStreamReference(stream: fileStream);
                 await JsRuntime.InvokeVoidAsync("downloadFileFromStream", FileName, streamRef);
+                Snack.Add("Request  Successfully, Please wait..");
             }
         }
-        var result = await ActivityLog.WriteLog($"{UserName}", $"DOWNLOAD a document entitled{FileName}", "[DOWNLOAD]", "USER");
+        var result = await ActivityLog.WriteLog($"{Actor}", $"DOWNLOAD a document entitled{FileName}", "[DOWNLOAD]", $"{Role}");
         if (result.IsSuccessStatusCode)
         {
             MudDialog.Close(DialogResult.Ok(true));
         }
     }
-
     void Cancel() => MudDialog.Cancel();
 }

@@ -24,8 +24,17 @@ namespace HIVE.Server.Repository
 
         public async Task<FileEntry> GetFileId(int id)
         {
-            var response = await _context.FileEntries.SingleOrDefaultAsync(f => f.Id == id);
-            return response;
+            try
+            {
+                var response = await _context.FileEntries.FirstOrDefaultAsync(f => f.Id == id);
+                if (response == null) throw new Exception("May Exception");
+                return response;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"{ex.Message}");
+                throw;
+            }
         }
 
         public async Task<FileEntry> UploadFileAsync(List<IFormFile> files)

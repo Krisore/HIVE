@@ -1,0 +1,231 @@
+﻿
+@inject IDocumentService DocumentService
+@inject IFileService FileService
+@inject IDialogService DialogService
+@inject IActivityLog ActivityLog
+<MudTable T="Document" ServerData="@(new Func<TableState, Task<TableData<Document>>>(ServerReload))"
+          Dense="true" Hover="true" @ref="_table" Bordered="false" Striped="true" MultiSelection="true" @bind-SelectedItems="_selectedItems">
+    <ToolBarContent>
+        <MudTextField Variant="Variant.Outlined" T="string" ValueChanged="@(OnSearch)" Placeholder="Search" Adornment="Adornment.End"
+                      AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0" Margin="Margin.Dense"></MudTextField>
+        @if (!string.IsNullOrWhiteSpace(_documentSearch))
+        {
+                <MudChip Label="true" Variant="Variant.Text" Color="Color.Info" Size="Size.Large" Class="rounded-0">
+                    result: @_documentSearch (@_table.GetFilteredItemsCount()) 
+                </MudChip>
+        }
+        <MudSpacer />
+        <MudIconButton Icon="@Icons.Material.Rounded.Sync"
+                       Color="Color.Info"
+                       OnClick="@(()=> _table.ReloadServerData())" />
+        <MudChip Class="d-block" Variant="Variant.Outlined">
+            Pending to Review :
+            <MudChip Size="Size.Small" Color="Color.Primary" Variant="Variant.Text">
+                @_totalDocuments
+            </MudChip>
+        </MudChip>
+        <div class="mx-5">
+            <MudTooltip Text="Archive Selected Document" Arrow="true">
+                <MudIconButton Class=" mx-2"
+                           Variant="Variant.Text"
+                           DisableElevation="true"
+                           Color="Color.Success"
+                           Size="Size.Medium"
+                           OnClick="Archived"
+                           Icon="@Icons.Material.Filled.Archive">
+                </MudIconButton>
+            </MudTooltip>
+            <MudTooltip Text="Move to Trash" Arrow="true">
+                <MudIconButton Variant="Variant.Text"
+                               DisableElevation="false"
+                               Size="Size.Medium"
+                               Color="Color.Error"
+                               Icon="@Icons.Material.Filled.Delete"
+                               OnClick="MoveToTrash" />
+            </MudTooltip>
+        </div>
+    </ToolBarContent>
+    <HeaderContent>
+        <MudTh> Detail</MudTh>
+        <MudTh><MudTableSortLabel SortLabel="title" T="Document">Title</MudTableSortLabel></MudTh>
+        <MudTh>Topics</MudTh>
+        <MudTh><MudTableSortLabel SortLabel="User" T="Document">Uploader</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel SortLabel="program" T="Document">Program </MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel SortLabel="year" T="Document">Year</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel SortLabel="review" T="Document">Review Status</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel SortLabel="upload" T="Document">Date uploaded</MudTableSortLabel></MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd>
+            <MudButton Variant="Variant.Outlined" Class="rounded-0 d-inline" Size="Size.Small" OnClick="@(() => OnReview(context))">
+                VIEW
+            </MudButton>
+        </MudTd>
+        <MudTd DataLabel="Title">@context.Title</MudTd>
+        <MudTd DataLabel="Topics">
+            <div class="d-inline flex">
+                @foreach (var topic in context.Topics)
+                {
+                    <MudChip Text="@topic.Name" Variant="Variant.Text" Size="Size.Small" Color="Color.Info"/>
+                }
+            </div>
+        </MudTd>
+        <MudTd DataLabel="User">
+            @context.UploaderEmail
+        </MudTd>
+        <MudTd DataLabel="Owner">
+            @context.Curriculum.Alt
+        </MudTd>
+        <MudTd DataLabel="Year">
+            @if (context.DatePublished != null)
+            {
+                @context.DatePublished.Value.Year
+            }
+        </MudTd>
+        <MudTd>
+           @if (context.ToReview)
+           {
+               <MudChip Text="To review" Variant="Variant.Filled" Color="Color.Info" Size="Size.Small"/> 
+           }
+           else if (context.UnApproved && context.ToReview == false)
+           {
+                <MudChip Text="Unapproved" Variant="Variant.Filled" Color="Color.Warning" Size="Size.Small" />
+           }
+           else
+           {
+                <MudChip Text="Approved" Variant="Variant.Filled" Color="Color.Success" Size="Size.Small" />
+           }
+        </MudTd>
+        <MudTd>
+            @context.DateUploaded.ToLongDateString()
+        </MudTd>
+    </RowTemplate>
+    <NoRecordsContent>
+        <MudText>No matching records found</MudText>
+    </NoRecordsContent>
+    <LoadingContent>
+        <MudText>Loading...</MudText>
+    </LoadingContent>
+    <PagerContent>
+        <MudTablePager />
+    </PagerContent>
+</MudTable>
+
+
+
+@code {
+    [CascadingParameter] Task<AuthenticationState>? AuthenticationState { get; set; }
+    [Parameter] public string Role { get; set; }
+    [Parameter] public int ReferenceId { get; set; }
+    IEnumerable<Document>? _documents = new List<Document>();
+    private string? _userName = string.Empty;
+    private IEnumerable<Document> _pagedData;
+    private MudTable<Document> _table;
+    private HashSet<Document> _selectedItems = new ();
+    private HashSet<FileEntry> _selectedFiles = new();
+    private List<FileEntry> _files = new();
+    private string _documentSearch = string.Empty;
+    private int _totalItems;
+    private int _totalDocuments;
+    string awit = "";
+    private List<string> _errors = new();
+    private List<string> _archiveList = new();
+
+
+    private async Task<TableData<Document>> ServerReload(TableState state)
+    {
+        IEnumerable<Document> documents = await DocumentService.GetDocumentsForArchivistAsync();
+        IEnumerable<Document> data = documents;
+        if (!string.IsNullOrEmpty(Role) && Role.Equals("Adviser"))
+        {
+            data = data.Where(d => d.AdviserId == ReferenceId);
+        }
+        else if(!string.IsNullOrEmpty(Role) && Role.Equals("Curriculum"))
+        {
+            data = data.Where(d => d.CurriculumId == ReferenceId);
+        }
+        else if (!string.IsNullOrEmpty(Role) && Role.Equals("Reference"))
+        {
+            data = data.Where(d => d.ReferenceId == ReferenceId);
+        }
+        else if (!string.IsNullOrEmpty(Role) && Role.Equals("User"))
+        {
+            data = data.Where(d => d.UserId == ReferenceId);
+        }
+        data = data.OrderByDescending(d => d.ToReview);
+        _totalDocuments = data.Count(d => d.ToReview);
+        await Task.Delay(300);
+        data = data.Where(element =>
+        {
+            if (string.IsNullOrWhiteSpace(_documentSearch))
+                return true;
+            if (element.Title.Contains(_documentSearch, StringComparison.OrdinalIgnoreCase))
+                return true;
+            return element.Abstract.Contains(_documentSearch, StringComparison.OrdinalIgnoreCase) || element.UploaderEmail.Contains(_documentSearch, StringComparison.OrdinalIgnoreCase);
+        }).ToArray();
+        _totalItems = data.Count();
+        data = state.SortLabel switch
+        {
+            "title" => data.OrderByDirection(state.SortDirection, o => o.Title),
+            "user" => data.OrderByDirection(state.SortDirection, o => o.UploaderEmail),
+            "program" => data.OrderByDirection(state.SortDirection, o => o.Curriculum.Alt),
+            "year" => data.OrderByDirection(state.SortDirection, o => o.DatePublished),
+            "review" => data.OrderByDirection(state.SortDirection, o => o.ToReview),
+            "uploaded" => data.OrderByDirection(state.SortDirection, o => o.DateUploaded),
+            _ => data
+        };
+        _pagedData = data.Skip(state.Page * state.PageSize).Take(state.PageSize).ToArray();
+        return new TableData<Document>() { TotalItems = _totalItems, Items = _pagedData };
+
+    }
+    private async void OnReview(Document document)
+    {
+        var parameters = new DialogParameters
+            {
+                ["Document"] = document,
+            };
+        var dialog = await DialogService.ShowAsync<DialogToReview>("Review 📂", parameters);
+        var result = await dialog.Result;
+        if (!result.Canceled)
+        {
+           await _table.ReloadServerData();
+        }
+        await _table.ReloadServerData();
+    }
+    private void OnSearch(string text)
+    {
+        _documentSearch = text;
+        _table.ReloadServerData();
+    }
+    private async void MoveToTrash()
+    {
+        var parameter = new DialogParameters
+        {
+            ["Documents"] = _selectedItems
+        };
+
+        var dialog = await DialogService.ShowAsync<DialogMoveToTrash>("Are you really want to move  these to trash?", parameter);
+        var result = await dialog.Result;
+        if (!result.Canceled)
+        {
+            await _table.ReloadServerData();
+        }
+        _errors.Clear();
+        _archiveList.Clear();
+    }
+    private async void Archived()
+    {
+        var parameter = new DialogParameters
+        {
+                ["Documents"] = _selectedItems,
+        };
+        var dialog = await DialogService.ShowAsync<DialogToArchive>("Are you really want to archive these?", parameter);
+        var result = await dialog.Result;
+        if (!result.Canceled)
+        {
+            await _table.ReloadServerData();
+        }
+        _errors.Clear();
+        _archiveList.Clear();
+    }
+}

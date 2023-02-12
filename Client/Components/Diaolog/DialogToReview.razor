@@ -1,0 +1,169 @@
+﻿@using HIVE.Client.Services
+@inject IDialogService DialogService
+@inject ISnackbar Snack
+@inject IActivityLog ActivityLog
+@inject IDocumentService DocumentService
+@inject AuthenticationStateProvider AuthenticationStateProvider
+<MudDialog DisableSidePadding="true">
+    <DialogContent>
+        <MudCardHeader>
+            <CardHeaderAvatar>
+                <MudAvatar Color="Color.Secondary" Size="Size.Medium" Elevation="2">
+                    @Document.UploaderEmail.ToUpper().ToCharArray()[0]
+                </MudAvatar>
+            </CardHeaderAvatar>
+            <CardHeaderContent>
+                <MudText Typo="Typo.body2">@Document.UploaderEmail</MudText>
+                <MudText Typo="Typo.caption"> Uploaded in @Document.DateUploaded.ToLongDateString()</MudText>
+            </CardHeaderContent>
+            <CardHeaderActions>
+                @if (!string.IsNullOrWhiteSpace(Document.Curriculum.Name))
+                {
+                    <MudChip Label="true" Color="Color.Info" Size="Size.Small" Variant="Variant.Filled">@Document.Curriculum.Alt</MudChip>
+                }
+            </CardHeaderActions>
+        </MudCardHeader>
+        <MudDivider Class="my-1" />
+        <MudContainer Style="max-height: 400px; overflow-y: scroll">
+            <MudCardContent>
+                <MudText Typo="Typo.caption" Align="Align.Center">[ TITLE ]</MudText>
+                <MudText Class="mx-2 my-2" Typo="Typo.body2" Align="Align.Justify">@Document.Title (@Document.DatePublished.Value.Year.ToString())</MudText>
+                @foreach (var topic in Document.Topics)
+                {
+                    <MudChip Size="Size.Small" Color="Color.Info" Variant="Variant.Text">@topic.Name</MudChip>
+                }
+                <MudDivider Class="my-2" DividerType="DividerType.Middle" />
+                <MudText Typo="Typo.caption" Align="Align.Center">[ Author ]</MudText> <br />
+                <MudText Class="mx-2" Typo="Typo.caption" Style="font-size: 80%">
+                    @foreach (var author in Document.Authors)
+                    {
+                        @($"{author.Name} ,.")
+                    }
+                </MudText> <br />
+                <MudDivider Class="my-2" DividerType="DividerType.Middle" />
+                <MudText Typo="Typo.caption" Align="Align.Center">[ Adviser ]</MudText> <br />
+                @if (!string.IsNullOrEmpty(Document.Adviser.Name))
+                {
+                    <MudText Class="mx-2 my-2" Typo="Typo.caption" Align="Align.Justify">@Document.Adviser.Name</MudText>
+                }
+                <MudDivider Class="my-2" DividerType="DividerType.Middle" />
+                <MudText Typo="Typo.caption" Align="Align.Center">[ ABSTRACT ]</MudText> <br />
+                <MudText Class="mx-2 my-2" Typo="Typo.caption" Align="Align.Justify">@Document.Abstract</MudText>
+                <MudDivider Class="my-2" DividerType="DividerType.Middle" />
+                @if (!string.IsNullOrEmpty(Document.File.FileName) || !string.IsNullOrEmpty(Document.File.StoreFileName))
+                {
+                    <MudAlert Dense="true" Severity="Severity.Info"> To Download this document Click here :
+                        <MudChip  Icon="@Icons.Material.Rounded.Download" 
+                             OnClick="@(()=> DownloadFileAsync(Document.File.FileName, Document.File.StoreFileName, Document.Title))" 
+                             Class="rounded-0 ml-auto" 
+                             Color="Color.Primary" 
+                             Size="Size.Small"
+                         Label="true">
+                        @Document.File.StoreFileName.ToUpper()
+                    </MudChip>  </MudAlert>
+                }
+            </MudCardContent>
+        </MudContainer>
+        <MudDivider Class="my-2" />
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel" Size="Size.Small" Variant="Variant.Outlined"> Cancel </MudButton>
+        @if (Document.ToReview == true)
+        {
+            <MudButton OnClick="OnApprove" Color="Color.Success" Size="Size.Small" Variant="Variant.Filled"> APPROVE! </MudButton>
+        }
+        else if (Document.UnApproved && Document.ToReview == false)
+        {
+            <MudButton OnClick="OnApprove" Color="Color.Info" Size="Size.Small" Variant="Variant.Filled"> TO REVIEW! </MudButton>
+        }
+        else
+        {
+            <MudButton OnClick="UnApprove" Color="Color.Warning" Size="Size.Small" Variant="Variant.Filled"> UN APPROVED! </MudButton>
+        }
+    </DialogActions>
+</MudDialog>
+@code {
+
+    [CascadingParameter]
+    public MudDialogInstance DialogInstance { get; set; } = new();
+    [Parameter]
+    public Document Document { get; set; } = new ();
+    public string? Actor { get; set; }
+    public string? Role { get; set; }
+    [CascadingParameter]
+    Task<AuthenticationState>? Authenticate { get; set; }
+    protected override async Task OnParametersSetAsync()
+    {
+        var customAuthStateProvider = (CustomAuthenticationStateProvider)AuthenticationStateProvider;
+        Authenticate = customAuthStateProvider.GetAuthenticationStateAsync();
+        if (Authenticate != null)
+        {
+            var account = await Authenticate;
+            if (account.User.Identity?.Name != null)
+            {
+                Actor = account.User.Identity.Name;
+                Role = account.User.IsInRole("Administrator") ? "Administrator" : "User";
+            }
+        }
+    }
+    private void Cancel() => DialogInstance.Cancel();
+    private async void OnApprove()
+    {
+       
+        try
+        {
+            var response = await DocumentService.UpdateStatusDocumentAsync(Document.Id);
+            if (response.IsSuccessStatusCode)
+            {
+                await ActivityLog.WriteLog($"{Actor}",
+                    $"{Actor} approved document entitled {Document.Title}",
+                    "APPROVED",
+                    $"{Role}");
+            }
+            Snack.Add("Approved Successful", Severity.Success);
+            DialogInstance.Close(DialogResult.Ok(true));
+        }
+        catch (Exception exception)
+        {
+            Console.WriteLine($"{exception.Message}");
+            throw;
+        }
+
+    }
+    private async void UnApprove()
+    {
+       
+        try
+        {
+            var response = await DocumentService.UpdateStatusDocumentAsync(Document.Id);
+            if (response.IsSuccessStatusCode)
+            {
+                await ActivityLog.WriteLog($"{Actor}",
+                    $"{Actor} approved document entitled {Document.Title}",
+                    "APPROVED",
+                    $"{Role}");
+            }
+            Snack.Add("Un Approved Successful", Severity.Warning);
+            DialogInstance.Close(DialogResult.Ok(true));
+        }
+        catch (Exception exception)
+        {
+            Console.WriteLine($"{exception.Message}");
+            throw;
+        }
+
+    }
+    private async Task DownloadFileAsync(string fileName, string storeFileName, string documentTitle)
+    {
+        var parameters = new DialogParameters
+        {
+            { "ContentText", $"{documentTitle}" },
+            { "ButtonText", "Download" },
+            { "StoreFileName", storeFileName },
+            { "FileName", fileName },
+        };
+        await DialogService.ShowAsync<DialogDownload>("Download a copy 📦", parameters);
+    }
+
+
+}

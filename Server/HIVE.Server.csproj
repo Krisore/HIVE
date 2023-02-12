@@ -30,4 +30,8 @@
     <ProjectReference Include="..\Shared\HIVE.Shared.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="ERD\" />
+  </ItemGroup>
+
 </Project>

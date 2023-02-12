@@ -6,5 +6,6 @@ namespace HIVE.Server.Services.Interface
     {
         Task<Activity> InsertLog(Activity activity);
         Task<List<Activity>> GetLogs();
+        Task ClearLogs(int id);
     }
 }

@@ -1,0 +1,76 @@
+﻿
+@inject IUserService UserService
+@inject IActivityLog ActivityLog
+@inject ISnackbar Snack
+@inject AuthenticationStateProvider AuthenticationStateProvider
+<MudDialog DisableSidePadding="true">
+    <DialogContent>
+        <MudDivider Class="my-1" />
+        <MudContainer Style="max-height: 400px; overflow-y: scroll">
+            <MudText Class="my-2" Typo="Typo.body2"> [User / Users]</MudText>
+            <ul>
+                @foreach (var user in Users)
+                {
+                    <li>
+                        <MudText Typo="Typo.caption" Align="Align.Justify">
+                            📦 @user.FirstName, @user.LastName 
+                        </MudText>
+                    </li>
+                }
+            </ul>
+            <MudDivider Class="my-1" />
+            <MudText Align="Align.Center" Typo="Typo.caption"> Do you really want to delete these accounts? <strong> This process cannot be undone. </strong></MudText>
+        </MudContainer>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="Variant.Text" Color="Color.Default" OnClick="OnCancel"> Cancel </MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Error" OnClick="OnOkay"> Ok </MudButton>
+    </DialogActions>
+</MudDialog>
+@code {
+    [CascadingParameter]
+    public MudDialogInstance DialogInstance { get; set; } = new();
+    [Parameter]
+    public HashSet<User> Users { get; set; } = new();
+    Task<AuthenticationState>? Authenticate { get; set; }
+    private string Actor = string.Empty;
+    private string Role = string.Empty;
+    protected override async Task OnParametersSetAsync()
+    {
+        var customAuthStateProvider = (CustomAuthenticationStateProvider)AuthenticationStateProvider;
+        Authenticate = customAuthStateProvider.GetAuthenticationStateAsync();
+        if (Authenticate != null)
+        {
+            var account = await Authenticate;
+            if (account.User.Identity?.Name != null)
+            {
+                Actor = account.User.Identity.Name;
+                Role = account.User.IsInRole("Administrator") ? "Administrator" : "User";
+            }
+        }
+    }
+    private async void OnOkay()
+    {
+        foreach (var user in Users)
+        {
+            try
+            {
+                var response = await UserService.DeleteUserAccount(user.Id);
+                if (response.IsSuccessStatusCode)
+                {
+                    await ActivityLog.WriteLog($"{Actor}",
+                        $"{Actor}, delete  account of {user.LastName}, {user.FirstName}",
+                        "[DELETE]",
+                        $"{Role}");
+                }
+            }
+            catch (Exception exception)
+            {
+                Console.WriteLine($"{exception.Message}");
+            }
+        }
+        Snack.Add("Delete Successfully", Severity.Success);
+        DialogInstance.Close(DialogResult.Ok(true));
+    }
+    private void OnCancel() => DialogInstance.Close(DialogResult.Cancel());
+}

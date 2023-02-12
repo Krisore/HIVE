@@ -20,6 +20,7 @@ namespace HIVE.Client.Services
             return response;
         }
 
+
         public async Task<Curriculum> GetCurriculumById(int id)
         {
             var response = await _client.GetFromJsonAsync<Curriculum>($"api/Curriculums/{id}");
@@ -44,6 +45,22 @@ namespace HIVE.Client.Services
                 Console.WriteLine($"{ex.Message}");
                 throw;
             }
+        }
+        public async Task<HttpResponseMessage> AddCurriculum(Curriculum? curriculum)
+        {
+            var result = await _client.PostAsJsonAsync("api/Curriculums", curriculum);
+            return result;
+        }
+
+        public async Task<HttpResponseMessage> UpdateAcademicProgram(Curriculum program)
+        {
+            var response = await _client.PutAsJsonAsync($"api/Curriculums/{program.Id}", program);
+            return response;
+        }
+        public async Task<HttpResponseMessage> DeleteAcademicProgram(int id)
+        {
+            var result = await _client.DeleteAsync($"api/Curriculums/{id}");
+            return result;
         }
     }
 }

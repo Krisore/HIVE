@@ -24,5 +24,11 @@ namespace HIVE.Server.Services
         {
             return await _context.Activities.ToListAsync();
         }
+        public async Task ClearLogs(int id)
+        {
+            var response = await _context.Activities.FirstOrDefaultAsync(a => a.Id == id);
+            if (response != null) _context.Activities.Remove(response);
+            await _context.SaveChangesAsync();
+        }
     }
 }
