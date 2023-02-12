@@ -49,7 +49,7 @@
             <MudButton Class="rounded-0" Size="Size.Small" Variant="Variant.Outlined" OnClick="@(() => ShowBtnPress(context.Id))">  🗃️@((context.ShowDocuments == true) ? "Hide" : "Show")</MudButton>
             </MudTd>
             <MudTd DataLabel="Name"> @context.Name </MudTd>
-            <MudTd DataLabel="Acronym"><MudChip Label="true" Variant="Variant.Text" Color="Color.Primary" Class="rounded-0">@context.Alt</MudChip></MudTd>
+            <MudTd DataLabel="Acronym"><MudChip Label="true" Variant="Variant.Text" Color="Color.Info" Class="rounded-0">@context.Alt</MudChip></MudTd>
         <MudTd>
             @if (_documents != null)
             {
