@@ -26,6 +26,8 @@ namespace HIVE.Server.Controllers
         {
             Documents = await _repository.GetDocumentsAsync();
             return Ok(Documents);
+           
+
         }
         [HttpGet("{id:int}")]
         public async Task<ActionResult<Document>> GetDocumentAsyncById(int id)

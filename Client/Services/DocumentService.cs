@@ -75,15 +75,23 @@ namespace HIVE.Client.Services
             return response;
         }
 
-        public async Task<List<Document>?> GetAllDocuments()
+        public async Task<List<Document>> GetAllDocuments()
         {
-            var response = await _client.GetFromJsonAsync<List<Document>>("api/Document");
-            if (response is not null)
+            try
             {
-                Documents = response;
+                var response = await _client.GetFromJsonAsync<List<Document>>("api/Document");
+                //if (response is not null)
+                //{
+                //    Documents = response;
+                //    return Documents;
+                //}
+                return response!;
             }
-
-            return Documents;
+            catch (Exception ex)
+            {
+                Console.WriteLine($"{ex.Message}, {ex.HelpLink}");
+                throw;
+            }
         }
 
         public async Task<Document> GetDocumentAsyncById(int id)

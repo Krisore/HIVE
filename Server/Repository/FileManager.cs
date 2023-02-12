@@ -41,7 +41,7 @@ namespace HIVE.Server.Repository
         {
             var uploadResults = new List<FileEntry>();
             var uploadResult = new FileEntry();
-            var container = new BlobContainerClient("DefaultEndpointsProtocol=https;AccountName=puparch;AccountKey=ggiTXy86V3PzvZoDLvjSM9EiKIViz0WG1tPWxh16YTSg4NP2TqQBqMF+2/LUSKw/wnuW53rgsqEU+ASt5LmhUQ==;BlobEndpoint=https://puparch.blob.core.windows.net/;TableEndpoint=https://puparch.table.core.windows.net/;QueueEndpoint=https://puparch.queue.core.windows.net/;FileEndpoint=https://puparch.file.core.windows.net/", "pupstored");
+            var container = new BlobContainerClient("DefaultEndpointsProtocol=https;AccountName=puparch;AccountKey=ggiTXy86V3PzvZoDLvjSM9EiKIViz0WG1tPWxh16YTSg4NP2TqQBqMF+2/LUSKw/wnuW53rgsqEU+ASt5LmhUQ==;EndpointSuffix=core.windows.net", "pupstored");
             foreach (var file in files)
             {
                 var untrustedFileName = file.FileName;
@@ -78,7 +78,7 @@ namespace HIVE.Server.Repository
 
         public async Task DeleteFileAsync(int id)
         {
-            var container = new BlobContainerClient("DefaultEndpointsProtocol=https;AccountName=puparch;AccountKey=ggiTXy86V3PzvZoDLvjSM9EiKIViz0WG1tPWxh16YTSg4NP2TqQBqMF+2/LUSKw/wnuW53rgsqEU+ASt5LmhUQ==;BlobEndpoint=https://puparch.blob.core.windows.net/;TableEndpoint=https://puparch.table.core.windows.net/;QueueEndpoint=https://puparch.queue.core.windows.net/;FileEndpoint=https://puparch.file.core.windows.net/", "pupstored");
+            var container = new BlobContainerClient("DefaultEndpointsProtocol=https;AccountName=puparch;AccountKey=ggiTXy86V3PzvZoDLvjSM9EiKIViz0WG1tPWxh16YTSg4NP2TqQBqMF+2/LUSKw/wnuW53rgsqEU+ASt5LmhUQ==;EndpointSuffix=core.windows.net", "pupstored");
             var response = await _context.FileEntries.FirstOrDefaultAsync(f => f.Id == id);
             _context.FileEntries.Remove(response);
             var blob = container.GetBlobClient(response.StoreFileName);

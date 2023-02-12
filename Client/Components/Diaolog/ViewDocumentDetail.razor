@@ -182,7 +182,6 @@
             { "ButtonText", "Download" },
             { "StoreFileName", storeFileName },
             { "FileName", fileName },
-            {"UserName", _userName}
         };
         await DialogService.ShowAsync<DialogDownload>("Download a copy 📦", parameters);
     }

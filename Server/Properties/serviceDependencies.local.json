@@ -1,10 +1,11 @@
 {
   "dependencies": {
-    "storage1": {
+    "mssql1": {
       "secretStore": "LocalSecretsFile",
-      "resourceId": "/subscriptions/[parameters('subscriptionId')]/resourceGroups/[parameters('resourceGroupName')]/providers/Microsoft.Storage/storageAccounts/puparch",
-      "type": "storage.azure",
-      "connectionId": "ConnectionStrings:StorageConnectionString"
+      "resourceId": "/subscriptions/[parameters('subscriptionId')]/resourceGroups/[parameters('resourceGroupName')]/providers/Microsoft.Sql/servers/pup-hive/databases/HIVE.Server_db",
+      "type": "mssql.azure",
+      "connectionId": "ConnectionStrings:DefaultConnections",
+      "dynamicId": null
     }
   }
 }

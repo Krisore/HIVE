@@ -216,7 +216,7 @@
             ["Documents"] = _selectedItems
         };
 
-        var dialog = await DialogService.ShowAsync<DialogToDeleteDocuments>("Are you really want to Delete these?", parameter);
+        var dialog = await DialogService.ShowAsync<DialogeRestoreTrashDocument>("Are you really want to Restore these?", parameter);
         var result = await dialog.Result;
         if (!result.Canceled)
         {

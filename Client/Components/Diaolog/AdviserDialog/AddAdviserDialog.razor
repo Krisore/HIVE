@@ -106,7 +106,7 @@
                 var response = await AdviserService.AddAdviserAsync(_adviser); // Make it this to update
                 if (response.IsSuccessStatusCode)
                 {
-                    var log = await ActivityLog.WriteLog($"{Actor}", $"Add a curriculum name: [{_adviser.Name}]", "INSERT", $"{Role}");
+                    var log = await ActivityLog.WriteLog($"{Actor}", $"Add a adviser name: [{_adviser.Name}]", "INSERT", $"{Role}");
                     if (log.IsSuccessStatusCode)
                     {
                         Snack.Add("Adviser program added", Severity.Success);

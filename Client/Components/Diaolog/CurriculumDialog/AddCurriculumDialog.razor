@@ -102,7 +102,7 @@
         else
         {
             bool valid = await IsValidAsync();
-            if (!valid)
+            if (valid)
             {
                 var response = await CurriculumService.AddCurriculum(_curriculum); // Make it this to update
                 if (response.IsSuccessStatusCode)

@@ -25,8 +25,8 @@
 
     [Parameter]
     public User User { get; set; }
-
-    MudDialogInstance dialogInstance = new MudDialogInstance();
+    [CascadingParameter]
+    public MudDialogInstance DialogInstance { get; set; } = new MudDialogInstance();
     private List<Activity> Logs = new List<Activity>();
 
     protected override async Task OnParametersSetAsync()
@@ -35,5 +35,5 @@
         Logs = response.Where(l => l.Actor != null && l.Actor.ToLower().Equals(User.Email.ToLower())).ToList();
     }
 
-    private void OnOkay() => dialogInstance.Close(DialogResult.Ok(true));
+    private void OnOkay() => DialogInstance.Close(DialogResult.Cancel());
 }

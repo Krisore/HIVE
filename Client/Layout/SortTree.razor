@@ -62,16 +62,19 @@
 
     protected override async Task OnInitializedAsync()
     {
-        Topics = await TopicService.GetTopics();
-        Documents = await DocumentService.GetAllDocuments();
-        Programs = await CurriculumService.GetProgramsAsync();
-        Types = await DocumentReferenceService.GetReferences();
-
-        foreach (var year in Documents.Select(d => d.DatePublished.Value.Year.ToString()).Distinct())
+        var response = await DocumentService.GetDocumentsAsync();
+        if (response.IsSuccessStatusCode)
         {
-            Years.Add(year);
+            Documents = await response.Content.ReadFromJsonAsync<List<Document>>();
+            Programs = await CurriculumService.GetProgramsAsync();
+            Types = await DocumentReferenceService.GetReferences();
+            Topics = await TopicService.GetTopics();
+            foreach (var year in Documents.Select(d => d.DatePublished?.Year.ToString()).Distinct())
+            {
+                if (year != null) Years.Add(year);
+            }
+            Years.Reverse();
         }
-        Years.Reverse();
     }
 
 }

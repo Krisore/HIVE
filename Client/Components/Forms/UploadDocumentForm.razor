@@ -25,7 +25,7 @@
                 <MudDivider></MudDivider>
                 <MudForm Model="RequestDocument" @bind-IsValid="_success">
                     <MudCardContent>
-                        <MudAlert Class="my-1" Variant="Variant.Text" Severity="Severity.Normal" Dense="true"> Fill up this form to Publish your Document</MudAlert>
+                        <MudAlert Class="my-2" Variant="Variant.Text" Severity="Severity.Normal"  Dense="true"> Fill up this form to Publish your Document</MudAlert>
                         <MudTextField @bind-Value="RequestDocument.Title"
                                       For="@(() => RequestDocument.Title)"
                                       Immediate="true"
@@ -151,7 +151,7 @@
                     </MudCardContent>
                     <MudDivider></MudDivider>
                     <MudCardActions>
-                        <div class="mx-auto">
+                        <div class="ml-auto">
                             <MudButton Class="mx-2 my-2 rounded-0"
                                        ButtonType="ButtonType.Reset"
                                        Variant="Variant.Outlined"

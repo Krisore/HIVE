@@ -26,15 +26,24 @@ namespace HIVE.Server.Repository
         public UploadDocumentRequest DataTransferObjectDocument { get; set; } = new UploadDocumentRequest();
         public async Task<List<Document>> GetDocumentsForArchivist()
         {
-            var response = await _context.Documents.Where(d => d.IsArchived == false && d.IsDeleted == false)
-                .Include(a => a.Adviser)
-                .Include(t => t.Topics)
-                .Include(a => a.Curriculum)
-                .Include(d => d.Reference)
-                .Include(a => a.Authors)
-                .Include(f => f.File)
-                .ToListAsync();
-            return response;
+            try
+            {
+                var response = await _context.Documents.Where(d => d.IsArchived == false && d.IsDeleted == false)
+                    //.Include(a => a.Adviser)
+                    ////.Include(t => t.Topics)
+                    ////.Include(a => a.Curriculum)
+                    ////.Include(d => d.Reference)
+                    ////.Include(a => a.Authors)
+                    ////.Include(f => f.File)
+                    .ToListAsync();
+                return response;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Mabe the documents is null {ex.HelpLink}");
+                ex.HelpLink = "Please contact: kristiandizon.enore@gmail.com";
+                throw;
+            }
         }
         public async Task ArchiveDocument(int id)
         {
@@ -138,19 +147,29 @@ namespace HIVE.Server.Repository
 
         public async Task<List<Document>> GetDocumentsAsync()
         {
-            var response = await _context.Documents
-                .Where(d => d.ToReview == false
-                            && d.UnApproved == false
-                            && d.IsActive == true
-                            && d.IsArchived == false
-                            && d.IsDeleted == false)
-                .Include(t => t.Topics)
-                .Include(a => a.Authors).Include(f => f.File)
-                .Include(a => a.Curriculum)
-                .Include(d => d.Reference)
-                .Include(a => a.Authors)
-                .ToListAsync();
-            return response;
+            try
+            {
+                var response = await _context.Documents
+                    .Where(d => d.ToReview == false
+                                && d.UnApproved == false
+                                && d.IsActive == true
+                                && d.IsArchived == false
+                                && d.IsDeleted == false)
+                    .Include(t => t.Topics)
+                    .Include(a => a.Authors).Include(f => f.File)
+                    .Include(a => a.Curriculum)
+                    .Include(d => d.Reference)
+                    .Include(a => a.Authors)
+                    .ToListAsync();
+                return response;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Mabe the documents is null {ex.HelpLink}");
+                ex.HelpLink = "Please contact: kristiandizon.enore@gmail.com";
+                throw;
+            }
+            
         }
 
        

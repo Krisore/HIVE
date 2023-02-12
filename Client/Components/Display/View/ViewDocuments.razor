@@ -1,4 +1,5 @@
 ﻿@using System.Globalization
+@using System.Net
 @using MudBlazor
 @inject IDocumentService DocumentService
 @inject IAuthorService AuthorService
@@ -7,6 +8,7 @@
 @inject IFileService FileService
 @inject ITopicService TopicService
 @inject IJSRuntime JsRuntime
+@inject NavigationManager NavigationManager
 @inject IDocumentReferenceService DocumentReference
 @inject IDialogService DialogService
 <style>
@@ -103,24 +105,40 @@
    
     protected override async Task OnParametersSetAsync()
     {
-        isLoading = true;
-        await Task.Delay(300);
-        IEnumerable<Document>? Documents = await DocumentService.GetAllDocuments();
-        if (string.IsNullOrWhiteSpace(SearchTerm))
+        try
         {
-            _documents = Documents.ToList();
+            isLoading = true;
+            await Task.Delay(300);
+            var response = await DocumentService.GetDocumentsAsync();
+            if (response.IsSuccessStatusCode)
+            {
+                IEnumerable<Document> Documents = await response.Content.ReadFromJsonAsync<List<Document>>();
+                if (string.IsNullOrWhiteSpace(SearchTerm))
+                {
+                    _documents = Documents.ToList();
+                }
+                else
+                {
+                    if (Documents != null)
+                        _documents = Documents.Where(d => d.Title.Contains(SearchTerm, StringComparison.OrdinalIgnoreCase)
+                                                          || d.Abstract.Contains(SearchTerm, StringComparison.OrdinalIgnoreCase)
+                                                          || d.DatePublished.Value.Year.ToString().Contains(SearchTerm.ToString().ToLower())
+                                                          || d.Authors.Any(a => a.Name.ToLower().Contains(SearchTerm.ToLower())
+                                                          || d.Reference.Name.ToLower().Contains(SearchTerm.ToLower())
+                                                          || d.Curriculum.Name.ToLower().Contains(SearchTerm.ToLower())
+                                                          || d.Curriculum.Alt.ToLower().Contains(SearchTerm.ToLower())
+                                                          || d.Topics.Any(t => t.Name.ToLower().Contains(SearchTerm.ToLower())))).ToList();
+                }
+            }
+            else if(response.StatusCode == HttpStatusCode.NotFound)
+            {
+                NavigationManager.NavigateTo("/", true);
+            }
         }
-        else
+        catch (Exception e)
         {
-            if (Documents != null)
-                _documents = Documents.Where(d => d.Title.Contains(SearchTerm, StringComparison.OrdinalIgnoreCase)
-                                       || d.Abstract.Contains(SearchTerm, StringComparison.OrdinalIgnoreCase)
-                                       || d.DatePublished.Value.Year.ToString().Contains(SearchTerm.ToString().ToLower())
-                                       || d.Authors.Any(a => a.Name.ToLower().Contains(SearchTerm.ToLower())
-                                       || d.Reference.Name.ToLower().Contains(SearchTerm.ToLower())
-                                       || d.Curriculum.Name.ToLower().Contains(SearchTerm.ToLower())
-                                       || d.Curriculum.Alt.ToLower().Contains(SearchTerm.ToLower())
-                                       || d.Topics.Any(t => t.Name.ToLower().Contains(SearchTerm.ToLower())))).ToList();
+            Console.WriteLine(e);
+            throw;
         }
         //get list of the following 
         //_files = await FileService.GetAllFiles();
