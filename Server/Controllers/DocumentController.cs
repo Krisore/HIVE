@@ -21,7 +21,7 @@ namespace HIVE.Server.Controllers
 
         private Document Document { get; set; } = new();
         private List<Document> Documents { get; set; } = new();
-        [HttpGet]
+        [HttpGet("documents")]
         public async Task<ActionResult<List<Document>>> GetDocumentsAsync()
         {
             Documents = await _repository.GetDocumentsAsync();
@@ -119,7 +119,7 @@ namespace HIVE.Server.Controllers
             await _repository.MoveToTrashAsync(id);
             return Ok();
         }
-        [HttpGet]
+        [HttpDelete]
         [Route("archivist/document/delete/{id:int}")]
         public async Task<ActionResult> DeleteAsync(int id)
         {

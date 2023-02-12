@@ -24,7 +24,7 @@ namespace HIVE.Client.Services
 
         public async Task<HttpResponseMessage> GetDocumentsAsync()
         {
-            var response = await _client.GetAsync("api/Document");
+            var response = await _client.GetAsync("api/Document/documents");
             return response;
         }
 
@@ -79,7 +79,7 @@ namespace HIVE.Client.Services
         {
             try
             {
-                var response = await _client.GetFromJsonAsync<List<Document>>("api/Document");
+                var response = await _client.GetFromJsonAsync<List<Document>>("api/Document/");
                 //if (response is not null)
                 //{
                 //    Documents = response;
@@ -129,7 +129,7 @@ namespace HIVE.Client.Services
 
         public async Task<HttpResponseMessage> DeleteDocuments(int id)
         {
-            var response = await _client.DeleteAsync($"api/Document/archivist/delete/{id}");
+            var response = await _client.DeleteAsync($"api/Document/archivist/document/delete/{id}");
             return response;
         }
 
@@ -155,7 +155,7 @@ namespace HIVE.Client.Services
         }
         public async Task<HttpResponseMessage> ArchiveDocumentAsync(int id)
         {
-            var result = await _client.GetAsync($"api/Document/archivist/document/archived/{id}");
+            var result = await _client.DeleteAsync($"api/Document/archivist/document/archived/{id}");
             return result;
         }
 

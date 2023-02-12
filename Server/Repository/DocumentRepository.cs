@@ -28,14 +28,7 @@ namespace HIVE.Server.Repository
         {
             try
             {
-                var response = await _context.Documents.Where(d => d.IsArchived == false && d.IsDeleted == false)
-                    //.Include(a => a.Adviser)
-                    ////.Include(t => t.Topics)
-                    ////.Include(a => a.Curriculum)
-                    ////.Include(d => d.Reference)
-                    ////.Include(a => a.Authors)
-                    ////.Include(f => f.File)
-                    .ToListAsync();
+                var response = await _context.Documents.ToListAsync();
                 return response;
             }
             catch (Exception ex)

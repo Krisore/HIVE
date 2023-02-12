@@ -80,10 +80,14 @@ namespace HIVE.Server.Repository
         {
             var container = new BlobContainerClient("DefaultEndpointsProtocol=https;AccountName=puparch;AccountKey=ggiTXy86V3PzvZoDLvjSM9EiKIViz0WG1tPWxh16YTSg4NP2TqQBqMF+2/LUSKw/wnuW53rgsqEU+ASt5LmhUQ==;EndpointSuffix=core.windows.net", "pupstored");
             var response = await _context.FileEntries.FirstOrDefaultAsync(f => f.Id == id);
-            _context.FileEntries.Remove(response);
-            var blob = container.GetBlobClient(response.StoreFileName);
-            await blob.DeleteAsync();
-            await _context.SaveChangesAsync();
+            if (response != null)
+            {
+                _context.FileEntries.Remove(response);
+                await _context.SaveChangesAsync();
+                var blob = container.GetBlobClient(response.StoreFileName);
+                await blob.DeleteAsync();
+            }
+
         }
     }
 }

@@ -22,5 +22,7 @@ namespace HIVE.Client.Services.Interface
         Task<HttpResponseMessage> ResetPassword(ResetPasswordRequest request);
         Task<List<string?>> UserEmails();
         Task<HttpResponseMessage> DeleteUserAccount(int id);
+        Task<bool> CheckEmail(string email);
+
     }
 }

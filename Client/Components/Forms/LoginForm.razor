@@ -114,7 +114,11 @@
         }
         else if (loginResponse.StatusCode == HttpStatusCode.Unauthorized)
         {
-            await DialogService.ShowAsync<VerifyForm>("Verify your account");
+            var response = await UserService.CheckEmail(_loginRequest.Email);
+            if (response)
+            {
+                await DialogService.ShowAsync<VerifyForm>("Verify your account");
+            }
         }
         else
         {

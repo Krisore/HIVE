@@ -116,7 +116,11 @@
     private async Task<TableData<Reference>> ServerReload(TableState state)
     {
         _references = await DocumentReferenceService.GetReferences();
-        _documents = await DocumentService.GetAllDocuments();
+        var response  = await DocumentService.GetDocumentsAsync();
+        if (response.IsSuccessStatusCode)
+        {
+          NavigationManager.NavigateTo("/dashboard", true);
+        }
         await Task.Delay(300);
         _references = _references.Where(reference =>
         {
@@ -137,7 +141,7 @@
         {
             "name" => _references.OrderByDirection(state.SortDirection, o => o.Name),
             _ => _references
-        };
+            };
 
         _pagedData = _references.Skip(state.Page * state.PageSize).Take(state.PageSize).ToArray();
         return new TableData<Reference>() { TotalItems = _totalItems, Items = _pagedData };

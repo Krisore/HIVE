@@ -12,10 +12,28 @@
 <MudLayout>
     <AuthorizeView>
          <MudAppBar Dense="false" Elevation="1">
-            <a href="/dashboard">
-                <MudAvatar Variant="Variant.Filled" Color="Color.Primary"
-                           Size="Size.Large" Elevation="2" Image="image/Pup_logo.jpg" />
-            </a>
+             <MudCardHeader>
+
+                 <CardHeaderAvatar>
+                     <a href="/dashboard">
+                         <MudAvatar Variant="Variant.Filled" Color="Color.Primary"
+                                    Size="Size.Large" Elevation="2" Image="image/Pup_logo.jpg"/>
+                     </a>
+                 </CardHeaderAvatar>
+                 <CardHeaderContent>
+                    @if (IsDarkMode)
+                    {
+                        <MudText Typo="Typo.body2" Color="Color.Default"> Polytechnic University of the Philippines </MudText>
+                    }
+                    else
+                    {
+                        <MudText Typo = "Typo.body2" Color = "Color.Dark" > Polytechnic University of the Philippines </MudText>
+                    }
+                 </CardHeaderContent>
+                 <CardHeaderActions>
+                    <MudChip Label="true" Size="Size.Medium" Color="Color.Default" Class="rounded-bl-xl"> Biñan Campus </MudChip>
+                 </CardHeaderActions>
+             </MudCardHeader>
              <MudSpacer/>
              <MudMenu Dense="true" Class="my-2 mx-1">
                  <ActivatorContent>
@@ -24,6 +42,9 @@
                             <MudAvatar Variant="Variant.Filled" Color="Color.Primary" Elevation="2">
                                 @context.User.Identity.Name.ToUpper()[0]
                             </MudAvatar>
+                            <MudChip Class="rounded-l-xl mx-2" Size="Size.Small">
+                                @context.User.Identity.Name
+                            </MudChip>
                         </MudTooltip>
                      </div>
                  </ActivatorContent>

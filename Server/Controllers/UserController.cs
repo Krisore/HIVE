@@ -118,6 +118,17 @@ namespace HIVE.Server.Controllers
             return Ok(result);
         }
         [HttpGet]
+        [Route("{email}")]
+        public async Task<ActionResult<bool>> CheckEmail(string email)
+        {
+            var result = await _userService.GetUserAccountByEmail(email);
+            if (result.VerifiedAt is null && result is not null)
+            {
+                return Unauthorized(true);
+            }
+            return NotFound(false);
+        }
+        [HttpGet]
         [Route("emails")]
         public async Task<ActionResult<List<string>>> GetEmails()
         {
