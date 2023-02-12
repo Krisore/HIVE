@@ -1,0 +1,39 @@
+﻿@inject IActivityLog ActivityLog
+<MudDialog DisableSidePadding="true">
+    <DialogContent>
+        <MudTable Items="@Logs" Elevation="0" Dense="true" Bordered="true" Hover="true">
+            <HeaderContent>
+                <MudTh>Type</MudTh>
+                <MudTh>Detailed</MudTh>
+                <MudTh>Date</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Type"><MudChip Label="true" Text="@context.Type" Variant="Variant.Filled" Class="rounded-br-xl" Size="Size.Small" Color="Color.Warning" /></MudTd>
+                <MudTd><MudText Typo="Typo.caption">@context.Detailed</MudText></MudTd>
+                <MudTd>@context.Date!.Value.ToLongDateString()</MudTd>
+            </RowTemplate>
+            <PagerContent>
+                <MudTablePager/>
+            </PagerContent>
+        </MudTable>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="Variant.Filled" Color="Color.Info" OnClick="OnOkay"> Ok</MudButton>
+    </DialogActions>
+</MudDialog>
+@code {
+
+    [Parameter]
+    public User User { get; set; }
+
+    MudDialogInstance dialogInstance = new MudDialogInstance();
+    private List<Activity> Logs = new List<Activity>();
+
+    protected override async Task OnParametersSetAsync()
+    {
+        var response = await ActivityLog.GetLogs();
+        Logs = response.Where(l => l.Actor != null && l.Actor.ToLower().Equals(User.Email.ToLower())).ToList();
+    }
+
+    private void OnOkay() => dialogInstance.Close(DialogResult.Ok(true));
+}

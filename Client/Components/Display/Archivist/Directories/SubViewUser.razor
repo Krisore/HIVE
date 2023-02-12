@@ -36,7 +36,7 @@
         </MudTooltip>
         <MudText>
             <MudChip Class="rounded-0" IconColor="Color.Primary" Variant="Variant.Outlined" Label="true">
-                Selected Curriculum:<MudChip Size="Size.Small"> @_selectedItems.Count </MudChip>
+                Selected User:<MudChip Size="Size.Small"> @_selectedItems.Count </MudChip>
             </MudChip>
         </MudText>
     </ToolBarContent>
@@ -103,14 +103,16 @@
                     <MudCard Elevation="0">
                         <MudCardHeader>
                             <CardHeaderAvatar>
-                                <MudAvatar Elevation="2" Size="Size.Large" Image="/image/Pup_logo.jpg"></MudAvatar>
+                                <MudAvatar Color="Color.Primary" Variant="Variant.Filled" Elevation="2" Size="Size.Large">
+                                    @context.LastName.ToUpper().ToCharArray()[0]
+                                </MudAvatar>
                             </CardHeaderAvatar>
                             <CardHeaderContent>
                                 <MudText Typo="Typo.body2"> @context.LastName ,@context.FirstName </MudText>
                                 <MudChip Label="true" Variant="Variant.Text"> @context.Email</MudChip>
                             </CardHeaderContent>
                             <CardHeaderActions>
-                                <MudChip Label="true" IconColor="Color.Error" Variant="Variant.Text" Size="Size.Medium" Icon="@Icons.Material.Rounded.Pages">
+                                <MudChip Label="true" IconColor="Color.Error" Variant="Variant.Text" OnClick="@(()=> UserLogs(context))" Size="Size.Medium" Icon="@Icons.Material.Rounded.Pages">
                                     Student logs
                                 </MudChip>
                                 <MudChip Label="true" IconColor="Color.Warning" Size="Size.Medium" Color="Color.Info" Variant="Variant.Filled" Icon="@Icons.Custom.FileFormats.FileExcel">
@@ -190,6 +192,26 @@
                 ["Users"] = _selectedItems
             };
         var dialog = await DialogService.ShowAsync<DialogDeleteUserAccount>("Delete this Selected User?", parameter);
+        var result = await dialog.Result;
+        if (!result.Canceled)
+        {
+            await _table.ReloadServerData();
+        }
+        _errors.Clear();
+    }
+
+    private DialogOptions _options = new()
+    {
+        FullWidth = true,
+        Position = DialogPosition.TopCenter,
+    };
+    private async void UserLogs(User user)
+    {
+        var parameter = new DialogParameters
+        {
+            ["User"] = user
+        };
+        var dialog = await DialogService.ShowAsync<UserDialogLogs>($"{user.LastName}, {user.FirstName} Logs", parameter, _options);
         var result = await dialog.Result;
         if (!result.Canceled)
         {
