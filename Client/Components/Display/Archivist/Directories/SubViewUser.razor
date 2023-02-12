@@ -42,10 +42,10 @@
     </ToolBarContent>
     <HeaderContent>
         <MudTh></MudTh>
+        <MudTh> <MudTableSortLabel SortLabel="role" T="User"> Role </MudTableSortLabel></MudTh>
         <MudTh><MudTableSortLabel SortLabel="lastname" T="User"> Last Name </MudTableSortLabel></MudTh>
         <MudTh><MudTableSortLabel SortLabel="firstname" T="User"> First Name </MudTableSortLabel></MudTh>
         <MudTh> <MudTableSortLabel SortLabel="email" T="User"> Email </MudTableSortLabel></MudTh>
-        <MudTh> <MudTableSortLabel SortLabel="role" T="User"> Role </MudTableSortLabel></MudTh>
         <MudTh> <MudTableSortLabel SortLabel="datereg" T="User"> Date Register </MudTableSortLabel></MudTh>
         <MudTh> <MudTableSortLabel SortLabel="verified" T="User"> Verified At </MudTableSortLabel></MudTh>
         <MudTh> <MudTableSortLabel SortLabel="status" T="User"> status </MudTableSortLabel></MudTh>
@@ -54,16 +54,16 @@
     <RowTemplate>
         <MudTd>
             <MudButton Class="rounded-0" Size="Size.Small" Variant="Variant.Outlined" OnClick="@(() => ShowBtnPress(context.Id))">  🗃️@((context.ShowDocuments == true) ? "Hide" : "Show")</MudButton>
-            </MudTd>
+        </MudTd>
+        <MudTd DataLabel="Email">
+            <MudChip Class="rounded-br-xl" Variant="Variant.Filled" Color="Color.Info">
+                <code>@context.Role</code>
+            </MudChip>
+        </MudTd>
         <MudTd DataLabel="Email">@context.LastName</MudTd>
             <MudTd DataLabel="Email">@context.FirstName</MudTd>
             <MudTd DataLabel="Email">@context.Email</MudTd>
-            <MudTd DataLabel="Email">
-                <MudChip Class="rounded-0" Variant="Variant.Filled" Color="Color.Info">
-                    <code>@context.Role</code>
-                </MudChip>
-            </MudTd>
-            <MudTd DataLabel="Email">@context.DateRegistered!.Value.ToShortDateString()</MudTd>
+        <MudTd DataLabel="Email">@context.DateRegistered!.Value.ToShortDateString()</MudTd>
             <MudTd DataLabel="Email">@context.VerifiedAt!.Value.ToShortDateString()</MudTd>
         <MudTd DataLabel="Email">
             @if (context.VerifiedAt is null)

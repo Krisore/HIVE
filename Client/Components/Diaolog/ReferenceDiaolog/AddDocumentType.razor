@@ -76,7 +76,7 @@
             var response = await DocumentReferenceService.EditReferenceAsync(ReferenceId, _reference);
             if (response.IsSuccessStatusCode)
             {
-                var log = await ActivityLog.WriteLog($"{Actor}", $"Add a Reference name: [{_reference.Name}]", "INSERT", $"{Role}");
+                var log = await ActivityLog.WriteLog($"{Actor}", $"Add a Reference name: {_reference.Name}", "INSERT", $"{Role}");
                 if (log.IsSuccessStatusCode)
                 {
                     Snack.Add("Reference  Edited", Severity.Info);
@@ -94,7 +94,7 @@
                 var response = await DocumentReferenceService.AddReferenceAsync(_reference);
                 if (response.IsSuccessStatusCode)
                 {
-                    var log = await ActivityLog.WriteLog($"{Actor}", $"Add a Reference name: [{_reference.Name}]", "INSERT", $"{Role}");
+                    var log = await ActivityLog.WriteLog($"{Actor}", $"Add a Reference name: {_reference.Name}", "INSERT", $"{Role}");
                     if (log.IsSuccessStatusCode)
                     {
                         Snack.Add("Reference  added", Severity.Success);

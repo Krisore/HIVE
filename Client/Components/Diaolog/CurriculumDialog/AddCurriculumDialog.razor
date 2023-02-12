@@ -89,7 +89,7 @@
             var response = await CurriculumService.UpdateAcademicProgram(_curriculum);
             if (response.IsSuccessStatusCode)
             {
-                var log = await ActivityLog.WriteLog($"{Actor}", $"Add a curriculum name: [{_curriculum.Name}]", "INSERT", $"{Role}");
+                var log = await ActivityLog.WriteLog($"{Actor}", $"Add a curriculum name: {_curriculum.Name}", "INSERT", $"{Role}");
                 if (log.IsSuccessStatusCode)
                 {
                     Snack.Add("Curriculum  Edited", Severity.Info);
@@ -107,7 +107,7 @@
                 var response = await CurriculumService.AddCurriculum(_curriculum); // Make it this to update
                 if (response.IsSuccessStatusCode)
                 {
-                    var log = await ActivityLog.WriteLog($"{Actor}", $"Add a curriculum name: [{_curriculum.Name}]", "INSERT", $"{Role}");
+                    var log = await ActivityLog.WriteLog($"{Actor}", $"Add a curriculum name: {_curriculum.Name}", "INSERT", $"{Role}");
                     if (log.IsSuccessStatusCode)
                     {
                         Snack.Add("Curriculum program added", Severity.Success);

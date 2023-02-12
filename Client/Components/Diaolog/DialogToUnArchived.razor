@@ -1,40 +1,39 @@
-﻿
-@inject IUserService UserService
+﻿@inject IDocumentService DocumentService
 @inject IActivityLog ActivityLog
 @inject ISnackbar Snack
 @inject AuthenticationStateProvider AuthenticationStateProvider
 <MudDialog DisableSidePadding="true">
     <DialogContent>
-        <MudDivider Class="my-1" />
         <MudContainer Style="max-height: 400px; overflow-y: scroll">
-            <MudText Class="my-2" Typo="Typo.body2"> [User / Users]</MudText>
+            <MudText Typo="Typo.body2"> [Documents]</MudText>
             <ul>
-                @foreach (var user in Users)
+                @foreach (var document in Documents)
                 {
                     <li>
                         <MudText Typo="Typo.caption" Align="Align.Justify">
-                            📦 @user.FirstName, @user.LastName 
+                            📦 @document.Title
                         </MudText>
                     </li>
                 }
             </ul>
-            <MudDivider Class="my-1" />
-            <MudText Align="Align.Center" Typo="Typo.caption"> Do you really want to delete these accounts? <strong> This process cannot be undone. </strong></MudText>
         </MudContainer>
     </DialogContent>
     <DialogActions>
-        <MudButton Variant="Variant.Text" Color="Color.Default" OnClick="OnCancel"> Cancel </MudButton>
-        <MudButton Variant="Variant.Filled" Color="Color.Error" OnClick="OnOkay"> Ok </MudButton>
+        <MudButton Variant="Variant.Text" Color="Color.Success" OnClick="OnCancel"> Cancel </MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Success" OnClick="OnOkay"> Ok </MudButton>
     </DialogActions>
 </MudDialog>
 @code {
+
     [CascadingParameter]
-    public MudDialogInstance DialogInstance { get; set; } = new();
-    [Parameter]
-    public HashSet<User> Users { get; set; } = new();
+    MudDialogInstance DialogInstance { get; set; } = new();
+    [CascadingParameter]
     Task<AuthenticationState>? Authenticate { get; set; }
-    private string Actor = string.Empty;
-    private string Role = string.Empty;
+    [Parameter]
+    public HashSet<Document> Documents { get; set; } = new();
+    [Parameter] public string? Actor { get; set; }
+    [Parameter] public string? Role { get; set; }
+
     protected override async Task OnParametersSetAsync()
     {
         var customAuthStateProvider = (CustomAuthenticationStateProvider)AuthenticationStateProvider;
@@ -49,19 +48,20 @@
             }
         }
     }
+
     private async void OnOkay()
     {
-        foreach (var user in Users)
+        foreach (var document in Documents)
         {
             try
             {
-                var response = await UserService.DeleteUserAccount(user.Id);
+                var response = await DocumentService.UnArchiveDocumentAsync(document.Id);
                 if (response.IsSuccessStatusCode)
                 {
                     await ActivityLog.WriteLog($"{Actor}",
-                        $"{Actor}, delete  account of {user.LastName}, {user.FirstName}",
-                        "[DELETE]",
-                        $"{Role}");
+                   $"{Actor} un archive document entitled {document.Title}",
+                   "UNARCHIVED",
+                   $"{Role}");
                 }
             }
             catch (Exception exception)
@@ -69,8 +69,9 @@
                 Console.WriteLine($"{exception.Message}");
             }
         }
-        Snack.Add("Delete Successfully", Severity.Success);
+        Snack.Add("Archived Successful", Severity.Success);
         DialogInstance.Close(DialogResult.Ok(true));
+
     }
     private void OnCancel() => DialogInstance.Close(DialogResult.Cancel());
 }

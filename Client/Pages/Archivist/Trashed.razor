@@ -1,0 +1,17 @@
+﻿@page "/trash"
+@using Microsoft.AspNetCore.Authorization
+@layout ArchivistLayout
+@attribute [Authorize(Roles = "Administrator")]
+<PageTitle></PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.ExtraExtraLarge" Class="my-12">
+    <MudTabs Outlined="false" Centered="false">
+        <MudTabPanel Text="Trash" Icon="@Icons.Material.Filled.FolderDelete">
+            <SubViewTrash/>
+        </MudTabPanel>
+    </MudTabs>
+</MudContainer>
+
+@code {
+
+}

@@ -1,0 +1,18 @@
+﻿@page "/archives"
+@using Microsoft.AspNetCore.Authorization
+@layout ArchivistLayout
+@attribute [Authorize(Roles = "Administrator")]
+<PageTitle></PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.ExtraExtraLarge" Class="my-12">
+    <MudTabs Outlined="false" Centered="false">
+        <MudTabPanel Text="Archive" Icon="@Icons.Material.Filled.Archive">
+            <SubViewInArchived/>
+        </MudTabPanel>
+    </MudTabs>
+</MudContainer>
+
+
+@code {
+
+}

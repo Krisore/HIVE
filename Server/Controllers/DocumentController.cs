@@ -118,6 +118,13 @@ namespace HIVE.Server.Controllers
             return Ok();
         }
         [HttpGet]
+        [Route("archivist/document/delete/{id:int}")]
+        public async Task<ActionResult> DeleteAsync(int id)
+        {
+            await _repository.DeleteAsync(id);
+            return Ok();
+        }
+        [HttpGet]
         [Route("archivist/document/unarchived/{id:int}")]
         public async Task<ActionResult> UnArchiveDocument(int id)
         {
@@ -138,5 +145,20 @@ namespace HIVE.Server.Controllers
             await _repository.UpdateDocumentStatus(id);
             return Ok();
         }
+        [HttpGet]
+        [Route("archivist/document/archived/")]
+        public async Task<ActionResult<List<Document>>> GetArchivedDocumentsAsync()
+        {
+            var response = await _repository.GetArchivedDocumentsAsync();
+            return Ok(response);
+        }
+        [HttpGet]
+        [Route("archivist/document/trash/")]
+        public async Task<ActionResult<List<Document>>> GetDocumentsInTrashAsync()
+        {
+            var response = await _repository.GetTrashedDocumentsAsync();
+            return Ok(response);
+        }
+
     }
 }

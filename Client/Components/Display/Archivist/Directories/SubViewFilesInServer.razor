@@ -3,7 +3,7 @@
 @inject IDialogService DialogService
 @inject IActivityLog ActivityLog
 <MudTable T="FileEntry" ServerData="@(new Func<TableState, Task<TableData<FileEntry>>>(ServerReload))"
-          Dense="true" Hover="true" @ref="_table" Bordered="false" Striped="true" MultiSelection="true" @bind-SelectedItems="_selectedItems">
+          Dense="true" Hover="true" @ref="_table" Bordered="true" Striped="true">
     <ToolBarContent>
         <MudTextField Variant="Variant.Outlined" T="string" ValueChanged="@(OnSearch)" Placeholder="Search" Adornment="Adornment.End"
                       AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0" Margin="Margin.Dense"></MudTextField>
@@ -18,18 +18,17 @@
                        Color="Color.Info"
                        OnClick="@(()=> _table.ReloadServerData())" />
         <MudChip Class="d-block" Variant="Variant.Outlined">
-            Pending to Review :
+            Total Files :
             <MudChip Size="Size.Small" Color="Color.Primary" Variant="Variant.Text">
                 @_totalDocuments
             </MudChip>
         </MudChip>
     </ToolBarContent>
     <HeaderContent>
-        <MudTh> Detail</MudTh>
         <MudTh><MudTableSortLabel SortLabel="storedFile" T="FileEntry">Trusted File Name</MudTableSortLabel></MudTh>
         <MudTh><MudTableSortLabel SortLabel="fileName" T="FileEntry">File Name</MudTableSortLabel></MudTh>
         <MudTh><MudTableSortLabel SortLabel="status" T="FileEntry">Status </MudTableSortLabel></MudTh>
-        <MudTh><MudTableSortLabel SortLabel="size" T="FileEntry">size</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel SortLabel="size" T="FileEntry">Size</MudTableSortLabel></MudTh>
     </HeaderContent>
     <RowTemplate>
         <MudTd DataLabel="Trusted File Name">
@@ -41,10 +40,17 @@
             </MudText>
         </MudTd>
         <MudTd DataLabel="Status">
-            <MudChip Text="@context.Status" Variant="Variant.Outlined" Size="Size.Small" Color="Color.Info" />
+            @if (context.Status)
+            {
+                <MudChip Text="active" Variant="Variant.Outlined" Size="Size.Small" Color="Color.Success" />
+            }
+            else
+            {
+                <MudChip Text="un-active" Variant="Variant.Outlined" Size="Size.Small" Color="Color.Warning" />
+            }
         </MudTd>
         <MudTd DataLabel="Size">
-            <MudChip Text="@context.Size" Variant="Variant.Text" Size="Size.Small" Color="Color.Info" />
+            <MudChip Text="@context.Size.ToString()" Variant="Variant.Text" Size="Size.Small" Color="Color.Info" />
         </MudTd>
     </RowTemplate>
     <NoRecordsContent>

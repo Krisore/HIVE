@@ -45,6 +45,16 @@ namespace HIVE.Server.Repository
         {
             await _documentService.UnArchiveDocument(id);
         }
+        public async Task DeleteAsync(int id)
+        {
+            var response = await _context.Documents.FirstOrDefaultAsync(D => D.Id == id);
+            if (response is not null)
+            {
+                _context.Documents.Remove(response);
+                await _fileManager.DeleteFileAsync(response.Id);
+            }
+            await  _context.SaveChangesAsync();
+        }
         public async Task MoveToTrashAsync(int id)
         {
             await _documentService.MoveToTrash(id);
@@ -54,6 +64,29 @@ namespace HIVE.Server.Repository
         {
             await _documentService.Restore(id);
 
+        }
+        public async Task<List<Document>> GetArchivedDocumentsAsync()
+        {
+            var result = await _context.Documents.Where(d => d.IsArchived == true && d.IsDeleted == false)
+                .Include(d => d.Adviser)
+                .Include(d => d.Reference)
+                .Include(t => t.Topics)
+                .Include(a => a.Curriculum)
+                .Include(a => a.Authors)
+                .ToListAsync();
+            return result;
+        }
+
+        public async Task<List<Document>> GetTrashedDocumentsAsync()
+        {
+            var result = await _context.Documents.Where(d => d.IsDeleted == true)
+                .Include(d => d.Adviser)
+                .Include(t => t.Topics)
+                .Include(a => a.Curriculum)
+                .Include(d => d.Reference)
+                .Include(a => a.Authors)
+                .ToListAsync();
+            return result;
         }
         public async Task UpdateDocumentStatus(int id)
         {
@@ -119,6 +152,8 @@ namespace HIVE.Server.Repository
                 .ToListAsync();
             return response;
         }
+
+       
 
         public async Task<IEnumerable<Document>> GetMyDocumentsAsync(string owner)
         {

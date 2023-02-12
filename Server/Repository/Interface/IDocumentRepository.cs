@@ -7,7 +7,10 @@ namespace HIVE.Server.Repository.Interface
     {
         UploadDocumentRequest DataTransferObjectDocument { get; set; }
         Task<List<Document>> GetDocumentsAsync();
+        Task<List<Document>> GetArchivedDocumentsAsync();
+        Task<List<Document>> GetTrashedDocumentsAsync();
         Task<IEnumerable<Document>> GetMyDocumentsAsync(string owner);
+        Task DeleteAsync(int id);
         Task<Document> GetDocumentAsyncById(int id);
         Task DeleteDocumentAsync(int id);
         Task<Document> AddDocumentAsync(UploadDocumentRequest request);

@@ -4,11 +4,14 @@
 <PageTitle> Archivist | Documents 🗃️</PageTitle>
 <MudContainer MaxWidth="MaxWidth.ExtraExtraLarge">
     <MudTabs>
-        <MudTabPanel Text="Documents" Icon="@Icons.Material.Filled.AttachFile">
-            <SubViewDocuments />
-        </MudTabPanel>
         <MudTabPanel Text="To Review" Icon="@Icons.Material.Filled.Reviews">
             <SubViewDocumentsToReview  />
+        </MudTabPanel>
+        <MudTabPanel Text="Documents" Icon="@Icons.Material.Filled.AttachFile">
+            <SubViewDocuments/>
+        </MudTabPanel>
+        <MudTabPanel Text="Files" Icon="@Icons.Material.Filled.FilePresent">
+            <SubViewFilesInServer/>
         </MudTabPanel>
     </MudTabs>
 </MudContainer>

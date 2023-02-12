@@ -102,7 +102,7 @@
             if (account.User.Identity?.Name != null)
             {
                 Actor = account.User.Identity.Name;
-                Role = account.User.IsInRole("Administrator") ? "[Administrator]" : "[User]";
+                Role = account.User.IsInRole("Administrator") ? "Administrator" : "User";
             }
         }
     }

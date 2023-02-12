@@ -119,6 +119,12 @@ namespace HIVE.Client.Services
             return result;
         }
 
+        public async Task<HttpResponseMessage> DeleteDocuments(int id)
+        {
+            var response = await _client.DeleteAsync($"api/Document/archivist/delete/{id}");
+            return response;
+        }
+
 
         public async Task<IEnumerable<Document>> GetMyDocumentsAsync(string owner)
         {
@@ -173,5 +179,19 @@ namespace HIVE.Client.Services
         {
             throw new NotImplementedException();
         }
+
+        public async Task<List<Document>> GetDocumentsInTrash()
+        {
+            var result = await _client.GetFromJsonAsync<List<Document>>($"api/Document/archivist/document/trash/");
+            if (result == null) throw new ArgumentNullException(nameof(result));
+            return result;
+        }
+
+        public async Task<List<Document>> GetArchivedDocuments()
+        {
+            var response = await _client.GetFromJsonAsync<List<Document>>($"api/Document/archivist/document/archived/");
+            return response ?? throw new InvalidOperationException();
+        }
+
     }
 }
