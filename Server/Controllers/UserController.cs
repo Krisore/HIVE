@@ -62,6 +62,22 @@ namespace HIVE.Server.Controllers
             return Ok(result);
         }
         [HttpPost]
+        [Route("register/admin")]
+        [AllowAnonymous]
+        public async Task<IActionResult> RegisterAdmin(User request)
+        {
+            await _userService.RegisterAdmin(request);
+            return Ok();
+        }
+        [HttpPut]
+        [Route("update/admin/{id:int}")]
+        [AllowAnonymous]
+        public async Task<IActionResult> UpdateAdmin(int id, User request)
+        {
+            await _userService.UpdateAdminAccount(id, request);
+            return Ok();
+        }
+        [HttpPost]
         [Route("verify/{token}")]
         public async Task<IActionResult> Verify(string token)
         {
@@ -119,6 +135,22 @@ namespace HIVE.Server.Controllers
             {
                 var response = await _userService.GetUsers();
                 return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"{ex.Message}");
+                throw;
+            }
+        }
+        [HttpDelete]
+        [Route("delete/{id:int}")]
+        [Authorize(Roles = "Administrator")]
+        public async Task<ActionResult> DeleteUser(int id)
+        {
+            try
+            {
+                 await _userService.DeleteUser(id);
+                return Ok();
             }
             catch (Exception ex)
             {

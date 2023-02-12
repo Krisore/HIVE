@@ -15,9 +15,12 @@ namespace HIVE.Client.Services.Interface
         Task<HttpResponseMessage> UpdateUserAccount(int id, UserRegisterRequest user);
         Task<HttpResponseMessage> Login(LoginRequest request);
         Task<HttpResponseMessage> RegisterAsync(UserRegisterRequest request);
+        Task<HttpResponseMessage> RegisterAdminAsync(User request);
+        Task<HttpResponseMessage> UpdateAdminAccount(int id, User request);
         Task<HttpResponseMessage> VerifyAsync(string token);
         Task<HttpResponseMessage> ForgotPassword(string email);
         Task<HttpResponseMessage> ResetPassword(ResetPasswordRequest request);
         Task<List<string?>> UserEmails();
+        Task<HttpResponseMessage> DeleteUserAccount(int id);
     }
 }

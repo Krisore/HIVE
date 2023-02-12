@@ -4,6 +4,8 @@ using System.Security.Cryptography;
 using HIVE.Server.Data;
 using HIVE.Server.Services.Interface;
 using Microsoft.EntityFrameworkCore;
+using HIVE.Server.Migrations;
+using Microsoft.AspNetCore.Identity;
 
 namespace HIVE.Server.Services
 {
@@ -22,6 +24,23 @@ namespace HIVE.Server.Services
             return user;
         }
 
+        public async Task DeleteUser(int id)
+        {
+            var response = await _context.Users.FirstOrDefaultAsync(d => d.Id == id);
+            if (response != null)
+            {
+                var sendVerification = new SendMail
+                {
+                    To = response.Email,
+                    Subject = $"PUP ARCHIVE :  Deletion of account of {response.LastName}, {response.FirstName}",
+                    Body = $"<strong> Hello {response.Email}, Your account has been deleted </strong>"
+                };
+                _emailService.SendEmail(sendVerification);
+                _context.Users.Remove(response);
+
+                await _context.SaveChangesAsync();
+            }
+        }
         public async Task<string> RegisterUser(UserRegisterRequest request)
         {
             if (request == null) throw new ArgumentNullException(nameof(request));
@@ -67,6 +86,58 @@ namespace HIVE.Server.Services
             }
         }
 
+        public async Task RegisterAdmin(User request)
+        {
+            CreatePasswordHash(request.Password, out byte[] passwordHash, out byte[] passwordSalt);
+            var user = new User()
+            {
+                UserName = request.UserName,
+                FirstName = request.FirstName,
+                LastName = request.LastName,
+                Email = request.Email,
+                Role = request.Role,
+                DateRegistered = DateTime.Now,
+                PasswordHash = passwordHash,
+                PasswordSalt = passwordSalt,
+                VerificationToken = CreateRandomToken()
+            };
+            var sendVerification = new SendMail
+            {
+                To = user.Email,
+                Subject = "PUP ARCHIVE : Email Verification Code",
+                Body = $"<strong> Verification code: </strong> <code>{user.VerificationToken}</code>"
+            };
+            _emailService.SendEmail(sendVerification);
+            _context.Users.Add(user);
+            await  _context.SaveChangesAsync();
+
+        }
+        public async Task UpdateAdminAccount(int id, User request)
+        {
+            CreatePasswordHash(request.Password, out byte[] passwordHash, out byte[] passwordSalt);
+            var user = new User()
+            {
+                UserName = request.UserName,
+                FirstName = request.FirstName,
+                LastName = request.LastName,
+                Email = request.Email,
+                Role = request.Role,
+                DateRegistered = DateTime.Now,
+                PasswordHash = passwordHash,
+                PasswordSalt = passwordSalt,
+                VerificationToken = CreateRandomToken()
+            };
+            var sendVerification = new SendMail
+            {
+                To = user.Email,
+                Subject = "PUP ARCHIVE : Email Verification Code",
+                Body = $"<strong> Verification code: </strong> <code>{user.VerificationToken}</code>"
+            };
+            _emailService.SendEmail(sendVerification);
+            _context.Users.Add(user);
+            await _context.SaveChangesAsync();
+
+        }
         public async Task<string?> UpdateUser(int id, UserRegisterRequest request)
         {
             var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == id);

@@ -24,5 +24,17 @@ namespace HIVE.Client.Services
             var response = await _client.PostAsJsonAsync($"api/Activity/write", log);
             return response;
         }
+
+        public async Task<List<Activity>> GetLogs()
+        {
+            var response = await _client.GetFromJsonAsync<List<Activity>>("api/Activity/logs");
+            return response;
+        }
+
+        public async Task<HttpResponseMessage> ClearLogs(int id)
+        {
+            var response = await _client.DeleteAsync($"api/Activity/logs/delete/{id}");
+            return response;
+        }
     }
 }

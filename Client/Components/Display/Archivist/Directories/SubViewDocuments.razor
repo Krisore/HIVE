@@ -25,20 +25,14 @@
             </MudChip>
         </MudChip>
         <div class="mx-5">
-            <MudTooltip Text="Download Selected Document" Arrow="true">
-                <MudIconButton Variant="Variant.Text"
-                               DisableElevation="false"
-                               Size="Size.Medium"
-                               Color="Color.Success"
-                               Icon="@Icons.Material.Filled.Download" />
-            </MudTooltip>
             <MudTooltip Text="Archive Selected Document" Arrow="true">
                 <MudIconButton Class=" mx-2"
                            Variant="Variant.Text"
                            DisableElevation="true"
+                           Color="Color.Success"
                            Size="Size.Medium"
                            OnClick="Archived"
-                           Icon="@Icons.Material.Filled.Archive" Color="Color.Inherit">
+                           Icon="@Icons.Material.Filled.Archive">
                 </MudIconButton>
             </MudTooltip>
             <MudTooltip Text="Move to Trash" Arrow="true">
@@ -122,8 +116,7 @@
 @code {
     [CascadingParameter] Task<AuthenticationState>? AuthenticationState { get; set; }
     [Parameter] public string Role { get; set; }
-    [Parameter] public int AdviserId { get; set; }
-    [Parameter] public int CurriculumId { get; set; }
+    [Parameter] public int ReferenceId { get; set; }
     IEnumerable<Document>? _documents = new List<Document>();
     private string? _userName = string.Empty;
     private IEnumerable<Document> _pagedData;
@@ -145,11 +138,19 @@
         IEnumerable<Document> data = documents;
         if (!string.IsNullOrEmpty(Role) && Role.Equals("Adviser"))
         {
-            data = data.Where(d => d.AdviserId == AdviserId);
+            data = data.Where(d => d.AdviserId == ReferenceId);
         }
         else if(!string.IsNullOrEmpty(Role) && Role.Equals("Curriculum"))
         {
-            data = data.Where(d => d.CurriculumId == CurriculumId);
+            data = data.Where(d => d.CurriculumId == ReferenceId);
+        }
+        else if (!string.IsNullOrEmpty(Role) && Role.Equals("Reference"))
+        {
+            data = data.Where(d => d.ReferenceId == ReferenceId);
+        }
+        else if (!string.IsNullOrEmpty(Role) && Role.Equals("User"))
+        {
+            data = data.Where(d => d.UserId == ReferenceId);
         }
         data = data.OrderByDescending(d => d.ToReview);
         _totalDocuments = data.Count(d => d.ToReview);
@@ -203,7 +204,7 @@
             ["Documents"] = _selectedItems
         };
 
-        var dialog = await DialogService.ShowAsync<DialogMoveToTrash>("Are you really want to archive these?", parameter);
+        var dialog = await DialogService.ShowAsync<DialogMoveToTrash>("Are you really want to move  these to trash?", parameter);
         var result = await dialog.Result;
         if (!result.Canceled)
         {

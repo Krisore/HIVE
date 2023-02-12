@@ -1,0 +1,139 @@
+﻿@inject IDocumentService DocumentService
+@inject IFileService FileService
+@inject IDialogService DialogService
+@inject IActivityLog ActivityLog
+<MudTable T="Activity" ServerData="@(new Func<TableState, Task<TableData<Activity>>>(ServerReload))"
+          Dense="true" Hover="true" @ref="_table" Bordered="true" Striped="true" MultiSelection="true" @bind-SelectedItems="_selectedItems">
+    <ToolBarContent>
+        <MudTextField Variant="Variant.Outlined" T="string" ValueChanged="@(OnSearch)" Placeholder="Search" Adornment="Adornment.End"
+                      AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0" Margin="Margin.Dense"></MudTextField>
+        @if (!string.IsNullOrWhiteSpace(_logSearch))
+        {
+            <MudChip Label="true" Variant="Variant.Text" Color="Color.Info" Size="Size.Large" Class="rounded-0">
+                result: @_logSearch (@_table.GetFilteredItemsCount())
+            </MudChip>
+        }
+        <MudSpacer />
+        <MudIconButton Icon="@Icons.Material.Rounded.Sync"
+                       Color="Color.Info"
+                       OnClick="@(()=> _table.ReloadServerData())" />
+        <MudChip Class="d-block" Variant="Variant.Outlined">
+            Total Logs :
+            <MudChip Size="Size.Small" Color="Color.Primary" Variant="Variant.Text">
+                @_totalDocuments
+            </MudChip>
+        </MudChip>
+        <div class="mx-5">
+            <MudTooltip Text="Delete this logs" Arrow="true">
+                <MudIconButton Variant="Variant.Text"
+                               DisableElevation="false"
+                               Size="Size.Medium"
+                               Color="Color.Error"
+                               OnClick="ClearLogs"
+                               Icon="@Icons.Material.Filled.Clear"
+                              />
+            </MudTooltip>
+        </div>
+    </ToolBarContent>
+    <HeaderContent>
+        <MudTh><MudTableSortLabel SortLabel="type" T="Activity">Type </MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel SortLabel="actor" T="Activity">Actor</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel SortLabel="detailed" T="Activity">Detail </MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel SortLabel="detailed" T="Activity">Role </MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel SortLabel="Date" T="Activity">Date</MudTableSortLabel></MudTh>
+    </HeaderContent>
+    <RowTemplate>
+
+        <MudTd DataLabel="Type"><MudChip Label="true" Text="@context.Type" Variant="Variant.Filled" Class="rounded-0" Size="Size.Medium" Color="Color.Secondary" /></MudTd>
+        <MudTd DataLabel="Actor">
+            @context.Actor
+        </MudTd>
+        <MudTd DataLabel="Detail">
+            <MudText Typo="Typo.body2" >  @context.Detailed</MudText>
+        </MudTd>
+        <MudTd DataLabel="Role">
+            <MudChip Text="@context.Role" Variant="Variant.Text" Size="Size.Small" Color="Color.Primary" />
+        </MudTd>
+        <MudTd DataLabel="Year">
+            @if (context.Date != null)
+            {
+                @context.Date.Value.ToLongTimeString()
+            }
+        </MudTd>
+    </RowTemplate>
+    <NoRecordsContent>
+        <MudText>No matching records found</MudText>
+    </NoRecordsContent>
+    <LoadingContent>
+        <MudText>Loading...</MudText>
+    </LoadingContent>
+    <PagerContent>
+        <MudTablePager />
+    </PagerContent>
+</MudTable>
+
+
+
+@code {
+    [CascadingParameter] Task<AuthenticationState>? AuthenticationState { get; set; }
+    private string? _userName = string.Empty;
+    private IEnumerable<Activity> _pagedData;
+    private MudTable<Activity> _table;
+    private string _logSearch = string.Empty;
+    private int _totalItems;
+    private int _totalDocuments;
+    private HashSet<Activity> _selectedItems = new();
+    private List<string> _errors = new();
+
+    private async Task<TableData<Activity>> ServerReload(TableState state)
+    {
+        IEnumerable<Activity> data = await ActivityLog.GetLogs();
+        data = data.OrderByDescending(d => d.Date.Value);
+        _totalDocuments = data.Count();
+        await Task.Delay(300);
+        data = data.Where(element =>
+        {
+            if (string.IsNullOrWhiteSpace(_logSearch))
+                return true;
+            if (element.Actor.Contains(_logSearch, StringComparison.OrdinalIgnoreCase))
+                return true;
+            return element.Detailed.Contains(_logSearch, StringComparison.OrdinalIgnoreCase) || element.Actor.Contains(_logSearch, StringComparison.OrdinalIgnoreCase);
+        }).ToArray();
+        _totalItems = data.Count();
+        data = state.SortLabel switch
+        {
+            "type" => data.OrderByDirection(state.SortDirection, o => o.Type),
+            "actor" => data.OrderByDirection(state.SortDirection, o => o.Actor),
+            "detailed" => data.OrderByDirection(state.SortDirection, o => o.Detailed),
+            "Role" => data.OrderByDirection(state.SortDirection, o => o.Role),
+            "Date" => data.OrderByDirection(state.SortDirection, o => o.Date),
+         
+            _ => data
+        };
+        _pagedData = data.Skip(state.Page * state.PageSize).Take(state.PageSize).ToArray();
+        return new TableData<Activity>() { TotalItems = _totalItems, Items = _pagedData };
+
+    }
+
+    private void OnSearch(string text)
+    {
+        _logSearch = text;
+        _table.ReloadServerData();
+    }
+
+    private async void ClearLogs()
+    {
+        var parameter = new DialogParameters
+        {
+            ["Activities"] = _selectedItems
+        };
+        var dialog = await DialogService.ShowAsync<ClearLogsDialog>("Delete this Selected Admin?", parameter);
+        var result = await dialog.Result;
+        if (!result.Canceled)
+        {
+            await _table.ReloadServerData();
+        }
+        _errors.Clear();
+    }
+
+}

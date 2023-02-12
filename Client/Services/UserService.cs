@@ -68,8 +68,22 @@ namespace HIVE.Client.Services
             var response = await _client.PostAsJsonAsync("api/User/register", request);
             return response;
         }
+
+        public async Task<HttpResponseMessage> RegisterAdminAsync(User request)
+        {
+            var response = await _client.PostAsJsonAsync("api/User/register/admin", request);
+            return response;
+        }
+        public async Task<HttpResponseMessage> UpdateAdminAccount(int id, User request)
+        {
+            var response = await _client.PutAsJsonAsync($"api/User/update/admin/{id}", request);
+            return response;
+        }
+
         public async Task<HttpResponseMessage> VerifyAsync(string token)
         {
+            var accessToken = await _customAuthenticationStateProvider.GetToken();
+            _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
             var response = await _client.PostAsJsonAsync($"api/User/verify/{token}", token);
             return response;
         }
@@ -91,6 +105,14 @@ namespace HIVE.Client.Services
             if (response == null) return Emails;
             Emails = response;
             return response;
+        }
+
+        public async Task<HttpResponseMessage> DeleteUserAccount(int id)
+        {
+            var accessToken = await _customAuthenticationStateProvider.GetToken();
+            _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+            var result = await _client.DeleteAsync($"api/User/delete/{id}");
+            return result;
         }
     }
 }

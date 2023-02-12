@@ -31,7 +31,7 @@
         </MudTooltip>
         <MudText>
             <MudChip Class="rounded-0" IconColor="Color.Primary" Variant="Variant.Outlined" Label="true">
-                Selected Curriculum:<MudChip Size="Size.Small"> @_selectedItems.Count </MudChip>
+                Selected Adviser:<MudChip Size="Size.Small"> @_selectedItems.Count </MudChip>
             </MudChip>
         </MudText>
         <MudTooltip Text="Add" Arrow="true">
@@ -97,7 +97,7 @@
                         </MudCardHeader>
                         <MudDivider />
                         <MudCardContent>
-                            <SubViewDocuments Role="@_role" AdviserId="context.Id" />
+                            <SubViewDocuments Role="@_role" ReferenceId="context.Id" />
                         </MudCardContent>
                     </MudCard>
                 </td>
@@ -158,7 +158,7 @@
     {
         var parameter = new DialogParameters
             {
-                ["AdviserId"] = id,
+                ["UserId"] = id,
             };
         var dialog = await DialogService.ShowAsync<AddAdviserDialog>("Edit Adviser?", parameter);
         var result = await dialog.Result;

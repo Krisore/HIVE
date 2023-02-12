@@ -1,0 +1,16 @@
+﻿@page "/logs"
+@inject IDocumentService DocumentService
+@layout ArchivistLayout
+<PageTitle> Archivist | Users 👥</PageTitle>
+<MudContainer MaxWidth="MaxWidth.ExtraExtraLarge">
+    <MudTabs>
+        <MudTabPanel Text="Logs" Icon="@Icons.Material.Filled.AccessTime">
+            <SubViewLogs/>
+        </MudTabPanel>
+    </MudTabs>
+</MudContainer>
+
+@code {
+
+
+}

@@ -1,18 +1,18 @@
-﻿@inject ICurriculumService CurriculumService
+﻿@inject IDocumentReferenceService DocumentReferenceService
 @inject IActivityLog ActivityLog
 @inject ISnackbar Snack
 @inject AuthenticationStateProvider AuthenticationStateProvider
 <MudDialog DisableSidePadding="true">
     <DialogContent>
-        <MudDivider Class="my-1"/>
+        <MudDivider Class="my-1" />
         <MudContainer Style="max-height: 400px; overflow-y: scroll">
-            <MudText Class="my-2" Typo="Typo.body2"> [Curriculum / Curriculums]</MudText>
+            <MudText Class="my-2" Typo="Typo.body2"> [Reference / References]</MudText>
             <ul>
-                @foreach (var curriculum in Curriculums)
+                @foreach (var reference in References)
                 {
                     <li>
                         <MudText Typo="Typo.caption" Align="Align.Justify">
-                            📦 @curriculum.Name
+                            📦 @reference.Name
                         </MudText>
                     </li>
                 }
@@ -30,7 +30,7 @@
     [CascadingParameter]
     public MudDialogInstance DialogInstance { get; set; } = new();
     [Parameter]
-    public HashSet<Curriculum> Curriculums { get; set; } = new();
+    public HashSet<Reference> References { get; set; } = new();
     Task<AuthenticationState>? Authenticate { get; set; }
     private string Actor = string.Empty;
     private string Role = string.Empty;
@@ -50,15 +50,15 @@
     }
     private async void OnOkay()
     {
-        foreach (var curriculum in Curriculums)
+        foreach (var reference in References)
         {
             try
             {
-                var response = await CurriculumService.DeleteAcademicProgram(curriculum.Id);
+                var response = await DocumentReferenceService.DeleteReferenceAsync(reference.Id);
                 if (response.IsSuccessStatusCode)
                 {
                     await ActivityLog.WriteLog($"{Actor}",
-                        $"{Actor}, delete  a curriculum named {curriculum.Name}",
+                        $"{Actor}, delete  a reference named {reference.Name}",
                         "TRASH",
                         $"{Role}");
                 }

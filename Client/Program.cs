@@ -24,6 +24,7 @@ builder.Services.AddScoped<IDocumentReferenceService, DocumentReferenceService>(
 builder.Services.AddScoped<IDocumentService, DocumentService>();
 builder.Services.AddScoped<ICurriculumService, CurriculumService>();
 builder.Services.AddScoped<IAdviserService, AdviserService>();
+builder.Services.AddScoped<IAuthorService, AuthorService>();
 builder.Services.AddScoped<IFileService, FileService>();
 builder.Services.AddScoped<IAuthorService, AuthorService>();
 builder.Services.AddScoped<ITopicService, TopicService>();

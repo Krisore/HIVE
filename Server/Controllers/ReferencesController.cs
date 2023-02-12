@@ -36,5 +36,25 @@ namespace HIVE.Server.Controllers
             return Ok(result);
 
         }
+        [HttpPost]
+        public async Task<ActionResult> AddReferenceAsync(Reference reference)
+        { 
+            await _referenceService.AddReferenceAsync(reference);
+            return Ok();
+
+        }
+        [HttpPut("{id:int}")]
+        public async Task<ActionResult> UpdateReferenceAsync(int id, Reference reference)
+        {
+            await _referenceService.EditReferencesAsync(id, reference);
+            return Ok();
+
+        }
+        [HttpDelete("{id:int}")]
+        public async Task<ActionResult> DeleteReferenceAsync(int id)
+        {
+            await _referenceService.DeleteReferenceAsync(id);
+            return Ok();
+        }
     }
 }

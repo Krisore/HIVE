@@ -58,7 +58,7 @@
                 if (response.IsSuccessStatusCode)
                 {
                     await ActivityLog.WriteLog($"{Actor}",
-                        $"{Actor}, delete  a adviser entitled {adviser.Name}",
+                        $"{Actor}, delete  a adviser named {adviser.Name}",
                         "TRASH",
                         $"{Role}");
                 }

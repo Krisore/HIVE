@@ -1,11 +1,13 @@
-﻿@inject ICurriculumService CurriculumService
+﻿@using HIVE.Client.Components.Diaolog.ReferenceDiaolog
+@inject ICurriculumService CurriculumService
 @inject IDocumentService DocumentService
 @inject IFileService FileService
 @inject IDialogService DialogService
+@inject IDocumentReferenceService DocumentReferenceService
 @inject ISnackbar Snack
 @inject NavigationManager NavigationManager
 <MudTable @ref="_table"
-          ServerData="@(new Func<TableState, Task<TableData<Curriculum>>>(ServerReload))"
+          ServerData="@(new Func<TableState, Task<TableData<Reference>>>(ServerReload))"
           Dense="true"
           Bordered="false"
           MultiSelection="true" @bind-SelectedItems="_selectedItems"
@@ -39,8 +41,8 @@
     </ToolBarContent>
     <HeaderContent>
         <MudTh></MudTh>
-        <MudTh><MudTableSortLabel SortLabel="name" T="Curriculum"> Name </MudTableSortLabel></MudTh>
-        <MudTh> <MudTableSortLabel SortLabel="acronym" T="Curriculum"> </MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel SortLabel="name" T="Reference"> Name </MudTableSortLabel></MudTh>
+        <MudTh> <MudTableSortLabel SortLabel="acronym" T="Reference"> </MudTableSortLabel></MudTh>
         <MudTh>Total Documents</MudTh>
         <MudTh></MudTh>
     </HeaderContent>
@@ -49,16 +51,16 @@
             <MudButton Class="rounded-0" Size="Size.Small" Variant="Variant.Outlined" OnClick="@(() => ShowBtnPress(context.Id))">  🗃️@((context.ShowDocuments == true) ? "Hide" : "Show")</MudButton>
             </MudTd>
             <MudTd DataLabel="Name"> @context.Name </MudTd>
-            <MudTd DataLabel="Acronym"><MudChip Label="true" Variant="Variant.Text" Color="Color.Primary" Class="rounded-0">@context.Alt</MudChip></MudTd>
-        <MudTd>
+            <MudTd DataLabel="Acronym"><MudChip Label="true" Variant="Variant.Text" Color="Color.Primary" Class="rounded-0">@context.Name</MudChip></MudTd>
+            <MudTd>
             @if (_documents != null)
             {
-                <MudChip Variant="Variant.Text" Size="Size.Large" Color="Color.Error"> @_documents.Count(d => d.Curriculum.Id == context.Id)</MudChip>
+                <MudChip Variant="Variant.Text" Size="Size.Large" Color="Color.Error"> @_documents.Count(d => d.ReferenceId == context.Id)</MudChip>
             }
         </MudTd>
         <MudTd>
             <MudTooltip Text="Edit" Arrow="true">
-                <MudIconButton Icon="@Icons.Material.Outlined.Edit" OnClick="@(() => EditCurriculumAsync(context.Id, context))" />
+                <MudIconButton Icon="@Icons.Material.Outlined.Edit" OnClick="@(() => EditCurriculumAsync(context.Id))" />
             </MudTooltip>
         </MudTd>
     </RowTemplate>
@@ -83,7 +85,6 @@
                             </CardHeaderAvatar>
                             <CardHeaderContent>
                                 <MudText Typo="Typo.body2"> @context.Name </MudText>
-                                <MudChip Label="true" Variant="Variant.Text"> @context.Alt</MudChip>
                             </CardHeaderContent>
                             <CardHeaderActions>
                                 <MudChip Label="true" IconColor="Color.Success" Size="Size.Medium" Icon="@Icons.Custom.FileFormats.FileExcel">
@@ -93,7 +94,7 @@
                         </MudCardHeader>
                         <MudDivider />
                         <MudCardContent>
-                            <SubViewDocuments Role="_role" ReferenceId="context.Id" />
+                            <SubViewDocuments Role="@_role" ReferenceId="@context.Id" />
                         </MudCardContent>
                     </MudCard>
                 </td>
@@ -104,38 +105,42 @@
 </MudTable>
 @code {
     string _searchTerm = string.Empty;
-    string _role = "Curriculum";
-    private IEnumerable<Curriculum> _curriculum;
-    private MudTable<Curriculum> _table;
-    private HashSet<Curriculum> _selectedItems = new();
+    string _role = "Reference";
+    private IEnumerable<Reference> _references;
+    private MudTable<Reference> _table;
+    private HashSet<Reference> _selectedItems = new();
     private List<Document>? _documents;
     private int _totalItems = 0;
-    private IEnumerable<Curriculum>? _pagedData;
+    private IEnumerable<Reference>? _pagedData;
     private List<string> _errors = new();
-    private async Task<TableData<Curriculum>> ServerReload(TableState state)
+    private async Task<TableData<Reference>> ServerReload(TableState state)
     {
-        _curriculum = await CurriculumService.GetProgramsAsync();
-        _documents = await DocumentService.GetDocumentsForArchivistAsync();
+        _references = await DocumentReferenceService.GetReferences();
+        _documents = await DocumentService.GetAllDocuments();
         await Task.Delay(300);
-        _curriculum = _curriculum.Where(curriculum =>
+        _references = _references.Where(reference =>
         {
-            if (string.IsNullOrWhiteSpace(_searchTerm))
+            if (!string.IsNullOrWhiteSpace(_searchTerm))
+            {
+                if (reference.Name.Contains(_searchTerm, StringComparison.OrdinalIgnoreCase))
+                    return true;
+            }
+            else
+            {
                 return true;
-            if ( curriculum.Name.Contains(_searchTerm, StringComparison.OrdinalIgnoreCase))
-                return true;
-            return  curriculum.Alt.Contains(_searchTerm, StringComparison.OrdinalIgnoreCase);
+            }
+            return false;
         }).ToArray();
-        _totalItems = _curriculum.Count();
+        _totalItems = _references.Count();
 
-        _curriculum = state.SortLabel switch
+        _references = state.SortLabel switch
         {
-            "name" => _curriculum.OrderByDirection(state.SortDirection, o => o.Name),
-            "alt" => _curriculum.OrderByDirection(state.SortDirection, o => o.Alt),
-            _ => _curriculum
+            "name" => _references.OrderByDirection(state.SortDirection, o => o.Name),
+            _ => _references
         };
 
-        _pagedData = _curriculum.Skip(state.Page * state.PageSize).Take(state.PageSize).ToArray();
-        return new TableData<Curriculum>() { TotalItems = _totalItems, Items = _pagedData };
+        _pagedData = _references.Skip(state.Page * state.PageSize).Take(state.PageSize).ToArray();
+        return new TableData<Reference>() { TotalItems = _totalItems, Items = _pagedData };
     }
 
     private void OnSearch(string text)
@@ -146,17 +151,17 @@
 
     private void ShowBtnPress(int nr)
     {
-        var program = _curriculum.First(a => a.Id == nr);
+        var program = _references.First(a => a.Id == nr);
         program.ShowDocuments = !program.ShowDocuments;
     }
 
-    private async void EditCurriculumAsync(int id, Curriculum curriculum)
+    private async void EditCurriculumAsync(int id)
     {
         var parameter = new DialogParameters
-        {
-            ["CurriculumId"] = id,
-        };
-        var dialog = await DialogService.ShowAsync<AddCurriculumDialog>("Edit Curriculum?", parameter);
+            {
+                ["ReferenceId"] = id,
+            };
+        var dialog = await DialogService.ShowAsync<AddDocumentType>("Edit Reference?", parameter);
         var result = await dialog.Result;
         if (!result.Canceled)
         {
@@ -167,7 +172,7 @@
 
     private async void AddCurriculum()
     {
-        var dialog = await DialogService.ShowAsync<AddCurriculumDialog>("Add Curriculum?");
+        var dialog = await DialogService.ShowAsync<AddDocumentType>("Add Reference?");
         var result = await dialog.Result;
         if (!result.Canceled)
         {
@@ -180,10 +185,10 @@
     private async void DeleteCurriculum()
     {
         var parameter = new DialogParameters
-        {
-            ["Curriculums"] = _selectedItems
-        };
-        var dialog = await DialogService.ShowAsync<DeleteCurriculumDialog>("Delete this Selected Curriculum?", parameter);
+            {
+                ["References"] = _selectedItems
+            };
+        var dialog = await DialogService.ShowAsync<DeleteReferenceDialog>("Delete this Selected Curriculum?", parameter);
         var result = await dialog.Result;
         if (!result.Canceled)
         {

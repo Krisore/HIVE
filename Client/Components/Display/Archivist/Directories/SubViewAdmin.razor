@@ -31,7 +31,10 @@
         <MudTooltip Text="Reload" Arrow="true">
             <MudIconButton Icon="@Icons.Material.Rounded.Sync" OnClick="@(() => _table.ReloadServerData())"></MudIconButton>
         </MudTooltip>
-        <MudTooltip Text="Delete Student" Arrow="true">
+        <MudTooltip Text="Add User" Arrow="true">
+            <MudIconButton Icon="@Icons.Material.Filled.PersonAdd" Color="Color.Success" OnClick="AddAdmin" />
+        </MudTooltip>
+        <MudTooltip Text="Delete Admin" Arrow="true">
             <MudIconButton Icon="@Icons.Material.Outlined.PersonRemoveAlt1" Color="Color.Error" OnClick="DeleteCurriculum" />
         </MudTooltip>
         <MudText>
@@ -41,32 +44,27 @@
         </MudText>
     </ToolBarContent>
     <HeaderContent>
-        <MudTh></MudTh>
+        <MudTh> <MudTableSortLabel SortLabel="role" T="User"> Role </MudTableSortLabel></MudTh>
         <MudTh><MudTableSortLabel SortLabel="lastname" T="User"> Last Name </MudTableSortLabel></MudTh>
         <MudTh><MudTableSortLabel SortLabel="firstname" T="User"> First Name </MudTableSortLabel></MudTh>
         <MudTh> <MudTableSortLabel SortLabel="email" T="User"> Email </MudTableSortLabel></MudTh>
-        <MudTh> <MudTableSortLabel SortLabel="role" T="User"> Role </MudTableSortLabel></MudTh>
         <MudTh> <MudTableSortLabel SortLabel="datereg" T="User"> Date Register </MudTableSortLabel></MudTh>
-        <MudTh> <MudTableSortLabel SortLabel="verified" T="User"> Verified At </MudTableSortLabel></MudTh>
-        <MudTh> <MudTableSortLabel SortLabel="status" T="User"> status </MudTableSortLabel></MudTh>
-        <MudTh>Total Documents</MudTh>
+        <MudTh> <MudTableSortLabel SortLabel="status" T="User"> Status </MudTableSortLabel></MudTh>
+        <MudTh></MudTh>
     </HeaderContent>
     <RowTemplate>
-        <MudTd>
-            <MudButton Class="rounded-0" Size="Size.Small" Variant="Variant.Outlined" OnClick="@(() => ShowBtnPress(context.Id))">  🗃️@((context.ShowDocuments == true) ? "Hide" : "Show")</MudButton>
-            </MudTd>
-        <MudTd DataLabel="Email">@context.LastName</MudTd>
-            <MudTd DataLabel="Email">@context.FirstName</MudTd>
-            <MudTd DataLabel="Email">@context.Email</MudTd>
-            <MudTd DataLabel="Email">
-                <MudChip Class="rounded-0" Variant="Variant.Filled" Color="Color.Info">
+            
+            <MudTd DataLabel="Role">
+                <MudChip Class="rounded-0" Variant="Variant.Filled" Color="Color.Error">
                     <code>@context.Role</code>
                 </MudChip>
             </MudTd>
-            <MudTd DataLabel="Email">@context.DateRegistered!.Value.ToShortDateString()</MudTd>
-            <MudTd DataLabel="Email">@context.VerifiedAt!.Value.ToShortDateString()</MudTd>
-        <MudTd DataLabel="Email">
-            @if (context.VerifiedAt is null)
+            <MudTd DataLabel="lastname">@context.LastName</MudTd>
+            <MudTd DataLabel="firstname">@context.FirstName</MudTd>
+            <MudTd DataLabel="Email">@context.Email</MudTd>
+        <MudTd DataLabel="Date registered">@context.DateRegistered!.Value.ToShortDateString()</MudTd>
+        <MudTd DataLabel="">
+                @if (context.VerifiedAt is null)
             {
                 <MudChip Label="true" Color="Color.Warning" Variant="Variant.Text">
                     not verified
@@ -75,16 +73,15 @@
             else
             {
                 <MudChip Label="true" Color="Color.Success" Variant="Variant.Text">
-                     verified
+                    verified
                 </MudChip>
             }
         </MudTd>
-            <MudTd>
-                @if (_documents != null)
-            {
-                <MudChip Variant="Variant.Text" Size="Size.Large" Color="Color.Error"> @_documents.Count(d => d.Curriculum.Id == context.Id)</MudChip>
-            }
-        </MudTd>
+        <MudTh>
+            <MudTooltip Text="Add User" Arrow="true">
+                <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Default" OnClick="@(() => EditAdmin(context.Id))" />
+            </MudTooltip>
+        </MudTh>
     </RowTemplate>
     <NoRecordsContent>
         <MudText>No matching records found</MudText>
@@ -120,7 +117,7 @@
                         </MudCardHeader>
                         <MudDivider />
                         <MudCardContent>
-                            <SubViewDocuments Role="@_role" ReferenceId="context.Id" />
+                           
                         </MudCardContent>
                     </MudCard>
                 </td>
@@ -130,19 +127,19 @@
 
 </MudTable>
 @code {
-    string _role = "User";
+   
     string _searchTerm = string.Empty;
     private IEnumerable<User> _users;
     private MudTable<User> _table;
-    private HashSet<User> _selectedItems = new();
     private List<Document>? _documents;
     private int _totalItems = 0;
     private IEnumerable<User>? _pagedData;
+    private HashSet<User> _selectedItems = new();
     private List<string> _errors = new();
     private async Task<TableData<User>> ServerReload(TableState state)
     {
         _users = await UserService.GetUserCount();
-        _users = _users.Where(u => u.Role == "User");
+        _users = _users.Where(u => u.Role == "Administrator");
         _documents = await DocumentService.GetDocumentsForArchivistAsync();
         await Task.Delay(300);
         _users = _users.Where(user =>
@@ -182,14 +179,39 @@
         var user = _users.First(a => a.Id == nr);
         user.ShowDocuments = !user.ShowDocuments;
     }
+    private async void EditAdmin(int id )
+    {
+        var parameter = new DialogParameters
+        {
+                ["AdminId"] = id,
+        };
+        var dialog = await DialogService.ShowAsync<AddAdmin>("Edit Admin?", parameter);
+        var result = await dialog.Result;
+        if (!result.Canceled)
+        {
+            await _table.ReloadServerData();
+        }
+        _errors.Clear();
+    }
 
+    private async void AddAdmin()
+    {
+        var dialog = await DialogService.ShowAsync<AddAdmin>("Add Admin?");
+        var result = await dialog.Result;
+        if (!result.Canceled)
+        {
+            await _table.ReloadServerData();
+        }
+        await _table.ReloadServerData();
+        _errors.Clear();
+    }
     private async void DeleteCurriculum()
     {
         var parameter = new DialogParameters
             {
                 ["Users"] = _selectedItems
             };
-        var dialog = await DialogService.ShowAsync<DialogDeleteUserAccount>("Delete this Selected User?", parameter);
+        var dialog = await DialogService.ShowAsync<DialogDeleteUserAccount>("Delete this Selected Admin?", parameter);
         var result = await dialog.Result;
         if (!result.Canceled)
         {
