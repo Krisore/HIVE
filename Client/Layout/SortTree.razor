@@ -15,7 +15,7 @@
             }
         </MudNavGroup>
         <MudNavGroup Disabled="false" Title="Topic" @bind-Expanded="_folderOneExpanded" IconColor="Color.Primary">
-            @foreach (var topic in Topics)
+            @foreach (var topic in Topics.Reverse())
             {
                 <MudNavLink Href=@($"/search/{topic.Name}")>
                     <MudText Typo="Typo.caption">
@@ -25,7 +25,7 @@
             }
         </MudNavGroup>
         <MudNavGroup Disabled="false" Title="Program" @bind-Expanded="_folderTwoExpanded">
-            @foreach (var program in Programs)
+            @foreach (var program in Programs.Reverse())
             {
                 <MudNavLink Href=@($"/search/{program.Name}")>
                     <MudText Typo="Typo.caption">
@@ -35,7 +35,7 @@
             }
         </MudNavGroup>
         <MudNavGroup Disabled="false" Title="Document Type" @bind-Expanded="_folderThreeExpanded">
-            @foreach (var type in Types)
+            @foreach (var type in Types.Reverse())
             {
                 <MudNavLink Href=@($"/search/{type.Name}")>
                     <MudText Typo="Typo.caption">
@@ -49,10 +49,10 @@
 
 @code {
     private HashSet<string>? SelectedValues { get; set; }
-    private List<Document>? Documents { get; set; } = new();
-    private List<Topic> Topics { get; set; } = new();
-    private List<Reference> Types { get; set; } = new();
-    private List<Curriculum> Programs { get; set; } = new();
+    private IEnumerable<Document>? Documents { get; set; } = new List<Document>();
+    private IEnumerable<Topic> Topics { get; set; } = new List<Topic>();
+    private IEnumerable<Reference> Types { get; set; } = new List<Reference>();
+    private IEnumerable<Curriculum> Programs { get; set; } = new List<Curriculum>();
 
     private List<string> Years = new();
     bool _folderOneExpanded;
@@ -66,14 +66,17 @@
         if (response.IsSuccessStatusCode)
         {
             Documents = await response.Content.ReadFromJsonAsync<List<Document>>();
-            Programs = await CurriculumService.GetProgramsAsync();
-            Types = await DocumentReferenceService.GetReferences();
-            Topics = await TopicService.GetTopics();
-            foreach (var year in Documents.Select(d => d.DatePublished?.Year.ToString()).Distinct())
+            var documents = Documents.OrderByDescending(d => d.DatePublished);
+            var curriculums = await CurriculumService.GetProgramsAsync();
+            var types = await DocumentReferenceService.GetReferences();
+            var topics = await TopicService.GetTopics();
+            Topics  = topics.OrderByDescending(t => t.Name);
+            Types = types.OrderByDescending(d => d.Name);
+            Programs = curriculums.OrderByDescending(d => d.Name);
+            foreach (var year in documents.Select(d => d.DatePublished?.Year.ToString()).Distinct())
             {
                 if (year != null) Years.Add(year);
             }
-            Years.Reverse();
         }
     }
 

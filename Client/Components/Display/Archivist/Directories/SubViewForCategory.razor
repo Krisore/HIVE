@@ -117,7 +117,7 @@
     {
         _references = await DocumentReferenceService.GetReferences();
         var response  = await DocumentService.GetDocumentsAsync();
-        if (response.IsSuccessStatusCode)
+        if (!response.IsSuccessStatusCode)
         {
           NavigationManager.NavigateTo("/dashboard", true);
         }

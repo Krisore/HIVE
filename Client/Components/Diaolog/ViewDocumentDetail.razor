@@ -10,7 +10,7 @@
                 <MudCardHeader>
                     <CardHeaderAvatar>
                         <MudAvatar Color="Color.Primary" Size="Size.Large"Elevation="2">
-                            @context.User.Identity.Name.ToUpper().ToCharArray()[0];
+                            @context.User.Identity.Name.ToUpper().ToCharArray()[0]
                         </MudAvatar>
                     </CardHeaderAvatar>
                     <CardHeaderContent>
@@ -55,9 +55,15 @@
                         <MudText Typo="Typo.caption" Align="Align.Center">[ ABSTRACT ]</MudText> <br />
                         <MudText Class="mx-2 my-2" Typo="Typo.caption" Align="Align.Justify">@_document.Abstract</MudText>
                         <MudDivider Class="my-2" DividerType="DividerType.Middle" />
-                        @if (!string.IsNullOrWhiteSpace(_document.File.FileName))
+                        @if (!string.IsNullOrWhiteSpace(_document.File.FileName) )
                         {
-                            <MudChip Icon="@Icons.Material.Rounded.Download" OnClick="@(()=> DownloadFileAsync(_document.File.FileName, _document.File.StoreFileName, _document.Title))" Class="rounded-0 ml-auto" Color="Color.Primary" Size="Size.Small" Label="true">@_document.File.StoreFileName.ToUpper()</MudChip>
+                            <MudChip Icon="@Icons.Material.Rounded.Download"
+                                     OnClick="@(() => DownloadFileAsync(_document.File.FileName, _document.File.StoreFileName, _document.Title))"
+                                     Class="rounded-0 ml-auto" Color="Color.Primary"
+                                     Size="Size.Small"
+                                     Label="true">
+                                @_document.File.StoreFileName.ToUpper()
+                            </MudChip>
                         }
                     </MudCardContent>
                 </MudContainer>

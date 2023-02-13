@@ -24,16 +24,6 @@
             </MudChip>
         </MudChip>
         <div class="mx-5">
-            <MudTooltip Text="Un-archive Selected Document" Arrow="true">
-                <MudIconButton Class=" mx-2"
-                               Variant="Variant.Text"
-                               DisableElevation="true"
-                               Color="Color.Info"
-                               Size="Size.Medium"
-                               OnClick="Archived"
-                               Icon="@Icons.Material.Filled.Unarchive">
-                </MudIconButton>
-            </MudTooltip>
             <MudTooltip Text="Delete Selected  Document" Arrow="true">
                 <MudIconButton Class=" mx-2"
                                Variant="Variant.Text"
@@ -217,21 +207,6 @@
         };
 
         var dialog = await DialogService.ShowAsync<DialogeRestoreTrashDocument>("Are you really want to Restore these?", parameter);
-        var result = await dialog.Result;
-        if (!result.Canceled)
-        {
-            await _table.ReloadServerData();
-        }
-        _errors.Clear();
-        _archiveList.Clear();
-    }
-    private async void Archived()
-    {
-        var parameter = new DialogParameters
-        {
-            ["Documents"] = _selectedItems,
-        };
-        var dialog = await DialogService.ShowAsync<DialogToArchive>("Are you really want to archive these?", parameter);
         var result = await dialog.Result;
         if (!result.Canceled)
         {

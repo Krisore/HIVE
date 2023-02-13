@@ -1,10 +1,12 @@
-﻿using HIVE.Server.Repository;
+﻿using HIVE.Server.Data;
+using HIVE.Server.Repository;
 using HIVE.Server.Repository.Interface;
 using HIVE.Shared.Model;
 using HIVE.Shared.Request;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace HIVE.Server.Controllers
 {
@@ -24,10 +26,8 @@ namespace HIVE.Server.Controllers
         [HttpGet("documents")]
         public async Task<ActionResult<List<Document>>> GetDocumentsAsync()
         {
-            Documents = await _repository.GetDocumentsAsync();
-            return Ok(Documents);
-           
-
+            var response = await _repository.GetDocumentsAsync();
+            return Ok(response);
         }
         [HttpGet("{id:int}")]
         public async Task<ActionResult<Document>> GetDocumentAsyncById(int id)
@@ -44,7 +44,7 @@ namespace HIVE.Server.Controllers
             return Ok();
         }
         [HttpGet]
-        [Route("{owner}")]
+        [Route("documents/{owner}")]
         [Authorize(Roles = "User")]
         public async Task<ActionResult<List<Document>>> GetMyDocuments(string owner)
         {
@@ -119,6 +119,13 @@ namespace HIVE.Server.Controllers
             await _repository.MoveToTrashAsync(id);
             return Ok();
         }
+        [HttpGet]
+        [Route("archivist/document/trash/restored/{id:int}")]
+        public async Task<ActionResult> Restore(int id)
+        {
+            await _repository.RestoreDocument(id);
+            return Ok();
+        }
         [HttpDelete]
         [Route("archivist/document/delete/{id:int}")]
         public async Task<ActionResult> DeleteAsync(int id)
@@ -131,13 +138,6 @@ namespace HIVE.Server.Controllers
         public async Task<ActionResult> UnArchiveDocument(int id)
         {
             await _repository.UnArchiveDocument(id);
-            return Ok();
-        }
-        [HttpGet]
-        [Route("archivist/document/trash/restore/{id:int}")]
-        public async Task<ActionResult> Restore(int id)
-        {
-            await _repository.RestoreDocument(id);
             return Ok();
         }
         [HttpGet]

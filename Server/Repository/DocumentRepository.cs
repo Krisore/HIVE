@@ -28,7 +28,13 @@ namespace HIVE.Server.Repository
         {
             try
             {
-                var response = await _context.Documents.ToListAsync();
+                var response = await _context.Documents.Where(d => d.IsArchived == false && d.IsDeleted == false)
+                    .Include(a => a.Authors)
+                    .Include(a => a.Adviser)
+                    .Include(t => t.Topics)
+                    .Include(a => a.Reference)
+                    .Include(d => d.Curriculum)
+                    .ToListAsync();
                 return response;
             }
             catch (Exception ex)
@@ -65,7 +71,6 @@ namespace HIVE.Server.Repository
         public async Task RestoreDocument(int id)
         {
             await _documentService.Restore(id);
-
         }
         public async Task<List<Document>> GetArchivedDocumentsAsync()
         {

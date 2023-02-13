@@ -102,7 +102,7 @@
         else
         {
             bool valid = await IsValidAsync();
-            if (valid)
+            if (!valid)
             {
                 var response = await CurriculumService.AddCurriculum(_curriculum); // Make it this to update
                 if (response.IsSuccessStatusCode)
@@ -129,6 +129,6 @@
     {
         var programs = await CurriculumService.GetProgramsAsync();
         return programs.Any(c => c.Name.ToLower().Equals(_curriculum.Name.ToLower()) 
-                                 || c.Alt.ToLower().Equals(_curriculum.Alt.ToLower()));
+                                 && c.Alt.ToLower().Equals(_curriculum.Alt.ToLower()));
     }
 }

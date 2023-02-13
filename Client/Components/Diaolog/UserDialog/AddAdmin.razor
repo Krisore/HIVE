@@ -111,7 +111,7 @@
     }
     private async Task OnHandleSubmit()
     {
-        User.Role = "Admin";
+        User.Role = "Administrator";
         if (AdminId is not null or 0)
         {
             var response = await UserService.UpdateAdminAccount((int)AdminId, User);

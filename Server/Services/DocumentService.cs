@@ -76,7 +76,7 @@ namespace HIVE.Server.Services
         public async Task Restore(int id)
         {
             var response = await _context.Documents.FirstOrDefaultAsync(d => d.Id == id && d.IsDeleted == true);
-            if (response != null)
+            if (response is not null)
             {
                 response.IsDeleted = false;
             }

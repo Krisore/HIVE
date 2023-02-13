@@ -39,8 +39,8 @@
     <HeaderContent>
         <MudTh> Detail </MudTh>
         <MudTh><MudTableSortLabel SortLabel="title" T="Document">Title</MudTableSortLabel></MudTh>
-        <MudTh><MudTableSortLabel SortLabel="curriculum" T="Document">Academic program </MudTableSortLabel></MudTh>
         <MudTh><MudTableSortLabel SortLabel="adviser" T="Document">Adviser </MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel SortLabel="curriculum" T="Document">Academic program </MudTableSortLabel></MudTh>
         <MudTh><MudTableSortLabel SortLabel="documentStatus" T="Document">Document status</MudTableSortLabel></MudTh>
         <MudTh><MudTableSortLabel SortLabel="year" T="Document">Year</MudTableSortLabel></MudTh>
         <MudTh><MudTableSortLabel SortLabel="status" T="Document">Status</MudTableSortLabel></MudTh>
@@ -117,13 +117,29 @@
         Authenticate = customAuthStateProvider.GetAuthenticationStateAsync();
         if (Authenticate != null)
         {
-            var account = await Authenticate;
-            var email = account.User.Identity?.Name;
-            if (email != null)
+            try
             {
-                _userName = email;
-                var response = await DocumentService.GetMyDocumentsAsync(email);
-                Documents = response;
+                var account = await Authenticate;
+                var email = account.User.Identity?.Name;
+                if (email != null)
+                {
+                    _userName = email;
+                    var response = await DocumentService.GetMyDocumentsAsync(email);
+                    if (response.IsSuccessStatusCode)
+                    {
+                        Documents = (await response.Content.ReadFromJsonAsync<List<Document>>())!;
+                        if (Documents is null)
+                        {
+                            NavigationManager.NavigateTo(NavigationManager.BaseUri, true);
+                        }
+                    }
+                
+                }
+            }
+            catch (Exception exception)
+            {
+                Console.WriteLine($"Something went wrong");
+                throw;
             }
         }
         await Task.Delay(300);

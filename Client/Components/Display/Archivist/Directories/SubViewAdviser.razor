@@ -50,15 +50,17 @@
     </HeaderContent>
     <RowTemplate>
         <MudTd>
-            <MudButton Class="rounded-0" Size="Size.Small" Variant="Variant.Outlined" OnClick="@(() => ShowBtnPress(context.Id))">  🗃️@((context.ShowDocuments == true) ? "Hide" : "Show")</MudButton>
+            <MudButton Class="rounded-0" Size="Size.Small" Variant="Variant.Outlined" OnClick="@(() => ShowBtnPress(context.Id))">@((context.ShowDocuments) ? "Hide" : "Show")</MudButton>
             </MudTd>
             <MudTd DataLabel="Name"> @context.Name </MudTd>
             <MudTd DataLabel="Email"><MudChip Label="true" Variant="Variant.Text" Color="Color.Primary" Class="rounded-0">@context.Email</MudChip></MudTd>
             <MudTd>
                 @if (_documents != null)
-            {
-                <MudChip Variant="Variant.Text" Size="Size.Large" Color="Color.Error"> @_documents.Count(d => d.Curriculum.Id == context.Id)</MudChip>
-            }
+                {
+                    <MudChip Variant="Variant.Text" Size="Size.Large" Color="Color.Error">
+                         @_documents.Count(d => d.AdviserId == context.Id)
+                    </MudChip>
+                }
         </MudTd>
         <MudTd>
             <MudTooltip Text="Edit" Arrow="true">
@@ -97,7 +99,7 @@
                         </MudCardHeader>
                         <MudDivider />
                         <MudCardContent>
-                            <SubViewDocuments Role="@_role" ReferenceId="context.Id" />
+                            <SubViewDocuments Role="@_role" ReferenceId="@context.Id" />
                         </MudCardContent>
                     </MudCard>
                 </td>
@@ -134,7 +136,7 @@
         _advisers = state.SortLabel switch
         {
             "name" => _advisers.OrderByDirection(state.SortDirection, o => o.Name),
-            "alt" => _advisers.OrderByDirection(state.SortDirection, o => o.Email),
+            "email" => _advisers.OrderByDirection(state.SortDirection, o => o.Email),
             _ => _advisers
         };
 
@@ -158,7 +160,7 @@
     {
         var parameter = new DialogParameters
             {
-                ["UserId"] = id,
+                ["AdviserId"] = id,
             };
         var dialog = await DialogService.ShowAsync<AddAdviserDialog>("Edit Adviser?", parameter);
         var result = await dialog.Result;

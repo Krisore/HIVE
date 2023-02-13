@@ -101,7 +101,7 @@
     {
         _users = await UserService.GetUserCount();
         _documents = await DocumentService.GetDocumentsForArchivistAsync();
-        //_archiveDocuments = await DocumentService.GetArchivedDocuments();
-        //if (_archiveDocuments != null) _totalArchive = _archiveDocuments.Count();
+        _archiveDocuments = await DocumentService.GetArchivedDocuments();
+        if (_archiveDocuments != null) _totalArchive = _archiveDocuments.Count();
     }
 }

@@ -24,29 +24,22 @@
             </MudChip>
         </MudChip>
         <div class="mx-5">
-            <MudTooltip Text="Download Selected Document" Arrow="true">
-                <MudIconButton Variant="Variant.Text"
-                               DisableElevation="false"
-                               Size="Size.Medium"
-                               Color="Color.Success"
-                               Icon="@Icons.Material.Filled.Download" />
-            </MudTooltip>
             <MudTooltip Text="Archive Selected Document" Arrow="true">
-                <MudIconButton Class=" mx-2"
-                               Variant="Variant.Text"
-                               DisableElevation="true"
-                               Size="Size.Medium"
-                               OnClick="Archived"
-                               Icon="@Icons.Material.Filled.Archive" Color="Color.Inherit">
-                </MudIconButton>
+            <MudIconButton Class=" mx-2"
+                           Variant="Variant.Text"
+                           DisableElevation="true"
+                           Size="Size.Medium"
+                           OnClick="Archived"
+                           Icon="@Icons.Material.Filled.Archive" Color="Color.Success">
+            </MudIconButton>
             </MudTooltip>
             <MudTooltip Text="Move to Trash" Arrow="true">
-                <MudIconButton Variant="Variant.Text"
-                               DisableElevation="false"
-                               Size="Size.Medium"
-                               Color="Color.Error"
-                               Icon="@Icons.Material.Filled.Delete"
-                               OnClick="MoveToTrash" />
+            <MudIconButton Variant="Variant.Text"
+                           DisableElevation="false"
+                           Size="Size.Medium"
+                           Color="Color.Error"
+                           Icon="@Icons.Material.Filled.Delete"
+                           OnClick="MoveToTrash" />
             </MudTooltip>
         </div>
     </ToolBarContent>

@@ -116,6 +116,7 @@
 @code {
     [CascadingParameter] Task<AuthenticationState>? AuthenticationState { get; set; }
     [Parameter] public string Role { get; set; }
+    [Parameter] public string UploaderName { get; set; }
     [Parameter] public int ReferenceId { get; set; }
     IEnumerable<Document>? _documents = new List<Document>();
     private string? _userName = string.Empty;
@@ -150,7 +151,7 @@
         }
         else if (!string.IsNullOrEmpty(Role) && Role.Equals("User"))
         {
-            data = data.Where(d => d.UserId == ReferenceId);
+            data = data.Where(d => d.UploaderEmail == UploaderName);
         }
         data = data.OrderByDescending(d => d.ToReview);
         _totalDocuments = data.Count(d => d.ToReview);

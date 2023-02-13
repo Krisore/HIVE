@@ -85,7 +85,7 @@
             <MudTd>
                 @if (_documents != null)
             {
-                <MudChip Variant="Variant.Text" Size="Size.Large" Color="Color.Error"> @_documents.Count(d => d.Curriculum.Id == context.Id)</MudChip>
+                <MudChip Variant="Variant.Text" Size="Size.Large" Color="Color.Error"> @_documents.Count(d => d.UploaderEmail == context.Email)</MudChip>
             }
         </MudTd>
     </RowTemplate>
@@ -122,7 +122,7 @@
                         </MudCardHeader>
                         <MudDivider />
                         <MudCardContent>
-                            <SubViewDocuments Role="@_role" ReferenceId="context.Id" />
+                            <SubViewDocuments Role="@_role" UploaderName="@context.Email" />
                         </MudCardContent>
                     </MudCard>
                 </td>

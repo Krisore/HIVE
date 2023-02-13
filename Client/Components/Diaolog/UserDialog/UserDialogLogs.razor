@@ -1,7 +1,7 @@
 ﻿@inject IActivityLog ActivityLog
 <MudDialog DisableSidePadding="true">
     <DialogContent>
-        <MudTable Items="@Logs" Elevation="0" Dense="true" Bordered="true" Hover="true">
+        <MudTable Items="@Logs" Elevation="0" Dense="true" Bordered="true" Hover="true" Style="max-height: 500px; overflow-y: scroll">
             <HeaderContent>
                 <MudTh>Type</MudTh>
                 <MudTh>Detailed</MudTh>

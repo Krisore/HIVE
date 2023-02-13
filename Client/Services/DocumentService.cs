@@ -79,13 +79,8 @@ namespace HIVE.Client.Services
         {
             try
             {
-                var response = await _client.GetFromJsonAsync<List<Document>>("api/Document/");
-                //if (response is not null)
-                //{
-                //    Documents = response;
-                //    return Documents;
-                //}
-                return response!;
+                var response = await _client.GetFromJsonAsync<List<Document>>("api/Document/documents");
+                return response;
             }
             catch (Exception ex)
             {
@@ -134,11 +129,11 @@ namespace HIVE.Client.Services
         }
 
 
-        public async Task<IEnumerable<Document>> GetMyDocumentsAsync(string owner)
+        public async Task<HttpResponseMessage> GetMyDocumentsAsync(string owner)
         {
             var accessToken = await _customAuthenticationStateProvider.GetToken();
             _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
-            var response = await _client.GetFromJsonAsync<List<Document>>($"api/Document/{owner}");
+            var response = await _client.GetAsync($"api/Document/documents/{owner}");
             return  response;
         }
 
@@ -155,7 +150,7 @@ namespace HIVE.Client.Services
         }
         public async Task<HttpResponseMessage> ArchiveDocumentAsync(int id)
         {
-            var result = await _client.DeleteAsync($"api/Document/archivist/document/archived/{id}");
+            var result = await _client.GetAsync($"api/Document/archivist/document/archived/{id}");
             return result;
         }
 
@@ -165,9 +160,9 @@ namespace HIVE.Client.Services
             return response;
         }
 
-        public async Task<HttpResponseMessage> RestoreDocument(int id)
+        public async Task<HttpResponseMessage> RestoredDocument(int id)
         {
-            var response = await _client.GetAsync($"api/Document/archivist/document/restore/{id}");
+            var response = await _client.GetAsync($"api/Document/archivist/document/trash/restored/{id}");
             return response;
         }
 

@@ -39,7 +39,7 @@
                           IconSize="Size.Small"
                           Immediate="true"
                           Variant="Variant.Outlined"
-                          Label="Username" />
+                          Label="Email" />
 
             <MudTextField @bind-Value="_loginRequest.Password"
                           For="@(() => _loginRequest.Password)"
@@ -64,7 +64,7 @@
                        Color="Color.Inherit"
                        Size="Size.Medium"
                        Class="mr-auto rounded-0"
-                       OnClick="@(() => BeginSingUp(_signUp))">Sign up</MudButton>
+                       OnClick="BeginSingUp">Sign up</MudButton>
             <MudButton DisableElevation="true"
                        Variant="Variant.Filled"
                        Color="Color.Primary"
@@ -90,6 +90,7 @@
         var loginResponse = await UserService.Login(_loginRequest);
         if (loginResponse.IsSuccessStatusCode)
         {
+            Snack.Add("Signing in.... Please wait a moment", Severity.Info);
             var userSession = await loginResponse.Content.ReadFromJsonAsync<UserSession>();
             var customAuthStateProvider = (CustomAuthenticationStateProvider)AuthenticationStateProvider;
             await customAuthStateProvider.UpdateAuthenticationState(userSession);
@@ -98,7 +99,7 @@
                 var log = await ActivityLog.WriteLog($"{userSession.Email}", "Sign in request", "SIGN IN", $"{userSession.Role}");
                 if (log.IsSuccessStatusCode)
                 {
-                    Snack.Add("Sign in Successful", Severity.Error, options => options.CloseAfterNavigation = true);
+                    Snack.Add("Sign in Successful", Severity.Success, options => options.CloseAfterNavigation = true);
                     Navigation.NavigateTo("/", true);
                 }
             }
@@ -107,13 +108,14 @@
                 var log = await ActivityLog.WriteLog($"{userSession.Email}", "Sign in request", "SIGN IN", $"{userSession.Role}");
                 if (log.IsSuccessStatusCode)
                 {
-                    Snack.Add("Sign in Successful", Severity.Error, options => options.CloseAfterNavigation = true);
+                    Snack.Add("Sign in Successful", Severity.Success);
                     Navigation.NavigateTo("/dashboard", true);
                 }
             }
         }
         else if (loginResponse.StatusCode == HttpStatusCode.Unauthorized)
         {
+            Snack.Add("UnAuthorize Email!", Severity.Info);
             var response = await UserService.CheckEmail(_loginRequest.Email);
             if (response)
             {
@@ -130,15 +132,17 @@
         {
             Position = DialogPosition.TopCenter,
             CloseButton = false,
+            FullScreen = true,
             NoHeader = true,
             DisableBackdropClick = false,
         };
     private readonly DialogOptions _forgot = new()
         {
             Position = DialogPosition.TopCenter,
+            FullScreen = false,
             CloseButton = true,
-            FullWidth = false,
-            MaxWidth = MaxWidth.Medium,
+            FullWidth = true,
+            MaxWidth = MaxWidth.Large,
             NoHeader = false,
             DisableBackdropClick = false,
         };
@@ -157,6 +161,7 @@
             _passwordInput = InputType.Text;
         }
     }
-    private void BeginSingUp(DialogOptions options) => DialogService.Show<RegisterForm>("", options);
+
+    private void BeginSingUp() => NavigationManager.NavigateTo("/register");
     private void OnForgotPassword(DialogOptions options) => DialogService.Show<ForgotPasswordForm>("Find Your Account 😶‍🌫️", _forgot);
 }
