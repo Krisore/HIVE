@@ -1,4 +1,8 @@
-﻿<MudNavMenu Color="Color.Primary" Bordered="true" Dense="true" Margin="Margin.Dense">
+﻿@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager Navigation
+
+<MudDivider/>
+<MudNavMenu Color="Color.Primary" Bordered="true" Dense="true" Margin="Margin.Dense">
     <MudNavLink Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Rounded.Dashboard" Href="/dashboard" IconColor="Color.Primary"> Dashboard </MudNavLink>
     <MudNavGroup Title="Directories" Icon="@Icons.Material.Rounded.Storage" IconColor="Color.Primary">
         <MudNavLink Match="NavLinkMatch.Prefix"
@@ -6,10 +10,10 @@
                     Href="/documents"> Documents </MudNavLink>
         <MudNavLink Match="NavLinkMatch.Prefix"
                     Icon="@Icons.Material.Rounded.School"
-                    Href="/curriculum"> Curriculum </MudNavLink>
+                    Href="/curriculum"> Academic  </MudNavLink>
         <MudNavLink Match="NavLinkMatch.Prefix"
                     Icon="@Icons.Material.Rounded.Category"
-                    Href="/category" Disabled="false"> Category </MudNavLink>
+                    Href="/category" Disabled="false"> Project Type </MudNavLink>
     </MudNavGroup>
 </MudNavMenu>
 <MudNavMenu Rounded="true" Margin="Margin.Dense" Dense="true" Color="Color.Primary" Class="pa-2">
@@ -19,11 +23,21 @@
 
     <MudDivider Class="my-2" />
     <MudNavLink Icon="@Icons.Material.Filled.Archive" Href="/archives"> Archived </MudNavLink>
-    <MudNavLink Icon="@Icons.Material.Filled.Delete" Href="/trash"> Trash </MudNavLink>
+    <MudNavLink Icon="@Icons.Material.Filled.Delete" Href="/bin"> Bin </MudNavLink>
+    <MudDivider DividerType="DividerType.Middle" />
+    <MudNavLink Icon="@Icons.Material.Rounded.Logout" OnClick="Logout"> Sign Out</MudNavLink>
+    <MudDivider DividerType="DividerType.Middle" />
 </MudNavMenu>
 
 @code {
     public string SelectedValue { get; set; }
     bool folderOneExpanded;
     bool folderTwoExpanded;
+    private async Task Logout()
+    {
+        var customAuthStateProvider = (CustomAuthenticationStateProvider)AuthenticationStateProvider;
+        await customAuthStateProvider.UpdateAuthenticationState(null);
+        Navigation.NavigateTo("/", true);
+    }
+
 }

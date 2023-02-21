@@ -23,17 +23,18 @@
                     </CardHeaderContent>
                 </MudCardHeader>
                 <MudDivider></MudDivider>
-                <MudForm Model="RequestDocument" @bind-IsValid="_success">
+                <MudForm Model="RequestDocument" @ref="form" @bind-IsValid="@_success">
                     <MudCardContent>
                         <MudAlert Class="my-2" Variant="Variant.Text" Severity="Severity.Normal"  Dense="true"> Fill up this form to Publish your Document</MudAlert>
-                        <MudTextField @bind-Value="RequestDocument.Title"
+                        <MudTextField T="string"
+                                      @bind-Value="RequestDocument.Title"
                                       For="@(() => RequestDocument.Title)"
-                                      Immediate="true"
                                       Margin="Margin.Dense"
                                       Label="Title"
                                       Variant="Variant.Outlined"
                                       Required="true"
-                                      RequiredError="Title is required"/>
+                                      RequiredError="Title is required"
+                                      Validation="@(new Func<string, IEnumerable<string>>(DocumentValidation))" />
                         <MudTextField @bind-Value="RequestDocument.Abstract"
                                       For="@(() => RequestDocument.Abstract)"
                                       Immediate="true"
@@ -62,6 +63,8 @@
 
                             <MudAutocomplete T="Reference"
                                              Class="mx-1"
+                                             CoerceText="true"
+                                             CoerceValue="true"
                                              RequiredError="Document Type is Required"
                                              Label="Document Type"
                                              @bind-Value="@_selectedDocumentType"
@@ -77,6 +80,8 @@
                             <MudAutocomplete T="Adviser"
                                              Class="mx-1"
                                              Required="true"
+                                             CoerceText="true"
+                                             CoerceValue="true"
                                              RequiredError="Adviser is Required"
                                              Clearable="true"
                                              Label="Project Adviser"
@@ -88,6 +93,8 @@
 
                             <MudAutocomplete T="Curriculum"
                                              Class="mx-1"
+                                             CoerceText="true"
+                                             CoerceValue="true"
                                              RequiredError="Academic Program is Required"
                                              Clearable="true"
                                              Label="Academic Program"
@@ -179,11 +186,14 @@
 @code {
 
     private UploadDocumentRequest RequestDocument { get; set; } = new();
+    string[] _formError = { };
     [Parameter]
     public int? Id { get; set; } 
+    private IEnumerable<Document>? Documents { get; set; }
     private Activity _activity = new();
     string _buttonText = "Submit";
     string _userName = string.Empty;
+    private List<string> Titles = new List<string>();
     private List<Reference> Types { get; set; } = new();
     private List<CreateTopic> _selectedTopics = new();
     private List<Topic> _topics = new();
@@ -195,7 +205,7 @@
     private List<string> _errors = new();
     private Document _document = new();
     private string _text = "File must be Portable Document Format";
-    public Severity Severity = Severity.Info;
+    private Severity Severity = Severity.Info;
     bool _success;
     MudForm? _form;
     [CascadingParameter]
@@ -203,6 +213,7 @@
 
     protected override async Task OnParametersSetAsync()
     {
+
         var customAuthStateProvider = (CustomAuthenticationStateProvider)AuthenticationStateProvider;
         Authenticate = customAuthStateProvider.GetAuthenticationStateAsync();
         if (Authenticate != null)
@@ -213,7 +224,6 @@
                 RequestDocument.UploaderEmail = account.User.Identity.Name!;
             }
         }
-        
 
         if (Id != null)
         {
@@ -230,12 +240,28 @@
 
 
     }
+    private IEnumerable<string> DocumentValidation(string document)
+    {
+        var documents = Titles;
+        if (documents.Any(d => d.ToLower().Equals(document.ToLower())) && Id is null)
+        {
+            yield return "Document Title is already taken";
+        }
+    }
     private IBrowserFile? File;
     private FileEntry _onFileEntry = new();
-    private Task OnInputFileChange(IBrowserFile? e)
+    MudForm? form;
+    private async Task OnInputFileChange(IBrowserFile? e)
     {
         this.File = e;
-        return Task.CompletedTask;
+        Files = await FileService.GetAllFiles();
+        if (Files.Any(f => File != null && f.FileName != null && f.FileName.ToLower().Equals(File.Name.ToLower())))
+        {
+            await DialogService.ShowMessageBox(
+                "This file is already uploaded", 
+                "Your file name is already exist.",
+                "Ok");
+        }
     }
     private async Task<int> FileUploadAsync()
     {
@@ -267,6 +293,8 @@
                 RequestDocument.UploaderEmail =  account.User.Identity.Name!;
             }
         }
+        var response = await DocumentService.DocumentTitles();
+        Titles = response;
     }
     private async Task<IEnumerable<Reference>> SearchDocumentType(string value)
     {

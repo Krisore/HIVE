@@ -25,7 +25,7 @@
             <MudText Typo="Typo.h6" Align="Align.Center" Class="my-2 mt-8"> Welcome, @context.User.Identity?.Name 🌱 </MudText>
             <MudText Typo="Typo.body1" Align="Align.Center"> Search for, or upload your documents 📦</MudText>
             <SearchFunc OnSearch="HandleSearch"></SearchFunc>
-            <SurveyPrompt Title="How is PUP Archive working for you?" />
+            <SurveyPrompt />
         </MudContainer>
     </Authorized>
     <NotAuthorized>
@@ -50,7 +50,7 @@
             <MudText Typo="Typo.h6" Align="Align.Center" Class="my-2 mt-8"> Welcome to Pup Archive 🗃️</MudText>
             <MudText Typo="Typo.body1" Align="Align.Center"> Search for, or upload your articles 📦</MudText>
             <SearchFunc OnSearch="HandleSearch"/>
-            <SurveyPrompt Title="How is PUP Archive working for you?" />
+            <SurveyPrompt/>
         </MudContainer>
     </NotAuthorized>
 </AuthorizeView>

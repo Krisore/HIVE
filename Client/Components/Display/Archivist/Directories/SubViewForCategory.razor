@@ -7,6 +7,7 @@
 @inject ISnackbar Snack
 @inject NavigationManager NavigationManager
 <MudTable @ref="_table"
+          Loading="@_isLoading" LoadingProgressColor="Color.Primary"
           ServerData="@(new Func<TableState, Task<TableData<Reference>>>(ServerReload))"
           Dense="true"
           Bordered="false"
@@ -107,6 +108,7 @@
     string _searchTerm = string.Empty;
     string _role = "Reference";
     private IEnumerable<Reference> _references;
+    private bool _isLoading = true;
     private MudTable<Reference> _table;
     private HashSet<Reference> _selectedItems = new();
     private List<Document>? _documents;
@@ -115,6 +117,7 @@
     private List<string> _errors = new();
     private async Task<TableData<Reference>> ServerReload(TableState state)
     {
+         _isLoading = true;
         _references = await DocumentReferenceService.GetReferences();
         var response  = await DocumentService.GetDocumentsAsync();
         if (!response.IsSuccessStatusCode)
@@ -136,7 +139,7 @@
             return false;
         }).ToArray();
         _totalItems = _references.Count();
-
+        _isLoading = false;
         _references = state.SortLabel switch
         {
             "name" => _references.OrderByDirection(state.SortDirection, o => o.Name),

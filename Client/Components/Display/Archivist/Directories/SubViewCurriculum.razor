@@ -7,6 +7,7 @@
 <MudTable @ref="_table"
           ServerData="@(new Func<TableState, Task<TableData<Curriculum>>>(ServerReload))"
           Dense="true"
+          Loading="@_isLoading" LoadingProgressColor="Color.Primary"
           Bordered="false"
           MultiSelection="true" @bind-SelectedItems="_selectedItems"
           Hover="true">
@@ -40,20 +41,20 @@
     <HeaderContent>
         <MudTh></MudTh>
         <MudTh><MudTableSortLabel SortLabel="name" T="Curriculum"> Name </MudTableSortLabel></MudTh>
-        <MudTh> <MudTableSortLabel SortLabel="acronym" T="Curriculum"> </MudTableSortLabel></MudTh>
+        <MudTh> <MudTableSortLabel SortLabel="acronym" T="Curriculum">  </MudTableSortLabel></MudTh>
         <MudTh>Total Documents</MudTh>
         <MudTh></MudTh>
     </HeaderContent>
     <RowTemplate>
         <MudTd>
-            <MudButton Class="rounded-0" Size="Size.Small" Variant="Variant.Outlined" OnClick="@(() => ShowBtnPress(context.Id))">  🗃️@((context.ShowDocuments == true) ? "Hide" : "Show")</MudButton>
+            <MudButton Class="rounded-0" Size="Size.Small" Variant="Variant.Outlined" OnClick="@(() => ShowBtnPress(context.Id))"> @((context.ShowDocuments == true) ? "Hide" : "Show")</MudButton>
             </MudTd>
-            <MudTd DataLabel="Name"> @context.Name </MudTd>
-            <MudTd DataLabel="Acronym"><MudChip Label="true" Variant="Variant.Text" Color="Color.Info" Class="rounded-0">@context.Alt</MudChip></MudTd>
+        <MudTd DataLabel="Name"> <MudText Typo="Typo.body2" Align="Align.Justify"> @context.Name </MudText></MudTd>
+            <MudTd DataLabel="Acronym"><MudChip Label="true" Text="@context.Alt" Variant="Variant.Outlined" Size="Size.Medium" Color="Color.Info" Class="rounded-l-xl" /></MudTd>
         <MudTd>
             @if (_documents != null)
             {
-                <MudChip Variant="Variant.Text" Size="Size.Large" Color="Color.Error"> @_documents.Count(d => d.Curriculum.Id == context.Id)</MudChip>
+                <MudChip Variant="Variant.Text" Size="Size.Large" Class="rounded-sm" Color="Color.Error"> @_documents.Count(d => d.Curriculum.Id == context.Id)</MudChip>
             }
         </MudTd>
         <MudTd>
@@ -83,13 +84,8 @@
                             </CardHeaderAvatar>
                             <CardHeaderContent>
                                 <MudText Typo="Typo.body2"> @context.Name </MudText>
-                                <MudChip Label="true" Variant="Variant.Text"> @context.Alt</MudChip>
+                                <MudChip Label="true" Text="@context.Alt" Class="rounded-b-xl" Variant="Variant.Outlined"/>
                             </CardHeaderContent>
-                            <CardHeaderActions>
-                                <MudChip Label="true" IconColor="Color.Success" Size="Size.Medium" Icon="@Icons.Custom.FileFormats.FileExcel">
-                                    Generate report
-                                </MudChip>
-                            </CardHeaderActions>
                         </MudCardHeader>
                         <MudDivider />
                         <MudCardContent>
@@ -110,10 +106,12 @@
     private HashSet<Curriculum> _selectedItems = new();
     private List<Document>? _documents;
     private int _totalItems = 0;
+    private bool _isLoading = true;
     private IEnumerable<Curriculum>? _pagedData;
     private List<string> _errors = new();
     private async Task<TableData<Curriculum>> ServerReload(TableState state)
     {
+        _isLoading = true;
         _curriculum = await CurriculumService.GetProgramsAsync();
         _documents = await DocumentService.GetDocumentsForArchivistAsync();
         await Task.Delay(300);
@@ -133,7 +131,7 @@
             "alt" => _curriculum.OrderByDirection(state.SortDirection, o => o.Alt),
             _ => _curriculum
         };
-
+        _isLoading = false;
         _pagedData = _curriculum.Skip(state.Page * state.PageSize).Take(state.PageSize).ToArray();
         return new TableData<Curriculum>() { TotalItems = _totalItems, Items = _pagedData };
     }

@@ -2,7 +2,7 @@
 @inject IFileService FileService
 @inject IDialogService DialogService
 @inject IActivityLog ActivityLog
-<MudTable T="Activity" ServerData="@(new Func<TableState, Task<TableData<Activity>>>(ServerReload))"
+<MudTable T="Activity" ServerData="@(new Func<TableState, Task<TableData<Activity>>>(ServerReload))" Loading="@_isLoading" LoadingProgressColor="Color.Primary"
           Dense="true" Hover="true" @ref="_table" Bordered="true" Striped="true" MultiSelection="true" @bind-SelectedItems="_selectedItems">
     <ToolBarContent>
         <MudTextField Variant="Variant.Outlined" T="string" ValueChanged="@(OnSearch)" Placeholder="Search" Adornment="Adornment.End"
@@ -80,6 +80,7 @@
     private IEnumerable<Activity> _pagedData;
     private MudTable<Activity> _table;
     private string _logSearch = string.Empty;
+    private bool _isLoading = true;
     private int _totalItems;
     private int _totalDocuments;
     private HashSet<Activity> _selectedItems = new();
@@ -87,6 +88,7 @@
 
     private async Task<TableData<Activity>> ServerReload(TableState state)
     {
+        _isLoading = true;
         IEnumerable<Activity> data = await ActivityLog.GetLogs();
         data = data.OrderByDescending(d => d.Date.Value);
         _totalDocuments = data.Count();
@@ -110,6 +112,7 @@
          
             _ => data
         };
+        _isLoading = false;
         _pagedData = data.Skip(state.Page * state.PageSize).Take(state.PageSize).ToArray();
         return new TableData<Activity>() { TotalItems = _totalItems, Items = _pagedData };
 

@@ -3,8 +3,8 @@
 @inject IFileService FileService
 @inject IDialogService DialogService
 @inject IActivityLog ActivityLog
-<MudTable T="Document" ServerData="@(new Func<TableState, Task<TableData<Document>>>(ServerReload))"
-          Dense="true" Hover="true" @ref="_table" Bordered="false" Striped="true" MultiSelection="true" @bind-SelectedItems="_selectedItems">
+<MudTable T="Document" Loading="@_loadingCath" LoadingProgressColor="Color.Primary" FixedHeader="true" ServerData="@(new Func<TableState, Task<TableData<Document>>>(ServerReload))"
+          Dense="true" Hover="true" @ref="_table" Bordered="true" Striped="true" MultiSelection="true" @bind-SelectedItems="_selectedItems">
     <ToolBarContent>
         <MudTextField Variant="Variant.Outlined" T="string" ValueChanged="@(OnSearch)" Placeholder="Search" Adornment="Adornment.End"
                       AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0" Margin="Margin.Dense"></MudTextField>
@@ -61,7 +61,7 @@
                 VIEW
             </MudButton>
         </MudTd>
-        <MudTd DataLabel="Title">@context.Title</MudTd>
+        <MudTd DataLabel="Title"><MudText Typo="Typo.caption">@context.Title</MudText></MudTd>
         <MudTd DataLabel="Topics">
             <div class="d-inline flex">
                 @foreach (var topic in context.Topics)
@@ -71,7 +71,7 @@
             </div>
         </MudTd>
         <MudTd DataLabel="User">
-            @context.UploaderEmail
+            <MudText Typo="Typo.caption" Align="Align.Center">@context.UploaderEmail</MudText>
         </MudTd>
         <MudTd DataLabel="Owner">
             @context.Curriculum.Alt
@@ -87,7 +87,7 @@
            {
                <MudChip Text="To review" Variant="Variant.Filled" Color="Color.Info" Size="Size.Small"/> 
            }
-           else if (context.UnApproved && context.ToReview == false)
+           else if (context is { UnApproved: true,ToReview: false })
            {
                 <MudChip Text="Unapproved" Variant="Variant.Filled" Color="Color.Warning" Size="Size.Small" />
            }
@@ -100,12 +100,12 @@
             @context.DateUploaded.ToLongDateString()
         </MudTd>
     </RowTemplate>
+    <LoadingContent >
+        <MudText>Loading...</MudText>
+    </LoadingContent>
     <NoRecordsContent>
         <MudText>No matching records found</MudText>
     </NoRecordsContent>
-    <LoadingContent>
-        <MudText>Loading...</MudText>
-    </LoadingContent>
     <PagerContent>
         <MudTablePager />
     </PagerContent>
@@ -131,10 +131,13 @@
     string awit = "";
     private List<string> _errors = new();
     private List<string> _archiveList = new();
+    private bool _loadingCath = true;
 
 
     private async Task<TableData<Document>> ServerReload(TableState state)
     {
+        _loadingCath = true;
+        await Task.Delay(300);
         IEnumerable<Document> documents = await DocumentService.GetDocumentsForArchivistAsync();
         IEnumerable<Document> data = documents;
         if (!string.IsNullOrEmpty(Role) && Role.Equals("Adviser"))
@@ -173,9 +176,11 @@
             "year" => data.OrderByDirection(state.SortDirection, o => o.DatePublished),
             "review" => data.OrderByDirection(state.SortDirection, o => o.ToReview),
             "uploaded" => data.OrderByDirection(state.SortDirection, o => o.DateUploaded),
+            "status" => data.OrderByDirection(state.SortDirection, o => o.IsActive),
             _ => data
         };
         _pagedData = data.Skip(state.Page * state.PageSize).Take(state.PageSize).ToArray();
+        _loadingCath = false;
         return new TableData<Document>() { TotalItems = _totalItems, Items = _pagedData };
 
     }

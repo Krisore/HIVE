@@ -1,11 +1,12 @@
 ﻿@using MudBlazor
+@using System.Diagnostics.Tracing
 <MudForm Class="my-1 mx-4">
     <div class="my-1 d-flex block justify-left align-center">
         <MudTextField AdornmentIcon="@Icons.Rounded.Search" Adornment="Adornment.End" AdornmentColor="Color.Secondary" Class="mx-2"
                       @bind-Value="SearchTerm" Label="Search article🤔"
                       Clearable="true"
-                      Variant="Variant.Outlined" Margin="Margin.Dense"
-                      OnKeyUp="HandleSearch" />
+                      OnKeyPress="(OnEnter)"
+                      Variant="Variant.Outlined" Margin="Margin.Dense"/>
         <MudButton Class="rounded-0" Disabled="@_processing" Variant="Variant.Filled" Color="Color.Primary" DisableElevation="true"
                    Size="Size.Medium" OnClick="HandleSearch">
             @if (_processing)
@@ -21,6 +22,7 @@
     </div>
 </MudForm>
 @code {
+
     private string SearchTerm { get; set; } = string.Empty;
     private bool _processing = false;
     [Parameter]
@@ -32,4 +34,13 @@
         _processing = false;
         await OnSearch.InvokeAsync(SearchTerm);
     }
+
+    private async void OnEnter(KeyboardEventArgs e)
+    {
+        if (e.Code == "Enter")
+        {
+            await HandleSearch();
+        }
+    }
+
 }

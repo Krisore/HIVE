@@ -48,6 +48,7 @@
                           InputType="@_passwordInput"
                           Adornment="Adornment.End"
                           AdornmentIcon="@_passwordInputIcon"
+                          OnKeyPress="OnEnter"
                           OnAdornmentClick="ButtonTestClick"
                           AdornmentAriaLabel="Show Password"
                           Variant="Variant.Outlined"
@@ -142,7 +143,7 @@
             FullScreen = false,
             CloseButton = true,
             FullWidth = true,
-            MaxWidth = MaxWidth.Large,
+            MaxWidth = MaxWidth.Small,
             NoHeader = false,
             DisableBackdropClick = false,
         };
@@ -162,6 +163,13 @@
         }
     }
 
+    private async void OnEnter(KeyboardEventArgs e)
+    {
+        if (e.Code == "Enter")
+        {
+            await Authenticate();
+        }
+    }
     private void BeginSingUp() => NavigationManager.NavigateTo("/register");
     private void OnForgotPassword(DialogOptions options) => DialogService.Show<ForgotPasswordForm>("Find Your Account 😶‍🌫️", _forgot);
 }

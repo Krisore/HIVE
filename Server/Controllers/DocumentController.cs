@@ -162,5 +162,13 @@ namespace HIVE.Server.Controllers
             return Ok(response);
         }
 
+        [HttpGet]
+        [Route("titles")]
+        public async Task<ActionResult<List<string>>> GetTitles()
+        {
+            var response = await _repository.DocumentsTitle();
+            return Ok(response);
+        }
+
     }
 }

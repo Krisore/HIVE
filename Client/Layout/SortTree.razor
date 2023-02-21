@@ -34,7 +34,7 @@
                 </MudNavLink>
             }
         </MudNavGroup>
-        <MudNavGroup Disabled="false" Title="Document Type" @bind-Expanded="_folderThreeExpanded">
+        <MudNavGroup Disabled="false" Title="Project Type" @bind-Expanded="_folderThreeExpanded">
             @foreach (var type in Types.Reverse())
             {
                 <MudNavLink Href=@($"/search/{type.Name}")>

@@ -8,6 +8,7 @@ using System.Reflection.Metadata;
 using System.Transactions;
 using HIVE.Server.Services.Interface;
 using Document = HIVE.Shared.Model.Document;
+using System.Xml.Linq;
 
 namespace HIVE.Server.Repository
 {
@@ -34,6 +35,7 @@ namespace HIVE.Server.Repository
                     .Include(t => t.Topics)
                     .Include(a => a.Reference)
                     .Include(d => d.Curriculum)
+                    .Include(f => f.File)
                     .ToListAsync();
                 return response;
             }
@@ -143,6 +145,11 @@ namespace HIVE.Server.Repository
 
         }
 
+        public async Task<List<string>> DocumentsTitle()
+        {
+            var response = await _context.Documents.Select(d => d.Title).ToListAsync();
+            return response;
+        }
         public async Task<List<Document>> GetDocumentsAsync()
         {
             try
@@ -154,7 +161,8 @@ namespace HIVE.Server.Repository
                                 && d.IsArchived == false
                                 && d.IsDeleted == false)
                     .Include(t => t.Topics)
-                    .Include(a => a.Authors).Include(f => f.File)
+                    .Include(a => a.Authors)
+                    .Include(f => f.File)
                     .Include(a => a.Curriculum)
                     .Include(d => d.Reference)
                     .Include(a => a.Authors)
@@ -210,6 +218,15 @@ namespace HIVE.Server.Repository
                 FileId = reference.Id,
                 File = file,
             };
+            var tenYearsAgo = DateTime.Now.AddYears(-10);
+            if (document.DatePublished.HasValue && document.DatePublished < tenYearsAgo)
+            {
+                document.IsActive = false;
+            }
+            else
+            {
+                document.IsActive = true;
+            }
             foreach (var topic in request.Topics)
             {
                 if (topic.Name != null)

@@ -141,7 +141,7 @@
             var login = await result.Result;
             if (!login.Canceled)
             {
-                await DialogService.ShowAsync<LoginForm>("", Login);
+                NavigationManager.NavigateTo("/", true);
             }
              
         }
@@ -165,7 +165,7 @@
     private IEnumerable<string> EmailValidation(string email)
     {
         var emails = _emails;
-        if (emails != null && emails.Any(e => e.ToLower().Equals(email.ToLower())))
+        if (emails.Any(e => e.ToLower().Equals(email.ToLower())))
         {
             yield return "Email is already taken";
         }

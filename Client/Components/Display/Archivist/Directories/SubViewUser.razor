@@ -14,6 +14,7 @@
           ServerData="@(new Func<TableState, Task<TableData<User>>>(ServerReload))"
           Dense="true"
           Bordered="false"
+          Loading="@_isLoading" LoadingProgressColor="Color.Primary"
           MultiSelection="true" @bind-SelectedItems="_selectedItems"
           Hover="true">
     <ToolBarContent>
@@ -52,7 +53,7 @@
     </HeaderContent>
     <RowTemplate>
         <MudTd>
-            <MudButton Class="rounded-0" Size="Size.Small" Variant="Variant.Outlined" OnClick="@(() => ShowBtnPress(context.Id))">  🗃️@((context.ShowDocuments == true) ? "Hide" : "Show")</MudButton>
+            <MudButton Class="rounded-0" Size="Size.Small" Variant="Variant.Outlined" OnClick="@(() => ShowBtnPress(context.Id))">@((context.ShowDocuments == true) ? "Hide" : "Show")</MudButton>
         </MudTd>
         <MudTd DataLabel="Email">
             <MudChip Class="rounded-br-xl" Variant="Variant.Filled" Color="Color.Info">
@@ -137,12 +138,14 @@
     private IEnumerable<User> _users;
     private MudTable<User> _table;
     private HashSet<User> _selectedItems = new();
+    private bool _isLoading = true;
     private List<Document>? _documents;
     private int _totalItems = 0;
     private IEnumerable<User>? _pagedData;
     private List<string> _errors = new();
     private async Task<TableData<User>> ServerReload(TableState state)
     {
+        _isLoading = true;
         _users = await UserService.GetUserCount();
         _users = _users.Where(u => u.Role == "User");
         _documents = await DocumentService.GetDocumentsForArchivistAsync();
@@ -168,7 +171,7 @@
             "verifiedAt" => _users.OrderByDirection(state.SortDirection, o => o.VerifiedAt),
             _ => _users
         };
-
+        _isLoading = false;
         _pagedData = _users.Skip(state.Page * state.PageSize).Take(state.PageSize).ToArray();
         return new TableData<User>() { TotalItems = _totalItems, Items = _pagedData };
     }

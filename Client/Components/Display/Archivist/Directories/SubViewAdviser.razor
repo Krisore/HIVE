@@ -9,6 +9,8 @@
 @inject ISnackbar Snack
 @inject NavigationManager NavigationManager
 <MudTable @ref="_table"
+          Loading="@_isLoading"
+          LoadingProgressColor="Color.Primary"
           ServerData="@(new Func<TableState, Task<TableData<Adviser>>>(ServerReload))"
           Dense="true"
           Bordered="false"
@@ -118,8 +120,10 @@
     private int _totalItems = 0;
     private IEnumerable<Adviser>? _pagedData;
     private List<string> _errors = new();
+    private bool _isLoading = true;
     private async Task<TableData<Adviser>> ServerReload(TableState state)
     {
+        _isLoading = true;
         _advisers = await AdviserService.GetAdvisersAsync();
         _documents = await DocumentService.GetDocumentsForArchivistAsync();
         await Task.Delay(300);
@@ -139,7 +143,7 @@
             "email" => _advisers.OrderByDirection(state.SortDirection, o => o.Email),
             _ => _advisers
         };
-
+        _isLoading = false;
         _pagedData = _advisers.Skip(state.Page * state.PageSize).Take(state.PageSize).ToArray();
         return new TableData<Adviser>() { TotalItems = _totalItems, Items = _pagedData };
     }

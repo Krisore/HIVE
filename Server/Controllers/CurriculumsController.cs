@@ -38,7 +38,7 @@ namespace HIVE.Server.Controllers
             var academics = await _context.Curriculums.ToListAsync();
             return Ok(academics);
         }
-        [HttpPost]
+        [HttpPost("create")]
         public async Task<ActionResult> AddAcademicProgramAsync(Curriculum curriculum)
         {
             var newProgram = new Curriculum()

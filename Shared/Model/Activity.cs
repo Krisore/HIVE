@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
 namespace HIVE.Shared.Model
@@ -14,5 +15,6 @@ namespace HIVE.Shared.Model
         public string? Role { get; set; }
         public string? Detailed { get; set; }
         public DateTime? Date { get; set; } = DateTime.Now;
+
     }
 }

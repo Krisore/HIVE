@@ -81,6 +81,7 @@ namespace HIVE.Client.Services
             {
                 var response = await _client.GetFromJsonAsync<List<Document>>("api/Document/documents");
                 return response;
+                
             }
             catch (Exception ex)
             {
@@ -196,5 +197,10 @@ namespace HIVE.Client.Services
             return response ?? throw new InvalidOperationException();
         }
 
+        public async Task<List<string>> DocumentTitles()
+        {
+            var response = await _client.GetFromJsonAsync<List<string>>("api/Document/titles");
+            return response;
+        }
     }
 }

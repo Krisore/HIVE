@@ -28,6 +28,7 @@ namespace HIVE.Client.Services.Interface
         Task<HttpResponseMessage> UpdateActiveStatusDocumentAsync();
         Task<List<Document>> GetDocumentsInTrash();
         Task<List<Document>> GetArchivedDocuments();
+        Task<List<string>> DocumentTitles();
 
     }
 }

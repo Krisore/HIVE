@@ -30,9 +30,9 @@
           Hover="true"
           Elevation="0"
           Bordered="true"
+          Loading="@isLoading" LoadingProgressColor="Color.Primary"
           Dense="true"
           Breakpoint="Breakpoint.Sm"
-          LoadingProgressColor="Color.Info"
           OnRowClick="RowClickEvent"
           RowClassFunc="@SelectedRowClassFunc"
           T="Document">
@@ -46,19 +46,14 @@
             <div class="d-flex inline">
                @if (string.IsNullOrWhiteSpace(SearchTerm))
                {
-                   <MudChip Color="Color.Primary" Size="Size.Large" Variant="Variant.Text" Label="true"><code>Total Documents: @((long)_table.GetFilteredItemsCount())</code></MudChip>
+                   <MudChip Color="Color.Primary" Size="Size.Large" Variant="Variant.Text" Label="true">
+                       <code>Total Documents: @((long)_table.GetFilteredItemsCount())</code>
+                   </MudChip>
                }
                else
                {
                    <MudChip Color="Color.Primary" Size="Size.Large" Variant="Variant.Text" Label="true"><code>Results: @((long)_table.GetFilteredItemsCount())</code></MudChip>
                }
-                @*<MudDateRangePicker Class="rounded-0 mx-1" Clearable="true" Variant="Variant.Outlined"  Margin="Margin.Dense" @ref="_picker" Label="From" @bind-DateRange="_dateRange" AutoClose="true">
-                    <PickerActions>
-                        <MudButton Variant="Variant.Text" Class="mr-auto align-self-start" OnClick="@(() => _picker.Clear())">Clear</MudButton>
-                        <MudButton Variant="Variant.Outlined" OnClick="@(() => _picker.Close(false))">Cancel</MudButton>
-                        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(() => _picker.Close())">Ok</MudButton>
-                    </PickerActions>
-                </MudDateRangePicker>*@
             </div>
         </MudTh>
     </HeaderContent>
@@ -69,12 +64,12 @@
             
         </MudTd>
     </RowTemplate>
-    <NoRecordsContent>
-        
-    </NoRecordsContent>
     <LoadingContent>
-       
+        <LoadingCard/>
     </LoadingContent>
+    <NoRecordsContent>
+        No Result Found 😣
+    </NoRecordsContent>
     <PagerContent>
         <div class="d-flex flex-column align-center">
             <MudPagination SelectedChanged="PageChanged" Rectangular="true" Variant="Variant.Text" Count="@((_table.GetFilteredItemsCount() + _table.RowsPerPage - 1) / _table.RowsPerPage)" Class="pa-4"/>
@@ -132,11 +127,11 @@
             Console.WriteLine(e);
             throw;
         }
-        //get list of the following 
+        ////get list of the following 
         _files = await FileService.GetAllFiles();
-        _programs = await ProgramService.GetProgramsAsync();
-        _advisers = await AdviserService.GetAdvisersAsync();
-        _authors = await AuthorService.GetAllAuthorAsync();
+        //_programs = await ProgramService.GetProgramsAsync();
+        //_advisers = await AdviserService.GetAdvisersAsync();
+        //_authors = await AuthorService.GetAllAuthorAsync();
         isLoading = false;
     }
 

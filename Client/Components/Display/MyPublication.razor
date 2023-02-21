@@ -4,7 +4,9 @@
 @inject IActivityLog ActivityLog
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject NavigationManager NavigationManager
-<MudTable MultiSelection="true"  @bind-SelectedItems="_selectedItems"  Elevation="1" Dense="true" @ref="_table" ServerData="@(new Func<TableState, Task<TableData<Document>>>(ServerReload))">
+<MudTable MultiSelection="true"  @bind-SelectedItems="_selectedItems"
+          Loading="@_isloading" LoadingProgressColor="Color.Primary"
+          Elevation="1" Dense="true" @ref="_table" ServerData="@(new Func<TableState, Task<TableData<Document>>>(ServerReload))">
     <ToolBarContent>
         <MudChip Label="true" T="Document" Class="d-block " Variant="Variant.Text"> <code> Selected Document: <strong> (@_selectedItems.Count) </strong></code></MudChip>
         <div class="mx-5">
@@ -49,11 +51,11 @@
     <RowTemplate>
         
         <MudTd> <MudTooltip Text="See the details"><MudButton Variant="Variant.Outlined" Size="Size.Small" OnClick="@(() => OnReview(context.Id))"> 🗃️ </MudButton></MudTooltip></MudTd>
-        <MudTd DataLabel="Title">@context.Title</MudTd>
-        <MudTd DataLabel="Adviser"> @context.Adviser.Name</MudTd>
+        <MudTd DataLabel="Title"><MudText Typo="Typo.caption" >@context.Title</MudText></MudTd>
+        <MudTd DataLabel="Adviser"> <MudText Typo="Typo.caption">@context.Adviser.Name</MudText></MudTd>
         <MudTd DataLabel="Program">
 
-            <MudText Typo="Typo.body2"> <code> @(context.Curriculum.Alt)</code></MudText>
+            <MudText Typo="Typo.body2"><MudText Typo="Typo.caption">@context.Curriculum.Alt</MudText></MudText>
 
         </MudTd>
         <MudTd DataLabel="documentYear">
@@ -105,6 +107,7 @@
     public int id { get; set; }
     private IEnumerable<Document> _pagedData;
     private int _totalItems;
+    private bool _isloading = true;
     private string searchTerm = string.Empty;
     private string _userName = string.Empty;
     [CascadingParameter]
@@ -113,6 +116,7 @@
 
     private async Task<TableData<Document>> ServerReload(TableState state)
     {
+        _isloading = true;
         var customAuthStateProvider = (CustomAuthenticationStateProvider)AuthenticationStateProvider;
         Authenticate = customAuthStateProvider.GetAuthenticationStateAsync();
         if (Authenticate != null)
@@ -169,6 +173,7 @@
             "status" => data.OrderByDirection(state.SortDirection, o => o.IsActive),
             _ => data
             };
+        _isloading = false;
         _pagedData = data.Skip(state.Page * state.PageSize).Take(state.PageSize).ToArray();
         return new TableData<Document>() { TotalItems = _totalItems, Items = _pagedData };
     }

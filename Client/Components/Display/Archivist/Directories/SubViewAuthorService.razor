@@ -2,7 +2,7 @@
 @inject ICurriculumService CurriculumService
 @inject IDocumentService DocumentService
 
-<MudTable T="Author" ServerData="@(new Func<TableState, Task<TableData<Author>>>(ServerReload))"
+<MudTable T="Author" Loading="@_isLoading" LoadingProgressColor="Color.Primary" ServerData="@(new Func<TableState, Task<TableData<Author>>>(ServerReload))"
           Dense="true" Hover="true" @ref="_table" Bordered="true" @bind-SelectedItems="_selectedItems">
     <ToolBarContent>
         <MudTextField Variant="Variant.Outlined" T="string" ValueChanged="@(OnSearch)" Placeholder="Search" Adornment="Adornment.End"
@@ -72,9 +72,11 @@
     private HashSet<Author> _selectedItems = new();
     private List<Curriculum> _programs = new();
     private int _totalItems;
+    private bool _isLoading = true;
     private string _searchString = null;
     private async Task<TableData<Author>> ServerReload(TableState state)
     {
+        _isLoading = true;
         _documents = await DocumentService.GetDocumentsForArchivistAsync();
         _programs = await CurriculumService.GetProgramsAsync();
         IEnumerable<Author> author = await AuthorService.GetAllAuthorAsync();
@@ -89,7 +91,7 @@
             "authorname" => author.OrderByDirection(state.SortDirection, o => o.Name),
             _ => author
             };
-
+        _isLoading = false;
         _pagedData = author.Skip(state.Page * state.PageSize).Take(state.PageSize).ToArray();
         return new TableData<Author>() { TotalItems = _totalItems, Items = _pagedData };
     }
