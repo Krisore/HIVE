@@ -46,14 +46,50 @@
                 <MudButton Size="Size.Small" Href="/upload-document" StartIcon="@Icons.Material.Filled.Add" Class="rounded-0 my-2 mx-2" Variant="Variant.Outlined" Disabled="false" DisableElevation="true">
                     UPLOAD
                 </MudButton>
-                <MudMenu Dense="true" Class="my-2 mx-1">
+                <MudDivider Vertical="true"></MudDivider>
+                <MudMenu Dense="true" Class="my-2 ml-auto">
                     <ActivatorContent>
                         <div class="d-inline">
-                            <MudChip Variant="Variant.Filled" Class="ml-2 rounded-0" Size="Size.Medium" Label="true" Color="Color.Primary">@context.User.Identity.Name </MudChip>
+                            <MudChip Size="Size.Large" Label="true" Variant="Variant.Text" Color="Color.Primary">
+                                <MudAvatar Size="Size.Medium" Color="Color.Primary">
+                                    K
+                                </MudAvatar>
+                                <MudIcon Size="Size.Small" Icon="@Icons.Material.Filled.MenuOpen" />
+                            </MudChip>
                         </div>
                     </ActivatorContent>
                     <ChildContent>
-                        <MudMenuItem OnClick="Logout" >Sign Out</MudMenuItem>
+                        <MudCardHeader>
+                            <CardHeaderAvatar>
+                                <MudBadge Dot="true" Overlap="true" Color="Color.Success">
+                                    <MudAvatar Size="Size.Large" Elevation="2" Color="Color.Primary">
+                                        K
+                                    </MudAvatar>
+                                </MudBadge>
+                            </CardHeaderAvatar>
+                            <CardHeaderContent>
+                                <MudText Typo="Typo.body2"> Enore, Kristian Paul</MudText>
+                                <MudText Typo="Typo.caption">@context.User.Identity.Name</MudText>
+                            </CardHeaderContent>
+                            <CardHeaderActions>
+                                <MudToggleIconButton @bind-Toggled="@IsDarkMode"
+                                                     Class="mx-3"
+                                                     Icon="@Icons.Material.Sharp.DarkMode"
+                                                     Color="Color.Dark"
+                                                     Title="Go to Dark Mode"
+                                                     ToggledIcon="@Icons.Material.Sharp.LightMode"
+                                                     ToggledColor="@Color.Success"
+                                                     Edge="Edge.End"
+                                                     Size="Size.Small"
+                                                     ToggledSize="Size.Small"
+                                                     ToggledTitle="Go to Light Mode" />
+                            </CardHeaderActions>
+                        </MudCardHeader>
+                        <MudDivider DividerType="DividerType.FullWidth"/>
+                        <MudMenuItem Href="/profile" Icon="@Icons.Material.Filled.AccountBox"> Profile </MudMenuItem>
+                        <MudDivider DividerType="DividerType.FullWidth"/>
+                        <MudDivider DividerType="DividerType.FullWidth"/>
+                        <MudMenuItem OnClick="Logout" Icon="@Icons.Material.Filled.Logout">Sign Out</MudMenuItem>
                     </ChildContent>
                 </MudMenu>
             </Authorized>
@@ -71,19 +107,19 @@
                 <MudButton OnClick="@((e) => BeginLogin(_logInDialog))" Size="Size.Small" Class="rounded-0" Variant="Variant.Filled" Color="Color.Primary" DisableElevation="true">
                     SIGN IN
                 </MudButton>
+                <MudToggleIconButton @bind-Toggled="@IsDarkMode"
+                                     Class="mx-3"
+                                     Icon="@Icons.Material.Sharp.DarkMode"
+                                     Color="Color.Dark"
+                                     Title="Go to Dark Mode"
+                                     ToggledIcon="@Icons.Material.Sharp.LightMode"
+                                     ToggledColor="@Color.Success"
+                                     Edge="Edge.End"
+                                     Size="Size.Small"
+                                     ToggledSize="Size.Small"
+                                     ToggledTitle="Go to Light Mode"/>
             </NotAuthorized>
         </AuthorizeView>
-        <MudToggleIconButton @bind-Toggled="@IsDarkMode"
-                             Class="mx-3"
-                             Icon="@Icons.Material.Sharp.DarkMode"
-                             Color="Color.Dark"
-                             Title="Go to Dark Mode"
-                             ToggledIcon="@Icons.Material.Sharp.LightMode"
-                             ToggledColor="@Color.Success"
-                             Edge="Edge.End"
-                             Size="Size.Small"
-                             ToggledSize="Size.Small"
-                             ToggledTitle="Go to Light Mode"/>
     </MudAppBar>
     <MudDrawer @bind-Open="IsDrawerOpen" ClipMode="DrawerClipMode.Always" Elevation="1" Variant="DrawerVariant.Responsive">
         <AuthorizeView Roles="User">
@@ -113,6 +149,7 @@
 </MudLayout>
 @code
 {
+    string Name = "K";
     private bool IsDrawerOpen { get; set; }
     private bool IsDarkMode { get; set; }
 

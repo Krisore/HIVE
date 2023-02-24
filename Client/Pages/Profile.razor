@@ -8,14 +8,33 @@
 <AuthorizeView Roles="User">
     <Authorized>
         <MudContainer MaxWidth="MaxWidth.Large">
-            <MudTabs Centered="true">
-                <MudTabPanel Text="My Publication">
-                    <MyPublication UserId="@_userId" />
-                </MudTabPanel>
-                <MudTabPanel Text="Profile">
-                    <MyAccount/>
-                </MudTabPanel>
-            </MudTabs>
+            <MudCard>
+                <MudCardHeader>
+                    <CardHeaderAvatar>
+                        <MudAvatar Elevation="2" Size="Size.Large" Color="Color.Primary">
+                            @context.User.Identity.Name.ToUpper().ToCharArray()[0]
+                        </MudAvatar>
+                    </CardHeaderAvatar>
+                    <CardHeaderContent>
+                        <MudText Typo="Typo.body2">@User.LastName, @User.FirstName</MudText>
+                        <MudText Typo="Typo.caption">@context.User.Identity.Name</MudText>
+                    </CardHeaderContent>
+                    <CardHeaderActions>
+                        <MudIconButton Icon="@Icons.Material.Filled.ManageAccounts" />
+                    </CardHeaderActions>
+                </MudCardHeader>
+                <MudDivider Class="my-2"/>
+                <MudCardContent>
+                    <MudTabs Centered="false">
+                        <MudTabPanel Text="My Publication">
+                            <MyPublication UserId="@_userId"/>
+                        </MudTabPanel>
+                        <MudTabPanel Text="Profile">
+                            <MyAccount/>
+                        </MudTabPanel>
+                    </MudTabs>
+                </MudCardContent>
+            </MudCard>
         </MudContainer>
     </Authorized>
     <NotAuthorized>
@@ -27,5 +46,17 @@
     public Task<AuthenticationState>? Authenticate { get; set; }
     private User User { get; set; } = new();
     private int _userId;
+    protected override async Task OnInitializedAsync()
+    {
+        if (Authenticate != null)
+        {
+            var authenticatedUser = await Authenticate;
+            if (authenticatedUser.User.Identity != null)
+            {
+                var email = authenticatedUser.User.Identity?.Name!;
+                User =  await UserService.MyAccount(email);
+            }
+        }
+    }
 
 }

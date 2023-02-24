@@ -4,19 +4,20 @@
 @inject IActivityLog ActivityLog
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject NavigationManager NavigationManager
-<MudTable MultiSelection="true"  @bind-SelectedItems="_selectedItems"
+
+<MudTable MultiSelection="true" @bind-SelectedItems="_selectedItems"
           Loading="@_isloading" LoadingProgressColor="Color.Primary"
           Elevation="1" Dense="true" @ref="_table" ServerData="@(new Func<TableState, Task<TableData<Document>>>(ServerReload))">
     <ToolBarContent>
         <MudChip Label="true" T="Document" Class="d-block " Variant="Variant.Text"> <code> Selected Document: <strong> (@_selectedItems.Count) </strong></code></MudChip>
         <div class="mx-5">
             <MudTooltip Text="Reload Table" Arrow="true">
-                <MudIconButton OnClick="@(()=> _table.ReloadServerData())"
+                <MudIconButton OnClick="@(() => _table.ReloadServerData())"
                                Variant="Variant.Text"
                                DisableElevation="true"
                                Color="Color.Success"
                                Size="Size.Medium"
-                               Icon="@Icons.Material.Filled.Sync" />
+                               Icon="@Icons.Material.Filled.Sync"/>
             </MudTooltip>
 
             <MudTooltip Text="Delete Selected Document" Arrow="true">
@@ -24,10 +25,10 @@
                                Variant="Variant.Text"
                                DisableElevation="true"
                                Size="Size.Medium"
-                               Icon="@Icons.Material.Filled.Delete" Color="Color.Error" />
+                               Icon="@Icons.Material.Filled.Delete" Color="Color.Error"/>
             </MudTooltip>
         </div>
-        <MudSpacer />
+        <MudSpacer/>
         <MudButton Variant="Variant.Outlined" Href="/upload-document" Class="rounded-0 mx-2" StartIcon="@Icons.Material.Filled.Add" Size="Size.Medium"> Add New </MudButton>
         <MudTextField Variant="Variant.Outlined" T="string" ValueChanged="@(OnSearch)" Placeholder="Search" Adornment="Adornment.End"
                       AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0" Margin="Margin.Dense"></MudTextField>
@@ -49,9 +50,9 @@
         <MudTh>Edit</MudTh>
     </HeaderContent>
     <RowTemplate>
-        
+
         <MudTd> <MudTooltip Text="See the details"><MudButton Variant="Variant.Outlined" Size="Size.Small" OnClick="@(() => OnReview(context.Id))"> 🗃️ </MudButton></MudTooltip></MudTd>
-        <MudTd DataLabel="Title"><MudText Typo="Typo.caption" >@context.Title</MudText></MudTd>
+        <MudTd DataLabel="Title"><MudText Typo="Typo.caption">@context.Title</MudText></MudTd>
         <MudTd DataLabel="Adviser"> <MudText Typo="Typo.caption">@context.Adviser.Name</MudText></MudTd>
         <MudTd DataLabel="Program">
 

@@ -22,7 +22,6 @@
             <MudCardMedia Style="height: 120px" Image="/image/sample.jpg" />
             <MudDivider Class="my-1" />
             <MudCardContent>
-                <MudAlert Severity="Severity.Info" Dense="true" Class="rounded-0 my-2 rounded-t"> Please use gmail account for Verification </MudAlert>
                 <MudTextField T="string"
                               Class="my-2"
                               Margin="Margin.Dense"
@@ -89,7 +88,7 @@
     bool _success;
     MudForm? _form;
     [CascadingParameter] MudDialogInstance MudDialog { get; set; }
-    private List<string?> _emails = new();
+    private List<string> _emails = new();
 
     MudTextField<string> _pwField1;
 
@@ -168,6 +167,10 @@
         if (emails.Any(e => e.ToLower().Equals(email.ToLower())))
         {
             yield return "Email is already taken";
+        }
+        if (email.Contains("pup.edu.ph") == false)
+        {
+            yield return "Email is Invalid use PUP Web mail";
         }
     }
     private string PasswordMatch(string arg)

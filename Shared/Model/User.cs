@@ -25,5 +25,6 @@ public class User
     public bool ShowDocuments;
     [JsonIgnore]
     public string Password = string.Empty;
+    [JsonIgnore]
     public string ConfirmPassword = string.Empty;
 }

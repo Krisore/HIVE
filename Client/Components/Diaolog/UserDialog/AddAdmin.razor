@@ -36,14 +36,15 @@
                                   RequiredError="Last name is required!"/>
                 </div>
                 <MudTextField T="string"
-                              Class="my-2"
-                              Margin="Margin.Dense"
-                              Label="Email"
-                              For="@(() => User.Email)"
-                              Variant="Variant.Outlined"
-                              Required="true" @bind-Value="@User.Email"
-                              RequiredError="Email is required!"
-                              Validation="@(new Func<string, IEnumerable<string>>(EmailValidation))"/>
+                                  Class="my-2"
+                              Disabled="@isEdit"
+                                  Margin="Margin.Dense"
+                                  Label="Email"
+                                  For="@(() => User.Email)"
+                                  Variant="Variant.Outlined"
+                                  Required="true" @bind-Value="@User.Email"
+                                  RequiredError="Email is required!"
+                                  Validation="@(new Func<string, IEnumerable<string>>(EmailValidation))"/>
                 <MudTextField T="string" @bind-Value="@User.Password"
                               Class="my-2"
                               Variant="Variant.Outlined"
@@ -84,6 +85,7 @@
     [CascadingParameter] MudDialogInstance MudDialog { get; set; }
     private List<string?> _emails = new();
     MudTextField<string> _pwField1;
+    bool isEdit = false;
 
     private DialogOptions _options = new DialogOptions
     {
@@ -100,6 +102,7 @@
     {
         if (AdminId is not null or 0)
         {
+            isEdit = true;
             var response = await UserService.GetUserCount();
             User = response.FirstOrDefault(i => i.Id == (int)AdminId)!;
 
@@ -117,16 +120,16 @@
             var response = await UserService.UpdateAdminAccount((int)AdminId, User);
             if (response.IsSuccessStatusCode)
             {
-                Snack.Add("Your account is registered Successfully", Severity.Success, config =>
+                Snack.Add("Your account is Updated Successfully", Severity.Success, config =>
                 {
-                    config.Icon = Icons.Material.Outlined.Checklist;
-                    config.IconColor = Color.Success;
+                    config.Icon = Icons.Material.Outlined.CheckCircle;
+                    config.IconColor = Color.Info;
                     config.IconSize = Size.Large;
                 });
                 var log = await ActivityLog.WriteLog($"{User.Email}", $"Register an Account {User.LastName}, {User.FirstName}", $"REGISTER", $"ADMIN");
                 if (log.IsSuccessStatusCode)
                 {
-                    await DialogService.ShowMessageBox("Check your mail box!", "We send you a verification token", "Ok");
+                    await DialogService.ShowMessageBox("Update Success!", $"Notification send to {User.Email}", "Ok");
                     MudDialog.Close(DialogResult.Ok(true));
                 }
             }
@@ -138,14 +141,14 @@
             {
                 Snack.Add("Your account is registered Successfully", Severity.Success, config =>
                 {
-                    config.Icon = Icons.Material.Outlined.Checklist;
+                    config.Icon = Icons.Material.Outlined.CheckCircle;
                     config.IconColor = Color.Success;
                     config.IconSize = Size.Large;
                 });
                 var log = await ActivityLog.WriteLog($"{User.Email}",$"Register an Account {User.LastName}, {User.FirstName}",$"REGISTER",$"ADMIN");
                 if (log.IsSuccessStatusCode)
                 {
-                   await DialogService.ShowMessageBox("Check your mail box!", "We send you a verification token", "Ok");
+                    await DialogService.ShowMessageBox("Check your mail box!", "We send you a verification token", "Ok");
                     MudDialog.Close(DialogResult.Ok(true));
                 }
             }
@@ -177,6 +180,10 @@
         if ( emails.Any(e => e.ToLower().Equals(email.ToLower())))
         {
             yield return "Email is already taken";
+        }
+        if (email.Contains("pup.edu.ph") == false)
+        {
+            yield return "Email is Invalid use PUP Web mail";
         }
     }
     private string PasswordMatch(string arg)
