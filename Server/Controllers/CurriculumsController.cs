@@ -27,7 +27,7 @@ namespace HIVE.Server.Controllers
             return Ok(result);
         }
         [HttpGet("{id:int}")]
-        public async Task<ActionResult<IEnumerable<Curriculum>>> GetCurriculumById(int id)
+        public async Task<ActionResult<Curriculum>> GetCurriculumById(int id)
         {
             var result = await _curriculumService.GetCurriculumById(id);
             return Ok(result);

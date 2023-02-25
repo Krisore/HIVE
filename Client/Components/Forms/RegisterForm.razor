@@ -72,12 +72,17 @@
                               HelperText="Repeat the password"
                               InputType="InputType.Password"
                               Validation="@(new Func<string, string>(PasswordMatch))" />
+                <div class="d-flex inline">
+                    <MudCheckBox Dense="true" T="bool" @bind-Checked="LicenseAccepted" Required="true" Color="Color.Primary" UnCheckedColor="Color.Default" Size="Size.Small"/>
+                    <MudChip Label="true" Size="Size.Small" OnClick="OpenTermsAndCondition"> Terms and Condition</MudChip>
+                </div>
+                
             </MudCardContent>
             <MudDivider />
             <MudCardActions>
                 <div class="ml-auto">
                     <MudButton Class="rounded-0" Variant="Variant.Outlined" OnClick="Cancel"> Cancel </MudButton>
-                    <MudButton Class="ml-3 rounded-0" Variant="Variant.Filled" Color="Color.Primary" Disabled="@(!_success)" OnClick="OnHandleSubmit">Register</MudButton>
+                    <MudButton Class="ml-3 rounded-0" Variant="Variant.Filled" Color="Color.Primary" Disabled="@(!_success)" OnClick="OnHandleSubmit">Sign Up</MudButton>
                 </div>
             </MudCardActions>
         </MudCard>
@@ -86,6 +91,7 @@
 @code {
     private UserRegisterRequest _registerUserAccount = new();
     bool _success;
+    private bool LicenseAccepted { get; set; } = false;
     MudForm? _form;
     [CascadingParameter] MudDialogInstance MudDialog { get; set; }
     private List<string> _emails = new();
@@ -188,4 +194,14 @@
         NoHeader = true,
         DisableBackdropClick = false,
     };
+
+    async Task OpenTermsAndCondition()
+    {
+        var result = await DialogService.Show<DialogTermsAndCondition>("PUP HIVE License").Result;
+        if (!result.Canceled)
+        {
+            LicenseAccepted = (bool)(result.Data ?? false);
+           
+        }
+    }
 }

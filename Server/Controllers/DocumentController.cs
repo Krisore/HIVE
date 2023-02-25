@@ -1,6 +1,7 @@
 ﻿using HIVE.Server.Data;
 using HIVE.Server.Repository;
 using HIVE.Server.Repository.Interface;
+using HIVE.Server.Services.Interface;
 using HIVE.Shared.Model;
 using HIVE.Shared.Request;
 using Microsoft.AspNetCore.Authorization;
@@ -15,14 +16,15 @@ namespace HIVE.Server.Controllers
     public class DocumentController : ControllerBase
     {
         private readonly IDocumentRepository _repository;
+        private readonly IDocumentHistoryService _documentLog;
 
-        public DocumentController(IDocumentRepository repository)
+        public DocumentController(IDocumentRepository repository, IDocumentHistoryService documentLog)
         {
             _repository = repository;
+            _documentLog = documentLog;
         }
 
         private Document Document { get; set; } = new();
-        private List<Document> Documents { get; set; } = new();
         [HttpGet("documents")]
         public async Task<ActionResult<List<Document>>> GetDocumentsAsync()
         {
@@ -170,5 +172,12 @@ namespace HIVE.Server.Controllers
             return Ok(response);
         }
 
+        [HttpPost]
+        [Route("modified")]
+        public async Task<IActionResult> InsertModifiedLog(DocumentHistory modified)
+        {
+            await _documentLog.InsertEditLog(modified);
+            return Ok();
+        }
     }
 }

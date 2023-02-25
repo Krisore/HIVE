@@ -10,6 +10,7 @@ namespace HIVE.Server.Data
 
         }
         public DbSet<User> Users => Set<User>();
+        public DbSet<DocumentHistory> DocumentHistories => Set<DocumentHistory>();
         public DbSet<Activity> Activities => Set<Activity>();
         public DbSet<Document> Documents => Set<Document>();
         public DbSet<Curriculum> Curriculums => Set<Curriculum>();

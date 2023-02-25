@@ -12,12 +12,16 @@ namespace HIVE.Shared.Model
         public int Id { get; set; }
         public string Title { get; set; } = string.Empty;
         public string Abstract { get; set; } = string.Empty;
+        public string Status { get; set; }
         public bool IsOpenAccess { get; set; } = true;
         public bool IsActive { get; set; } = true;
         public bool ToReview { get; set; } = true;
         public bool UnApproved { get; set; } = false;
         public bool IsArchived { get; set; } = false;
         public bool IsDeleted { get; set; } = false;
+        public bool IsConfirmForPlagiarism {get; set; }
+        public bool IsConfirmedForGrammarAndStatistic {get; set; }
+        public bool IsAgree { get; set; }
         public DateTime DateUploaded { get; set; } = DateTime.Now;
         public DateTime? DatePublished { get; set; }
         public int CurriculumId { get; set; }

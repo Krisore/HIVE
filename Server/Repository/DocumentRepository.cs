@@ -9,6 +9,7 @@ using System.Transactions;
 using HIVE.Server.Services.Interface;
 using Document = HIVE.Shared.Model.Document;
 using System.Xml.Linq;
+using HIVE.Server.Migrations;
 
 namespace HIVE.Server.Repository
 {
@@ -127,14 +128,12 @@ namespace HIVE.Server.Repository
             try
             {
                 var document = await _context.Documents.FindAsync(id);
-                if (document == null)
+                if (document != null)
                 {
-                    throw new NullReferenceException(message: "Null occured");
+                    document.IsDeleted = true;
+                    _context.Documents.Remove(document);
+                    await _fileManager.DeleteFileAsync(document.FileId);
                 }
-
-                document.IsDeleted = true;
-                _context.Documents.Remove(document);
-                await _fileManager.DeleteFileAsync(document.FileId);
                 await _context.SaveChangesAsync();
             }
             catch (Exception e)
@@ -212,11 +211,15 @@ namespace HIVE.Server.Repository
                 CurriculumId = request.CurriculumId,
                 ReferenceId = request.ReferenceId,
                 UploaderEmail = request.UploaderEmail,
+                Status = request.Status,
                 Adviser = adviser,
                 Curriculum = curriculum,
                 Reference = reference,
                 FileId = reference.Id,
                 File = file,
+                IsAgree = request.IsAgree,
+                IsConfirmedForGrammarAndStatistic = request.IsConfirmedForGrammarAndStatistic,
+                IsConfirmForPlagiarism = request.IsConfirmForPlagiarism,
             };
             var tenYearsAgo = DateTime.Now.AddYears(-10);
             if (document.DatePublished.HasValue && document.DatePublished < tenYearsAgo)
@@ -256,11 +259,15 @@ namespace HIVE.Server.Repository
             dbDocument.Id = document.Id;
             dbDocument.Title = document.Title;
             dbDocument.Abstract = document.Abstract;
+            dbDocument.Status = document.Status;
             dbDocument.DatePublished = document.DatePublished;
             dbDocument.CurriculumId = document.CurriculumId;
             dbDocument.AdviserId = document.AdviserId;
             dbDocument.ReferenceId = document.ReferenceId;
             dbDocument.UploaderEmail = document.UploaderEmail;
+            dbDocument.IsAgree = document.IsAgree;
+            dbDocument.IsConfirmForPlagiarism = document.IsConfirmForPlagiarism;
+            dbDocument.IsConfirmedForGrammarAndStatistic = document.IsConfirmedForGrammarAndStatistic;
             var tenYearsAgo = DateTime.Now.AddYears(-10);
             if (dbDocument.DatePublished.HasValue && dbDocument.DatePublished < tenYearsAgo)
             {
@@ -314,12 +321,16 @@ namespace HIVE.Server.Repository
             {
                 Title = document.Title,
                 Abstract = document.Abstract,
+                Status = document.Status,
                 DatePublished = document.DatePublished,
                 CurriculumId = document.CurriculumId,
                 AdviserId = document.AdviserId,
                 ReferenceId = document.ReferenceId,
                 IsActive = document.IsActive,
                 IsOpenAccess = document.IsOpenAccess,
+                IsAgree = document.IsAgree,
+                IsConfirmedForGrammarAndStatistic = document.IsConfirmedForGrammarAndStatistic,
+                IsConfirmForPlagiarism = document.IsConfirmForPlagiarism,
             };
             var file = await _context.FileEntries.FindAsync(document.FileId);
             if (file != null)

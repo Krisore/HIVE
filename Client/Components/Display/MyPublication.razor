@@ -6,7 +6,7 @@
 @inject NavigationManager NavigationManager
 
 <MudTable MultiSelection="true" @bind-SelectedItems="_selectedItems"
-          Loading="@_isloading" LoadingProgressColor="Color.Primary"
+          Loading="@_isloading" LoadingProgressColor="Color.Primary" Bordered="true"
           Elevation="1" Dense="true" @ref="_table" ServerData="@(new Func<TableState, Task<TableData<Document>>>(ServerReload))">
     <ToolBarContent>
         <MudChip Label="true" T="Document" Class="d-block " Variant="Variant.Text"> <code> Selected Document: <strong> (@_selectedItems.Count) </strong></code></MudChip>
@@ -47,7 +47,7 @@
         <MudTh><MudTableSortLabel SortLabel="documentStatus" T="Document">Document status</MudTableSortLabel></MudTh>
         <MudTh><MudTableSortLabel SortLabel="year" T="Document">Year</MudTableSortLabel></MudTh>
         <MudTh><MudTableSortLabel SortLabel="status" T="Document">Status</MudTableSortLabel></MudTh>
-        <MudTh>Edit</MudTh>
+        <MudTh>Tools</MudTh>
     </HeaderContent>
     <RowTemplate>
 
@@ -71,23 +71,47 @@
         </MudTd>
         <MudTd DataLabel="Year">@context.DatePublished.Value.Year</MudTd>
         <MudTd DataLabel="Status">
-            @if (context.IsActive)
+            @if (context.Status.Contains("Draft"))
             {
-                <MudChip Variant="Variant.Text" Color="Color.Success" Size="Size.Small"> active </MudChip>
+                <MudChip Variant="Variant.Text" Color="Color.Info" Size="Size.Small"> draft </MudChip>
             }
             else
             {
-                <MudChip Variant="Variant.Text" Color="Color.Error" Size="Size.Small"> in-active </MudChip>
+                if (context.IsActive)
+                {
+                    <MudChip Variant="Variant.Text" Color="Color.Success" Size="Size.Small"> active </MudChip>
+                }
+                else
+                {
+                    <MudChip Variant="Variant.Text" Color="Color.Success" Size="Size.Small"> in-active </MudChip>
+                }
             }
         </MudTd>
         <MudTd>
-            <MudTooltip Text="Edit Selected Document" Arrow="true">
-                <MudIconButton Variant="Variant.Text"
-                               DisableElevation="false"
-                               Size="Size.Medium"
-                               Icon="@Icons.Material.Filled.Edit"
-                               OnClick="@(() => OnEditAsync(context.Id))"/>
-            </MudTooltip>
+            <div class="d-flex inline">
+                <MudTooltip Text="Edit Document" Arrow="true">
+                    <MudIconButton Variant="Variant.Text"
+                                   DisableElevation="false"
+                                   Size="Size.Small"
+                                   Icon="@Icons.Material.Filled.Edit"
+                                   OnClick="@(() => OnEditAsync(context.Id))"/>
+                </MudTooltip>
+                <MudTooltip Text="Edit logs" Arrow="true">
+                    <MudIconButton Variant="Variant.Text"
+                                   DisableElevation="false"
+                                   Size="Size.Small"
+                                   Icon="@Icons.Material.Filled.Notes"
+                                   OnClick="@(() => OnEditAsync(context.Id))"/>
+                </MudTooltip>
+                <MudTooltip Text="Move to bin" Arrow="true">
+                    <MudIconButton Variant="Variant.Text"
+                                   DisableElevation="false"
+                                   Color="Color.Error"
+                                   Size="Size.Small"
+                                   Icon="@Icons.Material.Filled.FolderDelete"
+                                   OnClick="@(() => OnEditAsync(context.Id))" />
+                </MudTooltip>
+            </div>
         </MudTd>
     </RowTemplate>
     <NoRecordsContent>

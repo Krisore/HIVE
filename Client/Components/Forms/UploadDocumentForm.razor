@@ -21,11 +21,17 @@
                         <MudText Typo="Typo.body1">@context.User.Identity.Name</MudText>
                         <MudText Typo="Typo.caption"> @DateTime.Now.ToLongDateString()</MudText>
                     </CardHeaderContent>
+                    <CardHeaderActions>
+                        <MudTooltip Text="Document Privacy" Arrow="true">
+                            <MudChip Label="true" Color="Color.Info" Variant="Variant.Text" Size="Size.Medium" Text="Open Access"/>
+                            <MudSwitch @bind-Checked="@RequestDocument.IsOpenAccess" Color="Color.Success" ThumbIcon="@(RequestDocument.IsOpenAccess == true ? Icons.Material.Filled.Done : Icons.Material.Filled.Close)" ThumbIconColor="@(RequestDocument.IsOpenAccess == true ? Color.Success : Color.Error)">
+                            </MudSwitch>
+                        </MudTooltip>
+                    </CardHeaderActions>
                 </MudCardHeader>
                 <MudDivider></MudDivider>
                 <MudForm Model="RequestDocument" @ref="form" @bind-IsValid="@_success">
                     <MudCardContent>
-                        <MudAlert Class="my-2" Variant="Variant.Text" Severity="Severity.Normal"  Dense="true"> Fill up this form to Publish your Document</MudAlert>
                         <MudTextField T="string"
                                       @bind-Value="RequestDocument.Title"
                                       For="@(() => RequestDocument.Title)"
@@ -65,16 +71,14 @@
                                              Class="mx-1"
                                              CoerceText="true"
                                              CoerceValue="true"
-                                             RequiredError="Document Type is Required"
-                                             Label="Document Type"
+                                             RequiredError="Project Type is Required"
+                                             Label="Project Type"
                                              @bind-Value="@_selectedDocumentType"
                                              SearchFunc="@SearchDocumentType" ToStringFunc="@(e => e == null ? null : $"{e.Name}")"
                                              Variant="Variant.Outlined"
                                              Dense="true"
                                              Margin="Margin.Dense"/>
                         </div>
-
-                        <MudDivider Class="my-2"/>
                         <div class="d-flex inline my-2">
 
                             <MudAutocomplete T="Adviser"
@@ -108,32 +112,39 @@
                         <div class="d-flex inline">
                             <MudDatePicker @bind-Date="RequestDocument.DatePublished"
                                            Required="true"
+                                           AdornmentColor="Color.Primary"
                                            Class="my-2"
+                                           Editable="true"
                                            For="@(() => RequestDocument.DatePublished)"
                                            PickerVariant="PickerVariant.Dialog"
                                            Label="Date published"
+                                           DateFormat="dd.MM.yyyy"
                                            OpenTo="OpenTo.Date"
                                            Orientation="Orientation.Portrait"
                                            Variant="Variant.Outlined"
                                            Margin="Margin.Dense"/>
                             <div class="d-block mt-2 mx-2">
-                                <MudRadioGroup @bind-SelectedOption="RequestDocument.IsOpenAccess" Class="mx-2">
-                                    <MudRadio Size="Size.Small" Option="true" Color="Color.Primary" Dense="true">Public</MudRadio>
-                                    <MudRadio Size="Size.Small" Option="false" Color="Color.Secondary" Dense="false">Private</MudRadio>
-                                </MudRadioGroup>
+                                <MudSelect Margin="Margin.Dense" @bind-Value="RequestDocument.Status" 
+                                           For="@(() => RequestDocument.Status)"
+                                           AdornmentIcon="@Icons.Custom.Uncategorized.ColorPalette" 
+                                           AdornmentColor="Color.Primary" T="string" Label="Version Status" Variant="Variant.Outlined">
+                                    <MudSelectItem Value="@("Draft")" />
+                                    <MudSelectItem Value="@("Under review")" />
+                                </MudSelect>
                             </div>
                         </div>
                         <MudDivider Class="my-2"/>
-                        <MudAlert Class="my-2" Variant="Variant.Text" Severity="@Severity" Dense="true"> @_text</MudAlert>
                         <div class="d-flex inline">
-                            <MudFileUpload Class="mx-2" T="IBrowserFile" Accept=".pdf" FilesChanged="OnInputFileChange">
-                                <ButtonTemplate Context="john">
-                                    <MudFab HtmlTag="label"
-                                            Color="Color.Primary"
-                                            Icon="@Icons.Material.Filled.FilePresent"
-                                            for="@john"/>
-                                </ButtonTemplate>
-                            </MudFileUpload>
+                            <MudTooltip Text="Upload File" Arrow="true">
+                                <MudFileUpload Class="mx-2" T="IBrowserFile" Accept=".pdf" FilesChanged="OnInputFileChange">
+                                    <ButtonTemplate Context="john">
+                                        <MudFab HtmlTag="label"
+                                                Color="Color.Primary"
+                                                Icon="@Icons.Material.Filled.FilePresent"
+                                                for="@john"/>
+                                    </ButtonTemplate>
+                                </MudFileUpload>
+                            </MudTooltip>
                             @if (Id != null)
                             {
                                 @foreach (var file in Files.Where(f => f.Id == RequestDocument.FileId))
@@ -150,13 +161,33 @@
                             {
                                 <MudListItem Icon="@Icons.Material.Filled.AttachFile" @key="@File">
                                     <MudText Typo="Typo.caption"> New Attached File : @File.Name</MudText>
-                                    <MudChip Color="Color.Error" Variant="Variant.Text" Label="true"> <code>@File.Size bytes</code>
-                                    </MudChip>
+                                    @if (string.IsNullOrWhiteSpace(_isExist))
+                                    {
+                                    <MudChip Color="Color.Error" Variant="Variant.Text" Label="true">
+                                    <code>@File.Size bytes</code>
+                                        </MudChip>
+                                    }
+                                    else
+                                    {
+                                        <MudChip Color="Color.Error" Variant="Variant.Text" Label="true">
+                                            <code>@_isExist</code>
+                                        </MudChip>
+                                    }
                                 </MudListItem>
                             }
                         </div>
+                        <MudDivider Class="my-3" />
+                        <MudCheckBox  Dense="true" T="bool" @bind-Checked="@RequestDocument.IsConfirmForPlagiarism" Required="true" Color="Color.Primary" UnCheckedColor="Color.Default" Size="Size.Small">
+                            <MudText Typo="Typo.caption">I confirm that this document has been checked for plagiarism.</MudText>
+                        </MudCheckBox>
+                        <MudCheckBox  Dense="true" T="bool" @bind-Checked="@RequestDocument.IsConfirmedForGrammarAndStatistic" Required="true" Color="Color.Primary" UnCheckedColor="Color.Default" Size="Size.Small">
+                            <MudText Typo="Typo.caption">I confirm that this document has been checked for grammar and statistics.</MudText>
+                        </MudCheckBox>
+                        <MudCheckBox Dense="true" T="bool" @bind-Checked="@RequestDocument.IsAgree" Required="true" Color="Color.Primary" UnCheckedColor="Color.Default" Size="Size.Small">
+                            <MudText Typo="Typo.caption">I have read and understood, <MudText Typo="Typo.caption" @onclick="OpenDocumentPolicy" Color="Color.Primary"> <strong><u> the privacy policy for documents. </u> </strong>  </MudText></MudText>
+                        </MudCheckBox>
                     </MudCardContent>
-                    <MudDivider></MudDivider>
+                    <MudDivider DividerType="DividerType.FullWidth"/>
                     <MudCardActions>
                         <div class="ml-auto">
                             <MudButton Class="mx-2 my-2 rounded-0"
@@ -198,6 +229,7 @@
     private List<CreateTopic> _selectedTopics = new();
     private List<Topic> _topics = new();
     private List<FileEntry> Files = new List<FileEntry>();
+
     private Reference _selectedDocumentType = new();
     private Adviser _selectedAdviser = new();
     private Curriculum _selectedAcademicProgram = new();
@@ -205,12 +237,21 @@
     private List<string> _errors = new();
     private Document _document = new();
     private string _text = "File must be Portable Document Format";
-    private Severity Severity = Severity.Info;
+    private Severity _severity = Severity.Info;
     bool _success;
+    string _isExist = "";
     MudForm? _form;
     [CascadingParameter]
     public Task<AuthenticationState>? Authenticate { get; set; }
-
+    async Task OpenDocumentPolicy()
+    {
+        var result = await DialogService.Show<DialogDocumentPrivacy>("Privacy policy for documents. 📑").Result;
+        if (!result.Canceled)
+        {
+            RequestDocument.IsAgree = (bool)(result.Data ?? false);
+           
+        }
+    }
     protected override async Task OnParametersSetAsync()
     {
 
@@ -231,6 +272,9 @@
             var files = await FileService.GetAllFiles();
             Files = files;
             RequestDocument = response;
+            _selectedAcademicProgram = await CurriculumService.GetCurriculumById(RequestDocument.CurriculumId);
+            _selectedAdviser = await AdviserService.GetAdviserAsync(RequestDocument.AdviserId);
+            _selectedDocumentType = await DocumentReferenceService.GetReferenceById(RequestDocument.AdviserId);
             var authenticate = await Authenticate;
             if (authenticate.User.Identity is {Name: { } })
             {
@@ -254,6 +298,7 @@
     private async Task OnInputFileChange(IBrowserFile? e)
     {
         this.File = e;
+        _isExist = "";
         Files = await FileService.GetAllFiles();
         if (Files.Any(f => File != null && f.FileName != null && f.FileName.ToLower().Equals(File.Name.ToLower())))
         {
@@ -261,6 +306,7 @@
                 "This file is already uploaded", 
                 "Your file name is already exist.",
                 "Ok");
+            _isExist = "This file is already exist.";
         }
     }
     private async Task<int> FileUploadAsync()
