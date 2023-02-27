@@ -1,0 +1,25 @@
+﻿<MudTable Items="Histories" Hover="true" Striped="true" Elevation="0" Dense="true" >
+    <HeaderContent>
+        <MudTh>  </MudTh>
+        <MudTh> </MudTh>
+        <MudTh>   </MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd> <MudChip Class="rounded-0 rounded-r-xl" Color="Color.Info" Variant="Variant.Filled" Text="@context.Title"></MudChip></MudTd>
+        <MudTd> <MudText Typo="Typo.caption" Align="Align.Justify"> @context.ModifiedDate.ToLongDateString() </MudText></MudTd>
+        <MudTd> <MudText Typo="Typo.caption" Align="Align.Justify"> @context.Owner </MudText></MudTd>
+    </RowTemplate>
+    <NoRecordsContent>
+        No Document Histories Found.
+    </NoRecordsContent>
+    <PagerContent>
+        <MudTablePager/>
+    </PagerContent>
+</MudTable>
+
+@code
+{
+    [Parameter]
+    public List<DocumentHistory> Histories { get; set; } = new();
+
+}

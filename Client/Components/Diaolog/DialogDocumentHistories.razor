@@ -1,0 +1,36 @@
+﻿@inject IDocumentHistoryService DocumentHistoryService
+@inject IDialogService DialogService
+
+<MudDialog DisableSidePadding="true">
+    <DialogContent>
+        <MudContainer Style="max-height: 300px; overflow-y: scroll">
+            @if (Loading)
+            {
+                <MudProgressCircular Class="my-4" Color="Color.Primary" Indeterminate="true"></MudProgressCircular>
+            }
+            else
+            {
+                <DocumentHistoriesTable Histories="_histories"/>
+            }
+        </MudContainer>
+    </DialogContent>
+</MudDialog>
+
+@code {
+    [Parameter]
+    public int DocumentId { get; set; }
+    private MudDialogInstance Dialog { get; } = new MudDialogInstance();
+    private List<DocumentHistory>? _histories = new List<DocumentHistory>();
+    private bool Loading = false;
+    protected override async Task OnParametersSetAsync()
+    {
+        Loading = true;
+        var response = await DocumentHistoryService.GetDocumentHistories(DocumentId);
+        await Task.Delay(2000);
+        if (response.IsSuccessStatusCode)
+        {
+            _histories = await response.Content.ReadFromJsonAsync<List<DocumentHistory>>();
+        }
+        Loading = false;
+    }
+}

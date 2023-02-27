@@ -22,22 +22,22 @@
         <a href="/">
             <MudCardHeader>
                 <CardHeaderAvatar>
-                        <MudAvatar Size="Size.Medium" Elevation="2" Image="image/Pup_logo.jpg"/>
-                    </CardHeaderAvatar>
-                    <CardHeaderContent>
-                        @if (IsDarkMode)
-                        {
-                            <MudText Typo="Typo.body2" Color="Color.Default">
-                                Polytechnic University of the Philippines
-                            </MudText>
-                        }
-                        else
-                        {
-                            <MudText Typo="Typo.body2" Color="Color.Dark">
-                                Polytechnic University of the Philippines
-                            </MudText>
-                        }
-                    </CardHeaderContent>
+                    <MudAvatar Size="Size.Medium" Elevation="2" Image="image/Pup_logo.jpg"/>
+                </CardHeaderAvatar>
+                <CardHeaderContent>
+                    @if (IsDarkMode)
+                    {
+                        <MudText Typo="Typo.body2" Color="Color.Default">
+                            Polytechnic University of the Philippines
+                        </MudText>
+                    }
+                    else
+                    {
+                        <MudText Typo="Typo.body2" Color="Color.Dark">
+                            Polytechnic University of the Philippines
+                        </MudText>
+                    }
+                </CardHeaderContent>
             </MudCardHeader>
         </a>
         <MudSpacer/>
@@ -46,24 +46,21 @@
                 <MudButton Size="Size.Small" Href="/upload-document" StartIcon="@Icons.Material.Filled.Add" Class="rounded-0 my-2 mx-2" Variant="Variant.Outlined" Disabled="false" DisableElevation="true">
                     UPLOAD
                 </MudButton>
-                <MudDivider Vertical="true"></MudDivider>
-                <MudMenu Dense="true" Class="my-2 ml-auto">
+                <MudDivider Class="mx-3" Vertical="true"></MudDivider>
+                <MudMenu Dense="true" Class="ml-auto">
                     <ActivatorContent>
-                        <div class="d-inline">
-                            <MudChip Size="Size.Large" Label="true" Variant="Variant.Text" Color="Color.Primary">
-                                <MudAvatar Size="Size.Medium" Color="Color.Primary">
-                                    K
-                                </MudAvatar>
-                                <MudIcon Size="Size.Small" Icon="@Icons.Material.Filled.MenuOpen" />
-                            </MudChip>
-                        </div>
+                        <MudTooltip Text="@context.User.Identity.Name" Arrow="true">
+                            <MudAvatar Size="Size.Medium" Elevation="2" Color="Color.Primary">
+                                @context.User.Identity.Name.ToUpper().ToCharArray()[0]
+                            </MudAvatar>
+                        </MudTooltip>
                     </ActivatorContent>
                     <ChildContent>
                         <MudCardHeader>
                             <CardHeaderAvatar>
                                 <MudBadge Dot="true" Overlap="true" Color="Color.Success">
                                     <MudAvatar Size="Size.Large" Elevation="2" Color="Color.Primary">
-                                        K
+                                        @context.User.Identity.Name.ToUpper().ToCharArray()[0]
                                     </MudAvatar>
                                 </MudBadge>
                             </CardHeaderAvatar>
@@ -92,8 +89,6 @@
                     </ChildContent>
                 </MudMenu>
             </Authorized>
-        </AuthorizeView>
-        <AuthorizeView>
             <NotAuthorized>
                 <MudButton Href="/" Size="Size.Large" Class="rounded-0 mr-3 my-2" 
                            Variant="Variant.Text" Color="Color.Default" 
@@ -131,7 +126,7 @@
                 <div class="my-2">
                     <SortTree/>
                 </div>
-                    <MudDivider DividerType="DividerType.Middle" />
+                <MudDivider DividerType="DividerType.Middle" />
             </Authorized>
         </AuthorizeView>
     </MudDrawer>
@@ -143,9 +138,10 @@
         </MudContainer>
     </MudMainContent>
     <MudScrollToTop>
-        <MudFab Color="Color.Primary" Icon="@Icons.Material.Filled.KeyboardArrowUp" Size="Size.Small" />
+        <MudFab Color="Color.Secondary" Icon="@Icons.Material.Filled.KeyboardArrowUp" Size="Size.Small" />
     </MudScrollToTop>
 </MudLayout>
+<FooterLayout />
 @code
 {
     string Name = "K";

@@ -11,7 +11,7 @@ namespace HIVE.Client.Services.Interface
         Task<HttpResponseMessage> GetDocumentsAsync();
         Document Document { get; set; }
         Task<List<Document>> GetDocumentsForArchivistAsync();
-        Task<Document> UpdateDocumentAsync(int id, UploadDocumentRequest document);
+        Task<HttpResponseMessage> UpdateDocumentAsync(int id, UploadDocumentRequest document);
         Task<UploadDocumentRequest> GetDocumentByDataTransfer(int id);
         Task<List<Document>> GetAllDocuments();
         Task<HttpResponseMessage> MoveToTrash(int id);

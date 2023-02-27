@@ -4,6 +4,7 @@ namespace HIVE.Server.Services.Interface
 {
     public interface IDocumentHistoryService
     {
-        Task InsertEditLog(DocumentHistory modified);
+        Task<DocumentHistory> InsertEditLog(DocumentHistory modified);
+        Task<List<DocumentHistory>> GetDocumentHistoriesById(int id);
     }
 }

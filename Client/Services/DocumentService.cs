@@ -50,7 +50,7 @@ namespace HIVE.Client.Services
             }
         }
 
-        public async Task<Document> UpdateDocumentAsync(int id, UploadDocumentRequest document)
+        public async Task<HttpResponseMessage> UpdateDocumentAsync(int id, UploadDocumentRequest document)
         {
 
             try
@@ -60,7 +60,7 @@ namespace HIVE.Client.Services
                 {
                     Document = await result.Content.ReadFromJsonAsync<Document>() ?? throw new InvalidOperationException();
                 }
-                return Document;
+                return result;
             }
             catch (Exception ex)
             {

@@ -1,33 +1,22 @@
-﻿@page "/register"
-@using System.ComponentModel.DataAnnotations
+﻿@using System.ComponentModel.DataAnnotations
 @using System.Text.RegularExpressions
 @using Microsoft.AspNetCore.Components
+@inject IActivityLog ActivityLog
 @inject IUserService UserService
 @inject NavigationManager NavigationManager
 @inject IDialogService DialogService
 @inject ISnackbar Snack
-<MudContainer MaxWidth="MaxWidth.Small">
-    <MudForm @ref="_form" Model="_registerUserAccount" @bind-IsValid="@_success" @bind-Errors="@_errors">
-        <MudCard Elevation="4">
-            <MudCardHeader>
-                <CardHeaderAvatar>
-                    <MudAvatar Elevation="2" Style="height: 70px; width: 70px;" Image="image/Pup_logo.jpg"></MudAvatar>
-                </CardHeaderAvatar>
-                <CardHeaderContent>
-                    <MudText Typo="Typo.body1"> Polytechnic University of the Philippines</MudText>
-                    <MudText Typo="Typo.caption"> Biñan Campus</MudText>
-                </CardHeaderContent>
-            </MudCardHeader>
-            <MudDivider Class="mb-1" />
-            <MudCardMedia Style="height: 120px" Image="/image/sample.jpg" />
-            <MudDivider Class="my-1" />
+<MudDialog DisableSidePadding="true">
+    <DialogContent>
+        <MudDivider />
+        <MudForm @ref="_form" Model="User" @bind-IsValid="@_success" @bind-Errors="@_errors">
             <MudCardContent>
                 <MudTextField T="string"
                               Class="my-2"
                               Margin="Margin.Dense"
                               Label="Username"
                               Variant="Variant.Outlined"
-                              Required="true" @bind-Value="_registerUserAccount.UserName"
+                              Required="true" @bind-Value="@User.UserName"
                               RequiredError="User name is required!" />
                 <div class="d-flex inline">
                     <MudTextField T="string"
@@ -35,27 +24,27 @@
                                   Margin="Margin.Dense"
                                   Label="Firstname"
                                   Variant="Variant.Outlined"
-                                  Required="true" @bind-Value="_registerUserAccount.FirstName"
+                                  Required="true" @bind-Value="@User.FirstName"
                                   RequiredError="First name is required!" />
                     <MudTextField T="string"
                                   Class="my-2 mx-1"
                                   Margin="Margin.Dense"
                                   Label="Lastname"
                                   Variant="Variant.Outlined"
-                                  Required="true" @bind-Value="_registerUserAccount.LastName"
+                                  Required="true" @bind-Value="@User.LastName"
                                   RequiredError="Last name is required!" />
                 </div>
                 <MudTextField T="string"
                               Class="my-2"
+                              Disabled="@isEdit"
                               Margin="Margin.Dense"
                               Label="Email"
-                              For="@(() => _registerUserAccount.Email)"
+                              For="@(() => User.Email)"
                               Variant="Variant.Outlined"
-                              HelperText="Having trouble with your PUP Web Mail ? contact the webmail@pup.edu.ph for help."
-                              Required="true" @bind-Value="_registerUserAccount.Email"
+                              Required="true" @bind-Value="@User.Email"
                               RequiredError="Email is required!"
                               Validation="@(new Func<string, IEnumerable<string>>(EmailValidation))" />
-                <MudTextField T="string" @bind-Value="_registerUserAccount.Password"
+                <MudTextField T="string" @bind-Value="@User.Password"
                               Class="my-2"
                               Variant="Variant.Outlined"
                               Label="Password"
@@ -66,38 +55,38 @@
                               RequiredError="Password is required!" />
                 <MudTextField T="string"
                               Class="my-2"
-                              @bind-Value="_registerUserAccount.ConfirmPassword"
+                              @bind-Value="User.ConfirmPassword"
                               Variant="Variant.Outlined"
                               Margin="Margin.Dense"
                               Label="Confirm Password"
                               HelperText="Repeat the password"
                               InputType="InputType.Password"
                               Validation="@(new Func<string, string>(PasswordMatch))" />
-                <div class="d-flex inline">
-                    <MudCheckBox Dense="true" T="bool" @bind-Checked="LicenseAccepted" Required="true" Color="Color.Primary" UnCheckedColor="Color.Default" Size="Size.Small"/>
-                    <MudChip Label="true" Size="Size.Small" OnClick="OpenTermsAndCondition"> Terms and Condition</MudChip>
-                </div>
-                
             </MudCardContent>
             <MudDivider />
-            <MudCardActions>
-                <div class="ml-auto">
-                    <MudButton Class="rounded-0" Variant="Variant.Outlined" OnClick="Cancel"> Cancel </MudButton>
-                    <MudButton Class="ml-3 rounded-0" Variant="Variant.Filled" Color="Color.Primary" Disabled="@(!_success)" OnClick="OnHandleSubmit">Sign Up</MudButton>
-                </div>
-            </MudCardActions>
-        </MudCard>
-    </MudForm>
-</MudContainer>
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudCardActions>
+            <div class="ml-auto">
+                <MudButton Class="rounded-0" Variant="Variant.Outlined" OnClick="Cancel"> Cancel </MudButton>
+                <MudButton Class="ml-3 rounded-0" Variant="Variant.Filled" Color="Color.Primary" Disabled="@(!_success)" OnClick="OnHandleSubmit">Save</MudButton>
+            </div>
+        </MudCardActions>
+    </DialogActions>
+</MudDialog>
 @code {
-    private UserRegisterRequest _registerUserAccount = new();
+
+    [Parameter]
+    public User User { get; set; } = new User();
+
+    private int _userId;
     bool _success;
-    private bool LicenseAccepted { get; set; } = false;
     MudForm? _form;
     [CascadingParameter] MudDialogInstance MudDialog { get; set; }
-    private List<string> _emails = new();
-
+    private List<string?> _emails = new();
     MudTextField<string> _pwField1;
+    bool isEdit = false;
 
     private DialogOptions _options = new DialogOptions
     {
@@ -108,49 +97,40 @@
         CloseButton = false,
         Position = DialogPosition.TopCenter
     };
-    private DialogOptions Login = new DialogOptions()
-    {
-        Position = DialogPosition.TopCenter,
-        CloseButton = false,
-        NoHeader = true,
-        DisableBackdropClick = false,
-    };
 
     string[] _errors = { };
+    protected override  void OnParametersSet()
+    {
+       
+        isEdit = true;
+        _userId = User.Id;
 
-
+    }
     protected override async Task OnInitializedAsync()
     {
         _emails = await UserService.UserEmails();
     }
     private async Task OnHandleSubmit()
     {
-        _registerUserAccount.Role = "User";
-        Snack.Add("Your account is registered Successfully", Severity.Success, config =>
-        {
-            config.Icon = Icons.Material.Outlined.Check;
-            config.IconColor = Color.Success;
-            config.IconSize = Size.Large;
-            config.CloseAfterNavigation = true;
-        });
-        var response = await UserService.RegisterAsync(_registerUserAccount);
+        User.Role = "User";
+        
+        var response = await UserService.UpdateUserAccount((int)_userId, User);
         if (response.IsSuccessStatusCode)
         {
-            Snack.Add("Your account is registered Successfully", Severity.Success, config =>
+            Snack.Add("Your account is Updated Successfully", Severity.Success, config =>
             {
-                config.Icon = Icons.Material.Outlined.Checklist;
-                config.IconColor = Color.Success;
+                config.Icon = Icons.Material.Outlined.CheckCircle;
+                config.IconColor = Color.Info;
                 config.IconSize = Size.Large;
             });
-          var result =  await DialogService.ShowAsync<VerifyForm>("Verify your account");
-            
-            var login = await result.Result;
-            if (!login.Canceled)
+            var log = await ActivityLog.WriteLog($"{User.Email}", $"UPDATE an Account {User.LastName}, {User.FirstName}", $"UPDATE", $"User");
+            if (log.IsSuccessStatusCode)
             {
-                NavigationManager.NavigateTo("/", true);
+                await DialogService.ShowMessageBox("Update Success!", $"Notification send to {User.Email}", "Ok");
+                MudDialog.Close(DialogResult.Ok(true));
             }
-             
         }
+        
     }
     private IEnumerable<string> PasswordStrength(string pw)
     {
@@ -170,6 +150,7 @@
     }
     private IEnumerable<string> EmailValidation(string email)
     {
+        
         var emails = _emails;
         if (emails.Any(e => e.ToLower().Equals(email.ToLower())))
         {
@@ -177,7 +158,7 @@
         }
         if (email.Contains("pup.edu.ph") == false)
         {
-            yield return "PUP Web Mail is invalid, contact the webmail@pup.edu.ph";
+            yield return "Email is Invalid use PUP Web mail";
         }
     }
     private string PasswordMatch(string arg)
@@ -186,23 +167,5 @@
             return "Passwords don't match";
         return null;
     }
-
-    void Cancel() => NavigationManager.NavigateTo("/", true);
-    private readonly DialogOptions _logInDialog = new()
-    {
-        Position = DialogPosition.TopCenter,
-        CloseButton = false,
-        NoHeader = true,
-        DisableBackdropClick = false,
-    };
-
-    async Task OpenTermsAndCondition()
-    {
-        var result = await DialogService.Show<DialogTermsAndCondition>("Terms and Conditions for PUP Hive:").Result;
-        if (!result.Canceled)
-        {
-            LicenseAccepted = (bool)(result.Data ?? false);
-           
-        }
-    }
+    void Cancel() => MudDialog.Cancel();
 }

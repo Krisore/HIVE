@@ -251,62 +251,64 @@ namespace HIVE.Server.Repository
 
         public async Task<Document> EditDocumentAsync(int id, UploadDocumentRequest document)
         {
-
-            var dbDocument = await _context.Documents.Include(t => t.Topics)
+            try
+            {
+                var dbDocument = await _context.Documents.Include(t => t.Topics)
                 .Include(d => d.Reference)
                 .Include(a => a.Authors).FirstOrDefaultAsync(d => d.Id == id);
 
-            dbDocument.Id = document.Id;
-            dbDocument.Title = document.Title;
-            dbDocument.Abstract = document.Abstract;
-            dbDocument.Status = document.Status;
-            dbDocument.DatePublished = document.DatePublished;
-            dbDocument.CurriculumId = document.CurriculumId;
-            dbDocument.AdviserId = document.AdviserId;
-            dbDocument.ReferenceId = document.ReferenceId;
-            dbDocument.UploaderEmail = document.UploaderEmail;
-            dbDocument.IsAgree = document.IsAgree;
-            dbDocument.IsConfirmForPlagiarism = document.IsConfirmForPlagiarism;
-            dbDocument.IsConfirmedForGrammarAndStatistic = document.IsConfirmedForGrammarAndStatistic;
-            var tenYearsAgo = DateTime.Now.AddYears(-10);
-            if (dbDocument.DatePublished.HasValue && dbDocument.DatePublished < tenYearsAgo)
-            {
-                dbDocument.IsActive = false;
-            }
-            else
-            {
-                dbDocument.IsActive = true;
-            }
-
-            var file = await _context.FileEntries.FindAsync(document.FileId);
-            if (file != null)
-            {
-                dbDocument.File = file;
-            }
-
-            foreach (var newTopic in document.Topics)
-            {
-                if (newTopic.Name != null)
+                if (dbDocument != null)
                 {
-                    var topicTrans = new Topic()
+                    dbDocument.Title = document.Title;
+                    dbDocument.Abstract = document.Abstract;
+                    dbDocument.Status = document.Status;
+                    dbDocument.DatePublished = document.DatePublished;
+                    dbDocument.CurriculumId = document.CurriculumId;
+                    dbDocument.AdviserId = document.AdviserId;
+                    dbDocument.ReferenceId = document.ReferenceId;
+                    dbDocument.UploaderEmail = document.UploaderEmail;
+                    dbDocument.IsAgree = document.IsAgree;
+                    dbDocument.IsConfirmForPlagiarism = document.IsConfirmForPlagiarism;
+                    dbDocument.IsConfirmedForGrammarAndStatistic = document.IsConfirmedForGrammarAndStatistic;
+                    var tenYearsAgo = DateTime.Now.AddYears(-10);
+                    if (dbDocument.DatePublished.HasValue && dbDocument.DatePublished < tenYearsAgo)
                     {
-                        Name = newTopic.Name
-                    };
-                    var topic = await _context.Topics
-                        .Where(t => t.Name.Contains(topicTrans.Name, StringComparison.OrdinalIgnoreCase))
-                        .FirstOrDefaultAsync();
-                    if (topic != null)
+                        dbDocument.IsActive = false;
+                    }
+                    else
                     {
-                        dbDocument.Topics.Add(topicTrans);
+                        dbDocument.IsActive = true;
                     }
 
-                    topic.Documents.Add(dbDocument);
+                    var file = await _context.FileEntries.FindAsync(document.FileId);
+                    if (file != null)
+                    {
+                        dbDocument.File = file;
+                    }
+
+                    foreach (var topic in document.Topics)
+                    {
+                        if (topic.Name != null)
+                        {
+                            var addTopic = await _context.Topics.FirstOrDefaultAsync(t => t.Name == topic.Name);
+                            if (addTopic == null)
+                            {
+                                addTopic = new Topic { Name = topic.Name };
+                                _context.Topics.Add(addTopic);
+                            }
+                            dbDocument.Topics.Add(addTopic);
+                        }
+                    }
+
+                    await _context.SaveChangesAsync();
                 }
-
+                return dbDocument!;
             }
-            await _context.SaveChangesAsync();
-            return dbDocument;
-
+            catch (Exception ex)
+            {
+                Console.WriteLine($"{ex.Message}");
+                throw;
+            }
         }
         public async Task<UploadDocumentRequest> GetDocumentDataTransferAsync(int id)
         {

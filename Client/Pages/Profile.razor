@@ -1,5 +1,6 @@
 ﻿
 @page "/profile"
+@using HIVE.Client.Components.Diaolog.UserDialog
 @inject NavigationManager NavigationManager
 @inject ISnackbar Snack
 @inject IDialogService DialogService
@@ -20,17 +21,19 @@
                         <MudText Typo="Typo.caption">@context.User.Identity.Name</MudText>
                     </CardHeaderContent>
                     <CardHeaderActions>
-                        <MudIconButton Icon="@Icons.Material.Filled.ManageAccounts" />
+                        <MudTooltip Text="Account Setting" Arrow="true">
+                            <MudIconButton Icon="@Icons.Material.Filled.ManageAccounts" OnClick="@(() => EditUserAccount(_userId))" />
+                        </MudTooltip>
                     </CardHeaderActions>
                 </MudCardHeader>
                 <MudDivider Class="my-2"/>
                 <MudCardContent>
                     <MudTabs Centered="false">
-                        <MudTabPanel Text="My Publication">
+                        <MudTabPanel Text="My Document" Icon="@Icons.Material.Filled.SnippetFolder">
                             <MyPublication UserId="@_userId"/>
                         </MudTabPanel>
-                        <MudTabPanel Text="Profile">
-                            <MyAccount/>
+                        <MudTabPanel Text="My Bin" Icon="@Icons.Material.Rounded.FolderDelete">
+                            <MyTrash Username="@context.User.Identity.Name"/>
                         </MudTabPanel>
                     </MudTabs>
                 </MudCardContent>
@@ -56,6 +59,20 @@
                 var email = authenticatedUser.User.Identity?.Name!;
                 User =  await UserService.MyAccount(email);
             }
+        }
+    }
+
+    private async void EditUserAccount(int id )
+    {
+        var parameter = new DialogParameters
+        {
+            ["User"] = User,
+        };
+        var dialog = await DialogService.ShowAsync<EditUser>("Account Setting", parameter);
+        var result = await dialog.Result;
+        if (!result.Canceled)
+        {
+           NavigationManager.NavigateTo("/profile", true);
         }
     }
 

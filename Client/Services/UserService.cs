@@ -90,7 +90,11 @@ namespace HIVE.Client.Services
             var response = await _client.PutAsJsonAsync($"api/User/update/admin/{id}", request);
             return response;
         }
-
+        public async Task<HttpResponseMessage> UpdateUserAccount(int id, User request)
+        {
+            var response = await _client.PutAsJsonAsync($"api/User/update/user/{id}", request);
+            return response;
+        }
         public async Task<HttpResponseMessage> VerifyAsync(string token)
         {
             var accessToken = await _customAuthenticationStateProvider.GetToken();

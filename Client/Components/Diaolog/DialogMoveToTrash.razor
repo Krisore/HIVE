@@ -6,7 +6,15 @@
     <DialogContent>
         <MudContainer Style="max-height: 400px; overflow-y: scroll">
             <MudText Typo="Typo.body2"> [Document /Document's]</MudText>
-            <ul>
+           @if (DocumentId is not null or 0)
+           {
+               <MudText Typo="Typo.caption" Align="Align.Justify">
+                   📦 @_document.Title
+               </MudText>
+           }
+           else
+           {
+                <ul>
                 @foreach (var document in Documents)
                 {
                     <li>
@@ -16,6 +24,7 @@
                     </li>
                 }
             </ul>
+           }
             <MudDivider Class="my-1" />
             <MudText Align="Align.Center" Typo="Typo.caption"> Do you really want to move these documents to trash?
                 <strong> you will see the trashed documents in Trash panel </strong></MudText>
@@ -34,8 +43,11 @@
     Task<AuthenticationState>? Authenticate { get; set; }
     [Parameter]
     public HashSet<Document> Documents { get; set; } = new();
+    [Parameter]
+    public int? DocumentId { get; set; }
     [Parameter] public string? Actor { get; set; }
     [Parameter] public string? Role { get; set; }
+    private Document _document = new Document();
 
     protected override async Task OnParametersSetAsync()
     {
@@ -50,25 +62,51 @@
                 Role = account.User.IsInRole("Administrator") ? "Administrator" : "User";
             }
         }
+        if (DocumentId is not null or 0)
+        {
+            var response = await DocumentService.GetDocumentAsyncById((int)DocumentId);
+            _document = response;
+        }
     }
     private async void OnOkay()
     {
-        foreach (var document in Documents)
+        if (DocumentId is not null or 0)
         {
             try
             {
-                var response = await DocumentService.MoveToTrash(document.Id);
+                var response = await DocumentService.MoveToTrash(_document.Id);
                 if (response.IsSuccessStatusCode)
                 {
                     await ActivityLog.WriteLog($"{Actor}",
-                   $"{Actor}, move document to trash entitled {document.Title}",
-                   "TRASH",
-                   $"{Role}");
+                        $"{Actor}, move document to trash entitled {_document.Title}",
+                        "TRASH",
+                        $"{Role}");
                 }
             }
             catch (Exception exception)
             {
                 Console.WriteLine($"{exception.Message}");
+            }
+        }
+        else
+        {
+            foreach (var document in Documents)
+            {
+                try
+                {
+                    var response = await DocumentService.MoveToTrash(document.Id);
+                    if (response.IsSuccessStatusCode)
+                    {
+                        await ActivityLog.WriteLog($"{Actor}",
+                            $"{Actor}, move document to trash entitled {document.Title}",
+                            "TRASH",
+                            $"{Role}");
+                    }
+                }
+                catch (Exception exception)
+                {
+                    Console.WriteLine($"{exception.Message}");
+                }
             }
         }
         Snack.Add("Document / Documents moved Trash", Severity.Success);

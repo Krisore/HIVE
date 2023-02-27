@@ -9,12 +9,11 @@
             <DialogContent>
                 <MudCardHeader>
                     <CardHeaderAvatar>
-                        <MudAvatar Color="Color.Primary" Size="Size.Large"Elevation="2">
-                            @context.User.Identity.Name.ToUpper().ToCharArray()[0]
+                        <MudAvatar Color="Color.Primary" Size="Size.Large" Image="Image/Pup_logo.jpg" Elevation="2">
                         </MudAvatar>
                     </CardHeaderAvatar>
                     <CardHeaderContent>
-                        <MudText Typo="Typo.body2"> @context.User.Identity.Name </MudText>
+                        <MudText Typo="Typo.body2">Polytechnic University of The Philippines </MudText>
                         <MudText Typo="Typo.caption"> Uploaded in @_document.DateUploaded.ToLongDateString()</MudText>
                     </CardHeaderContent>
                     <CardHeaderActions>

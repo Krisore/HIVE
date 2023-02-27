@@ -16,14 +16,12 @@ namespace HIVE.Server.Controllers
     public class DocumentController : ControllerBase
     {
         private readonly IDocumentRepository _repository;
-        private readonly IDocumentHistoryService _documentLog;
 
-        public DocumentController(IDocumentRepository repository, IDocumentHistoryService documentLog)
+        public DocumentController(IDocumentRepository repository)
         {
             _repository = repository;
-            _documentLog = documentLog;
+           
         }
-
         private Document Document { get; set; } = new();
         [HttpGet("documents")]
         public async Task<ActionResult<List<Document>>> GetDocumentsAsync()
@@ -68,7 +66,7 @@ namespace HIVE.Server.Controllers
             return NotFound();
         }
         [HttpPut]
-        [Route("update/{id}")]
+        [Route("update/{id:int}")]
         public async Task<ActionResult<Document>> UpdateDocumentAsync(int id, UploadDocumentRequest document)
         {
             try
@@ -79,8 +77,8 @@ namespace HIVE.Server.Controllers
             catch (Exception ex)
             {
                 Console.WriteLine($"{ex.Message}");
+                throw;
             }
-            return NotFound();
         }
         [HttpGet]
         [Route("Get/{id:int}")]
@@ -172,12 +170,5 @@ namespace HIVE.Server.Controllers
             return Ok(response);
         }
 
-        [HttpPost]
-        [Route("modified")]
-        public async Task<IActionResult> InsertModifiedLog(DocumentHistory modified)
-        {
-            await _documentLog.InsertEditLog(modified);
-            return Ok();
-        }
     }
 }

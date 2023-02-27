@@ -1,5 +1,6 @@
 ﻿@using Microsoft.AspNetCore.Components.Forms
 @inject IDocumentService DocumentService
+@inject IDocumentHistoryService DocumentHistoryService
 @inject IDocumentReferenceService DocumentReferenceService
 @inject ICurriculumService CurriculumService
 @inject IAdviserService AdviserService
@@ -13,6 +14,7 @@
     <Authorized>
         <MudContainer MaxWidth="MaxWidth.Medium">
             <MudCard>
+                <MudForm Model="@RequestDocument" @ref="form" @bind-IsValid="_success">
                 <MudCardHeader>
                     <CardHeaderAvatar>
                         <MudAvatar Color="Color.Primary"> @context.User.Identity.Name[0] </MudAvatar>
@@ -23,15 +25,15 @@
                     </CardHeaderContent>
                     <CardHeaderActions>
                         <MudTooltip Text="Document Privacy" Arrow="true">
-                            <MudChip Label="true" Color="Color.Info" Variant="Variant.Text" Size="Size.Medium" Text="Open Access"/>
-                            <MudSwitch @bind-Checked="@RequestDocument.IsOpenAccess" Color="Color.Success" ThumbIcon="@(RequestDocument.IsOpenAccess == true ? Icons.Material.Filled.Done : Icons.Material.Filled.Close)" ThumbIconColor="@(RequestDocument.IsOpenAccess == true ? Color.Success : Color.Error)">
-                            </MudSwitch>
+                            <MudChip Variant="Variant.Text" Color="Color.Primary" Class="rounded-0 rounded-l-xl"><span>@(RequestDocument.IsOpenAccess ? "Public" : "Private")</span></MudChip>
                         </MudTooltip>
+                        <MudToggleIconButton @bind-Toggled="@RequestDocument.IsOpenAccess"
+                                             Icon="@Icons.Material.Filled.Lock" Color="@Color.Error" Title="Private"
+                                             ToggledIcon="@Icons.Material.Filled.LockOpen" ToggledColor="@Color.Success" ToggledTitle="Public"/>
                     </CardHeaderActions>
                 </MudCardHeader>
                 <MudDivider></MudDivider>
-                <MudForm Model="RequestDocument" @ref="form" @bind-IsValid="@_success">
-                    <MudCardContent>
+                <MudCardContent>
                         <MudTextField T="string"
                                       @bind-Value="RequestDocument.Title"
                                       For="@(() => RequestDocument.Title)"
@@ -126,6 +128,7 @@
                             <div class="d-block mt-2 mx-2">
                                 <MudSelect Margin="Margin.Dense" @bind-Value="RequestDocument.Status" 
                                            For="@(() => RequestDocument.Status)"
+                                           Required="true"
                                            AdornmentIcon="@Icons.Custom.Uncategorized.ColorPalette" 
                                            AdornmentColor="Color.Primary" T="string" Label="Version Status" Variant="Variant.Outlined">
                                     <MudSelectItem Value="@("Draft")" />
@@ -149,7 +152,7 @@
                             {
                                 @foreach (var file in Files.Where(f => f.Id == RequestDocument.FileId))
                                 {
-                                    <MudListItem Icon="@Icons.Material.Filled.AttachFile" OnClick="@(()=>OnRemoveFile(file.Id))">
+                                    <MudListItem Icon="@Icons.Material.Filled.AttachFile">
                                         <MudText Typo="Typo.caption"> Old attached File :  @file.FileName</MudText>
                                         <MudChip Color="Color.Error" Variant="Variant.Text" Label="true">
                                             <code>@file.Size bytes</code>
@@ -177,13 +180,13 @@
                             }
                         </div>
                         <MudDivider Class="my-3" />
-                        <MudCheckBox  Dense="true" T="bool" @bind-Checked="@RequestDocument.IsConfirmForPlagiarism" Required="true" Color="Color.Primary" UnCheckedColor="Color.Default" Size="Size.Small">
+                        <MudCheckBox Dense="true" T="bool" For="@(() => RequestDocument.IsConfirmForPlagiarism)" @bind-Checked="@RequestDocument.IsConfirmForPlagiarism" Required="true" Color="Color.Primary" UnCheckedColor="Color.Default" Size="Size.Small">
                             <MudText Typo="Typo.caption">I confirm that this document has been checked for plagiarism.</MudText>
                         </MudCheckBox>
-                        <MudCheckBox  Dense="true" T="bool" @bind-Checked="@RequestDocument.IsConfirmedForGrammarAndStatistic" Required="true" Color="Color.Primary" UnCheckedColor="Color.Default" Size="Size.Small">
+                        <MudCheckBox Dense="true" T="bool" For="@(() => RequestDocument.IsConfirmedForGrammarAndStatistic)" @bind-Checked="@RequestDocument.IsConfirmedForGrammarAndStatistic" Required="true" Color="Color.Primary" UnCheckedColor="Color.Default" Size="Size.Small">
                             <MudText Typo="Typo.caption">I confirm that this document has been checked for grammar and statistics.</MudText>
                         </MudCheckBox>
-                        <MudCheckBox Dense="true" T="bool" @bind-Checked="@RequestDocument.IsAgree" Required="true" Color="Color.Primary" UnCheckedColor="Color.Default" Size="Size.Small">
+                        <MudCheckBox Dense="true" T="bool" For="@(() => RequestDocument.IsAgree)" @bind-Checked="@RequestDocument.IsAgree" Required="true" Color="Color.Primary" UnCheckedColor="Color.Default" Size="Size.Small">
                             <MudText Typo="Typo.caption">I have read and understood, <MudText Typo="Typo.caption" @onclick="OpenDocumentPolicy" Color="Color.Primary"> <strong><u> the privacy policy for documents. </u> </strong>  </MudText></MudText>
                         </MudCheckBox>
                     </MudCardContent>
@@ -198,14 +201,27 @@
                                        Disabled="false">
                                 Clear
                             </MudButton>
-                            <MudButton Class="mx-2 my-2 rounded-0"
-                                       Disabled="@(!_success)"
-                                       Variant="Variant.Filled"
-                                       Color="Color.Primary"
-                                       OnClick="HandleSubmit"
-                                       DisableElevation="true">
-                                @_buttonText
-                            </MudButton>
+                           @if (Id is not null)
+                           {
+                               <MudButton Class="mx-2 my-2 rounded-0"
+                                          Variant="Variant.Filled"
+                                          Color="Color.Primary"
+                                          OnClick="HandleSubmit"
+                                          DisableElevation="true">
+                                   @_buttonText
+                               </MudButton>
+                           }
+                           else
+                           {
+                               <MudButton Class="mx-2 my-2 rounded-0"
+                                          Disabled="@(!_success)"
+                                          Variant="Variant.Filled"
+                                          Color="Color.Primary"
+                                          OnClick="HandleSubmit"
+                                          DisableElevation="true">
+                                   @_buttonText
+                               </MudButton>
+                           }
                         </div>
                     </MudCardActions>
                 </MudForm>
@@ -229,7 +245,6 @@
     private List<CreateTopic> _selectedTopics = new();
     private List<Topic> _topics = new();
     private List<FileEntry> Files = new List<FileEntry>();
-
     private Reference _selectedDocumentType = new();
     private Adviser _selectedAdviser = new();
     private Curriculum _selectedAcademicProgram = new();
@@ -272,6 +287,7 @@
             var files = await FileService.GetAllFiles();
             Files = files;
             RequestDocument = response;
+            RequestDocument.Topics = response.Topics;
             _selectedAcademicProgram = await CurriculumService.GetCurriculumById(RequestDocument.CurriculumId);
             _selectedAdviser = await AdviserService.GetAdviserAsync(RequestDocument.AdviserId);
             _selectedDocumentType = await DocumentReferenceService.GetReferenceById(RequestDocument.AdviserId);
@@ -398,11 +414,19 @@
                 RequestDocument.ReferenceId = _selectedDocumentType.Id;
                 if (IsValid(RequestDocument))
                 {
-                    var response = await DocumentService.UpdateDocumentAsync(((int)Id), RequestDocument);
+                    var response = await DocumentService.UpdateDocumentAsync(RequestDocument.Id, RequestDocument);
                     Snack.Add("Processing to Author Form", Severity.Info);
-                    await DialogService.ShowMessageBox("Uploaded Successful! ✔️", "You will be navigate to your Profile", "Ok");
+                    await DialogService.ShowMessageBox("Uploaded Successful! ✔️", "You will be navigate to Author form", "Ok");
                     var log =  await ActivityLog.WriteLog($"{RequestDocument.UploaderEmail}", $"Upload a Document Titled: {RequestDocument.Title}", "UPLOAD", "USER");
-                    if (log.IsSuccessStatusCode)
+                    var history = new DocumentHistory
+                    {
+                        Title = "Modified",
+                        ModifiedDate = DateTime.Now,
+                        DocumentId = RequestDocument.Id,
+                        Owner = RequestDocument.UploaderEmail
+                    };
+                    var documentHistory = await DocumentHistoryService.InsertDocumentModified(history);
+                    if (log.IsSuccessStatusCode || documentHistory.IsSuccessStatusCode)
                     {
                         Navigation.NavigateTo($"/document-author/{(int)Id}");
                     }
@@ -466,13 +490,5 @@
         }
         return true;
 
-    }
-    private async void OnRemoveFile(int id)
-    {
-        var result = await FileService.DeleteFileAsync(id);
-        if (result.IsSuccessStatusCode)
-        {
-            StateHasChanged();
-        }
     }
 }

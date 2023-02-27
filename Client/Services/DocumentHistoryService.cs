@@ -14,9 +14,15 @@ namespace HIVE.Client.Services
         }
         public async Task<HttpResponseMessage>  InsertDocumentModified(DocumentHistory modified)
         {
-            var response = await _client.PostAsJsonAsync("api/Document/modified", modified);
+            var response = await _client.PostAsJsonAsync("api/History/write/", modified);
             return response;
             
+        }
+
+        public async Task<HttpResponseMessage> GetDocumentHistories(int id)
+        {
+            var response = await _client.GetAsync($"api/History/{id}");
+            return response;
         }
     }
 }
