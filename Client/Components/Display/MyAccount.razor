@@ -85,7 +85,7 @@
     private User User { get; set; } = new();
     private User ForReadUser { get; set; } = new User();
     private List<string?> _emails = new();
-    private string? _email = String.Empty;
+    private string? _email = string.Empty;
     private string _info = string.Empty;
     private string _token = string.Empty;
     protected override async Task OnInitializedAsync()
@@ -107,11 +107,10 @@
         }
     }
     bool _success;
-    bool _verification = false;
-    MudForm _form;
-    MudTextField<string>? _pwField1;
+    public bool Verification = false;
+    MudForm? _form;
     string[] _errors = { };
-    private char _character = 'A';
+    public char Character = 'A';
     bool _isEdit = true;
     private async void OnSave()
     {

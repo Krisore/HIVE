@@ -15,7 +15,6 @@ namespace HIVE.Server.Services
         }
         public async Task<DocumentHistory> InsertEditLog(DocumentHistory modified)
         {
-          
             var history = new DocumentHistory
             {
                 Title = modified.Title,

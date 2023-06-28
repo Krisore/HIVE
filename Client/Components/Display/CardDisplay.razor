@@ -1,7 +1,6 @@
 ﻿@inject IDialogService DialogService
 @inject NavigationManager Navigation
 @inject AuthenticationStateProvider AuthenticationStateProvider;
-@inject IUserService UserService
 <MudCard Class="cursor-pointer" Elevation="1">
     <MudCardHeader>
         <CardHeaderAvatar>
@@ -78,7 +77,7 @@
     [Parameter] public List<FileEntry> Files { get; set; } = new();
     [Parameter] public List<Adviser> Advisers { get; set; } = new();
     [Parameter] public List<Curriculum> Programs { get; set; } = new();
-    [Parameter] public string SearchTerm { get; set; }
+    [Parameter] public string? SearchTerm { get; set; }
     private string _owner = "";
     private List<Topic> _topics = new();
     private FileEntry _file = new();
@@ -86,7 +85,6 @@
     private Curriculum _program = new();
     private Adviser _adviser = new();
     private Reference _documentType = new();
-    private string sample = "";
     [CascadingParameter] public Task<AuthenticationState> Authenticate { get; set; }
     bool _isAuthenticated = true;
     protected override async Task OnParametersSetAsync()
@@ -97,14 +95,13 @@
             _isAuthenticated = false;
         }
         _topics = Document.Topics;
-        //_authors = Document.Authors;
+        _authors = Document.Authors;
         _documentType = Document.Reference;
         _adviser = Advisers.FirstOrDefault(a => a.Id == Document.AdviserId)!;
         _program = Programs.FirstOrDefault(a => a.Id == Document.CurriculumId)!;
         _file = Files.FirstOrDefault(a => a.Id == Document.FileId)!;
         var customAuthStateProvider = (CustomAuthenticationStateProvider)AuthenticationStateProvider;
         Authenticate = customAuthStateProvider.GetAuthenticationStateAsync();
-        if (Authenticate != null)
         {
             var account = await Authenticate;
             if (account.User.Identity?.Name != null)
@@ -112,12 +109,6 @@
                 _owner = account.User.Identity.Name;
             }
         }
-    }
-
-
-    private string Format(string name)
-    {
-        return name;
     }
     private async Task DownloadFileAsync(string fileName, string storeFileName, string documentTitle)
     {
@@ -128,27 +119,14 @@
             { "StoreFileName", storeFileName },
             { "FileName", fileName }
         };
-
-
         await DialogService.ShowAsync<DialogDownload>("Download a copy 📦", parameters);
 
     }
-    private string Trim(string context)
-    {
-        var modifyContext = "";
-        const int maxLength = 150;
-        if (context.Length > 150)
-        {
-            modifyContext = context.Substring(0, maxLength);
-        }
-        return modifyContext;
-    }
-
     private async void ViewDetailedAsync()
-    {
+    {   
         var documentId = Document.Id;
         var option = new DialogOptions
-            {
+           {
                 NoHeader = true,
                 FullScreen = true,
                 MaxWidth = MaxWidth.Medium,

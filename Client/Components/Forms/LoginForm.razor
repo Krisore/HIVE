@@ -81,7 +81,7 @@
 </MudText>
 @code {
     [CascadingParameter] MudDialogInstance? Dialog { get; set; }
-    private LoginRequest _loginRequest = new LoginRequest();
+    private readonly LoginRequest _loginRequest = new ();
     bool _isShow;
     InputType _passwordInput = InputType.Password;
     private bool Agreement { get; set; }
@@ -95,7 +95,7 @@
             var userSession = await loginResponse.Content.ReadFromJsonAsync<UserSession>();
             var customAuthStateProvider = (CustomAuthenticationStateProvider)AuthenticationStateProvider;
             await customAuthStateProvider.UpdateAuthenticationState(userSession);
-            if (userSession is { Role: { } } && userSession.Role.ToLower().Equals("user"))
+            if (userSession is { Role: not null } && userSession.Role.ToLower().Equals("user"))
             {
                 var log = await ActivityLog.WriteLog($"{userSession.Email}", "Sign in request", "SIGN IN", $"{userSession.Role}");
                 if (log.IsSuccessStatusCode)
@@ -116,8 +116,8 @@
         }
         else if (loginResponse.StatusCode == HttpStatusCode.Unauthorized)
         {
-            Snack.Add("UnAuthorize Email!", Severity.Info);
-            var response = await UserService.CheckEmail(_loginRequest.Email);
+            Snack.Add("UnAuthorize Email!", Severity.Warning);
+            var response = _loginRequest.Email != null && await UserService.CheckEmail(_loginRequest.Email);
             if (response)
             {
                 await DialogService.ShowAsync<VerifyForm>("Verify your account");
@@ -126,7 +126,6 @@
         else
         {
             Snack.Add("Invalid Email or Password!", Severity.Error);
-            return;
         }
     }
     private readonly DialogOptions _signUp = new()

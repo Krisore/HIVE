@@ -41,7 +41,6 @@
         DoChart(_documents);
         DoLineGraph(_documents);
     }
-
     private  void DoChart(List<Document> documents )
     {
         if (!documents.Any()) return;
@@ -51,12 +50,10 @@
             _labels.Add(course);
             _data.Add(documents.Count(d => d.Curriculum.Alt.Contains(course, StringComparison.OrdinalIgnoreCase)));
         }
-
     }
-
     private void DoLineGraph(List<Document> documents)
     {
-        List<double> totalCount = new List<double>();
+        var totalCount = new List<double>();
         foreach (var curriculum in documents.Select(d => d.Curriculum.Alt).Distinct())
         {
             foreach (var axis in _xAxisLabels)
