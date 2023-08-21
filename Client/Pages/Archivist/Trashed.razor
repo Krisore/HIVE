@@ -1,4 +1,4 @@
-﻿@page "/trash"
+﻿@page "/bin"
 @using Microsoft.AspNetCore.Authorization
 @layout ArchivistLayout
 @attribute [Authorize(Roles = "Administrator")]
@@ -6,7 +6,7 @@
 
 <MudContainer MaxWidth="MaxWidth.ExtraExtraLarge" Class="my-12">
     <MudTabs Outlined="false" Centered="false">
-        <MudTabPanel Text="Trash" Icon="@Icons.Material.Filled.FolderDelete">
+        <MudTabPanel Text="Bin" Icon="@Icons.Material.Filled.FolderDelete">
             <SubViewTrash/>
         </MudTabPanel>
     </MudTabs>

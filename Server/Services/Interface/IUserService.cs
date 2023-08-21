@@ -10,6 +10,7 @@ namespace HIVE.Server.Services.Interface
         Task RegisterAdmin(User request);
         Task UpdateAdminAccount(int id, User request);
         Task<string?> UpdateUser(int id, UserRegisterRequest request);
+        Task UpdateStudentAccount(int id, User request);
         Task<string> Verify(string token);
         Task<List<User>> GetUsers();
         Task<string> ForgotPasswordAsync(string email);

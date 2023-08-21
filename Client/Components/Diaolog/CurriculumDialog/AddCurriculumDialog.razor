@@ -48,7 +48,7 @@
                        Size="Size.Medium"
                        Class="rounded-0"
                        OnClick="OnHandleSubmit">
-                @(CurriculumId is not 0 ? "Edit" : "Add")
+                @(CurriculumId != null ? "Edit" : "Add")
             </MudButton>
         </div>
     </MudCardActions>
@@ -58,15 +58,15 @@
     [CascadingParameter]
     Task<AuthenticationState>? Authenticate { get; set; }
     [Parameter] public string? Username { get; set; }
-    [Parameter] public int CurriculumId { get; set; } = new();
+    [Parameter] public int? CurriculumId { get; set; }
     private Curriculum _curriculum = new();
     private string? Actor { get; set; }
     private string? Role { get; set; }
     protected override async Task OnParametersSetAsync()
     {
-        if (CurriculumId is not 0)
+        if (CurriculumId != null )
         {
-            var response = await CurriculumService.GetCurriculumById(CurriculumId);
+            var response = await CurriculumService.GetCurriculumById((int)CurriculumId);
             _curriculum = response;
         }
         var customAuthStateProvider = (CustomAuthenticationStateProvider)AuthenticationStateProvider;
@@ -84,7 +84,7 @@
 
     private async Task OnHandleSubmit()
     {
-        if (CurriculumId is not 0)
+        if (CurriculumId != null)
         {
             var response = await CurriculumService.UpdateAcademicProgram(_curriculum);
             if (response.IsSuccessStatusCode)
@@ -128,7 +128,6 @@
     private async Task<bool> IsValidAsync()
     {
         var programs = await CurriculumService.GetProgramsAsync();
-        return programs.Any(c => c.Name.ToLower().Equals(_curriculum.Name.ToLower()) 
-                                 || c.Alt.ToLower().Equals(_curriculum.Alt.ToLower()));
+        return programs.Any(c => c.Name.ToLower().Equals(_curriculum.Name.ToLower()));
     }
 }

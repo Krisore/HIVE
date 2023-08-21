@@ -7,7 +7,7 @@ namespace HIVE.Client.Services.Interface
     {
         List<Curriculum> Curriculums { get; set; }
         Task<IEnumerable<Curriculum>> GetCurriculumBySearch(string value);
-        Task<HttpResponseMessage> AddCurriculum(Curriculum? curriculum);
+        Task<HttpResponseMessage> AddCurriculum(Curriculum curriculum);
         Task<HttpResponseMessage> UpdateAcademicProgram(Curriculum program);
         Task<HttpResponseMessage> DeleteAcademicProgram(int id);
 

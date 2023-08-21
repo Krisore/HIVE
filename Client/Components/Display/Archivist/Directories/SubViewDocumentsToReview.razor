@@ -3,7 +3,7 @@
 @inject IDialogService DialogService
 @inject IActivityLog ActivityLog
 <MudTable T="Document" ServerData="@(new Func<TableState, Task<TableData<Document>>>(ServerReload))"
-          Dense="true" Hover="true" @ref="_table" Bordered="false" Striped="true" MultiSelection="true" @bind-SelectedItems="_selectedItems">
+          Dense="true" Loading="@_isLoading" LoadingProgressColor="Color.Primary" Hover="true" @ref="_table" Bordered="false" Striped="true" MultiSelection="true" @bind-SelectedItems="_selectedItems">
     <ToolBarContent>
         <MudTextField Variant="Variant.Outlined" T="string" ValueChanged="@(OnSearch)" Placeholder="Search" Adornment="Adornment.End"
                       AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0" Margin="Margin.Dense"></MudTextField>
@@ -24,29 +24,22 @@
             </MudChip>
         </MudChip>
         <div class="mx-5">
-            <MudTooltip Text="Download Selected Document" Arrow="true">
-                <MudIconButton Variant="Variant.Text"
-                               DisableElevation="false"
-                               Size="Size.Medium"
-                               Color="Color.Success"
-                               Icon="@Icons.Material.Filled.Download" />
-            </MudTooltip>
             <MudTooltip Text="Archive Selected Document" Arrow="true">
-                <MudIconButton Class=" mx-2"
-                               Variant="Variant.Text"
-                               DisableElevation="true"
-                               Size="Size.Medium"
-                               OnClick="Archived"
-                               Icon="@Icons.Material.Filled.Archive" Color="Color.Inherit">
-                </MudIconButton>
+            <MudIconButton Class=" mx-2"
+                           Variant="Variant.Text"
+                           DisableElevation="true"
+                           Size="Size.Medium"
+                           OnClick="Archived"
+                           Icon="@Icons.Material.Filled.Archive" Color="Color.Success">
+            </MudIconButton>
             </MudTooltip>
             <MudTooltip Text="Move to Trash" Arrow="true">
-                <MudIconButton Variant="Variant.Text"
-                               DisableElevation="false"
-                               Size="Size.Medium"
-                               Color="Color.Error"
-                               Icon="@Icons.Material.Filled.Delete"
-                               OnClick="MoveToTrash" />
+            <MudIconButton Variant="Variant.Text"
+                           DisableElevation="false"
+                           Size="Size.Medium"
+                           Color="Color.Error"
+                           Icon="@Icons.Material.Filled.Delete"
+                           OnClick="MoveToTrash" />
             </MudTooltip>
         </div>
     </ToolBarContent>
@@ -121,9 +114,10 @@
     string awit = "";
     private List<string> _errors = new();
     private List<string> _archiveList = new();
+    private bool _isLoading = true;
     private async Task<TableData<Document>> ServerReload(TableState state)
     {
-
+        _isLoading = true;
         IEnumerable<Document> data = await DocumentService.GetDocumentsForArchivistAsync();
         data =  data.Where(d => d.ToReview);
         _totalDocuments = data.Count(d => d.ToReview);
@@ -147,6 +141,7 @@
             "uploaded" => data.OrderByDirection(state.SortDirection, o => o.DateUploaded),
             _ => data
         };
+        _isLoading = false;
         _pagedData = data.Skip(state.Page * state.PageSize).Take(state.PageSize).ToArray();
         return new TableData<Document>() { TotalItems = _totalItems, Items = _pagedData };
 

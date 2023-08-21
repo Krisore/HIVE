@@ -46,9 +46,10 @@ namespace HIVE.Client.Services
                 throw;
             }
         }
-        public async Task<HttpResponseMessage> AddCurriculum(Curriculum? curriculum)
+        public async Task<HttpResponseMessage> AddCurriculum(Curriculum curriculum)
         {
-            var result = await _client.PostAsJsonAsync("api/Curriculums", curriculum);
+
+            var result = await _client.PostAsJsonAsync("api/Curriculums/create", curriculum);
             return result;
         }
 

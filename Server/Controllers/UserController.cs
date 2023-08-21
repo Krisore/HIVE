@@ -77,6 +77,14 @@ namespace HIVE.Server.Controllers
             await _userService.UpdateAdminAccount(id, request);
             return Ok();
         }
+        [HttpPut]
+        [Route("update/user/{id:int}")]
+        [AllowAnonymous]
+        public async Task<IActionResult> UpdateUser(int id, User request)
+        {
+            await _userService.UpdateStudentAccount(id, request);
+            return Ok();
+        }
         [HttpPost]
         [Route("verify/{token}")]
         public async Task<IActionResult> Verify(string token)
@@ -116,6 +124,17 @@ namespace HIVE.Server.Controllers
                 return NotFound(result);
             }
             return Ok(result);
+        }
+        [HttpGet]
+        [Route("{email}")]
+        public async Task<ActionResult<bool>> CheckEmail(string email)
+        {
+            var result = await _userService.GetUserAccountByEmail(email);
+            if (result.VerifiedAt is null && result is not null)
+            {
+                return Unauthorized(true);
+            }
+            return NotFound(false);
         }
         [HttpGet]
         [Route("emails")]

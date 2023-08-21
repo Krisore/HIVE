@@ -14,6 +14,7 @@
           ServerData="@(new Func<TableState, Task<TableData<User>>>(ServerReload))"
           Dense="true"
           Bordered="false"
+          Loading="@_isLoading" LoadingProgressColor="Color.Primary"
           MultiSelection="true" @bind-SelectedItems="_selectedItems"
           Hover="true">
     <ToolBarContent>
@@ -36,7 +37,7 @@
         </MudTooltip>
         <MudText>
             <MudChip Class="rounded-0" IconColor="Color.Primary" Variant="Variant.Outlined" Label="true">
-                Selected Curriculum:<MudChip Size="Size.Small"> @_selectedItems.Count </MudChip>
+                Selected User:<MudChip Size="Size.Small"> @_selectedItems.Count </MudChip>
             </MudChip>
         </MudText>
     </ToolBarContent>
@@ -47,13 +48,12 @@
         <MudTh><MudTableSortLabel SortLabel="firstname" T="User"> First Name </MudTableSortLabel></MudTh>
         <MudTh> <MudTableSortLabel SortLabel="email" T="User"> Email </MudTableSortLabel></MudTh>
         <MudTh> <MudTableSortLabel SortLabel="datereg" T="User"> Date Register </MudTableSortLabel></MudTh>
-        <MudTh> <MudTableSortLabel SortLabel="verified" T="User"> Verified At </MudTableSortLabel></MudTh>
         <MudTh> <MudTableSortLabel SortLabel="status" T="User"> status </MudTableSortLabel></MudTh>
         <MudTh>Total Documents</MudTh>
     </HeaderContent>
     <RowTemplate>
         <MudTd>
-            <MudButton Class="rounded-0" Size="Size.Small" Variant="Variant.Outlined" OnClick="@(() => ShowBtnPress(context.Id))">  🗃️@((context.ShowDocuments == true) ? "Hide" : "Show")</MudButton>
+            <MudButton Class="rounded-0" Size="Size.Small" Variant="Variant.Outlined" OnClick="@(() => ShowBtnPress(context.Id))">@((context.ShowDocuments == true) ? "Hide" : "Show")</MudButton>
         </MudTd>
         <MudTd DataLabel="Email">
             <MudChip Class="rounded-br-xl" Variant="Variant.Filled" Color="Color.Info">
@@ -63,8 +63,12 @@
         <MudTd DataLabel="Email">@context.LastName</MudTd>
             <MudTd DataLabel="Email">@context.FirstName</MudTd>
             <MudTd DataLabel="Email">@context.Email</MudTd>
-        <MudTd DataLabel="Email">@context.DateRegistered!.Value.ToShortDateString()</MudTd>
-            <MudTd DataLabel="Email">@context.VerifiedAt!.Value.ToShortDateString()</MudTd>
+        <MudTd DataLabel="Email">
+            @if (context.DateRegistered.HasValue)
+            {
+                @context.DateRegistered.Value.ToShortDateString()
+            }
+        </MudTd>
         <MudTd DataLabel="Email">
             @if (context.VerifiedAt is null)
             {
@@ -82,7 +86,7 @@
             <MudTd>
                 @if (_documents != null)
             {
-                <MudChip Variant="Variant.Text" Size="Size.Large" Color="Color.Error"> @_documents.Count(d => d.Curriculum.Id == context.Id)</MudChip>
+                <MudChip Variant="Variant.Text" Size="Size.Large" Color="Color.Error"> @_documents.Count(d => d.UploaderEmail == context.Email)</MudChip>
             }
         </MudTd>
     </RowTemplate>
@@ -99,28 +103,27 @@
         @if (context.ShowDocuments)
         {
             <MudTr>
-                <td colspan="10">
+                <td colspan="9">
                     <MudCard Elevation="0">
                         <MudCardHeader>
                             <CardHeaderAvatar>
-                                <MudAvatar Elevation="2" Size="Size.Large" Image="/image/Pup_logo.jpg"></MudAvatar>
+                                <MudAvatar Color="Color.Primary" Variant="Variant.Filled" Elevation="2" Size="Size.Large">
+                                    @context.LastName.ToUpper().ToCharArray()[0]
+                                </MudAvatar>
                             </CardHeaderAvatar>
                             <CardHeaderContent>
                                 <MudText Typo="Typo.body2"> @context.LastName ,@context.FirstName </MudText>
                                 <MudChip Label="true" Variant="Variant.Text"> @context.Email</MudChip>
                             </CardHeaderContent>
                             <CardHeaderActions>
-                                <MudChip Label="true" IconColor="Color.Error" Variant="Variant.Text" Size="Size.Medium" Icon="@Icons.Material.Rounded.Pages">
+                                <MudChip Label="true" IconColor="Color.Error" Variant="Variant.Text" OnClick="@(()=> UserLogs(context))" Size="Size.Medium" Icon="@Icons.Material.Rounded.Pages">
                                     Student logs
-                                </MudChip>
-                                <MudChip Label="true" IconColor="Color.Warning" Size="Size.Medium" Color="Color.Info" Variant="Variant.Filled" Icon="@Icons.Custom.FileFormats.FileExcel">
-                                    Generate report
                                 </MudChip>
                             </CardHeaderActions>
                         </MudCardHeader>
                         <MudDivider />
                         <MudCardContent>
-                            <SubViewDocuments Role="@_role" ReferenceId="context.Id" />
+                            <SubViewDocuments Role="@_role" UploaderName="@context.Email" />
                         </MudCardContent>
                     </MudCard>
                 </td>
@@ -135,12 +138,14 @@
     private IEnumerable<User> _users;
     private MudTable<User> _table;
     private HashSet<User> _selectedItems = new();
+    private bool _isLoading = true;
     private List<Document>? _documents;
     private int _totalItems = 0;
     private IEnumerable<User>? _pagedData;
     private List<string> _errors = new();
     private async Task<TableData<User>> ServerReload(TableState state)
     {
+        _isLoading = true;
         _users = await UserService.GetUserCount();
         _users = _users.Where(u => u.Role == "User");
         _documents = await DocumentService.GetDocumentsForArchivistAsync();
@@ -166,7 +171,7 @@
             "verifiedAt" => _users.OrderByDirection(state.SortDirection, o => o.VerifiedAt),
             _ => _users
         };
-
+        _isLoading = false;
         _pagedData = _users.Skip(state.Page * state.PageSize).Take(state.PageSize).ToArray();
         return new TableData<User>() { TotalItems = _totalItems, Items = _pagedData };
     }
@@ -190,6 +195,26 @@
                 ["Users"] = _selectedItems
             };
         var dialog = await DialogService.ShowAsync<DialogDeleteUserAccount>("Delete this Selected User?", parameter);
+        var result = await dialog.Result;
+        if (!result.Canceled)
+        {
+            await _table.ReloadServerData();
+        }
+        _errors.Clear();
+    }
+
+    private DialogOptions _options = new()
+    {
+        FullWidth = true,
+        Position = DialogPosition.TopCenter,
+    };
+    private async void UserLogs(User user)
+    {
+        var parameter = new DialogParameters
+        {
+            ["User"] = user
+        };
+        var dialog = await DialogService.ShowAsync<UserDialogLogs>($"{user.LastName}, {user.FirstName} Logs", parameter, _options);
         var result = await dialog.Result;
         if (!result.Canceled)
         {

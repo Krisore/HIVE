@@ -2,7 +2,7 @@
 @inject IFileService FileService
 @inject IDialogService DialogService
 @inject IActivityLog ActivityLog
-<MudTable T="Document" ServerData="@(new Func<TableState, Task<TableData<Document>>>(ServerReload))"
+<MudTable T="Document" ServerData="@(new Func<TableState, Task<TableData<Document>>>(ServerReload))" Loading="@_isLoading" LoadingProgressColor="Color.Primary"
           Dense="true" Hover="true" @ref="_table" Bordered="false" Striped="true" MultiSelection="true" @bind-SelectedItems="_selectedItems">
     <ToolBarContent>
         <MudTextField Variant="Variant.Outlined" T="string" ValueChanged="@(OnSearch)" Placeholder="Search" Adornment="Adornment.End"
@@ -120,6 +120,7 @@
     [Parameter] public int ReferenceId { get; set; }
     IEnumerable<Document>? _documents = new List<Document>();
     private string? _userName = string.Empty;
+    private bool _isLoading = true;
     private IEnumerable<Document> _pagedData;
     private MudTable<Document> _table;
     private HashSet<Document> _selectedItems = new();
@@ -135,6 +136,7 @@
 
     private async Task<TableData<Document>> ServerReload(TableState state)
     {
+        _isLoading = true;
         IEnumerable<Document> documents = await DocumentService.GetArchivedDocuments();
         IEnumerable<Document> data = documents;
         data = data.OrderByDescending(d => d.IsActive);
@@ -159,6 +161,7 @@
             "uploaded" => data.OrderByDirection(state.SortDirection, o => o.DateUploaded),
             _ => data
         };
+        _isLoading = false;
         _pagedData = data.Skip(state.Page * state.PageSize).Take(state.PageSize).ToArray();
         return new TableData<Document>() { TotalItems = _totalItems, Items = _pagedData };
 

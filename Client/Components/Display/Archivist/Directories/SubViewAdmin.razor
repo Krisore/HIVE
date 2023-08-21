@@ -11,6 +11,8 @@
 @inject ISnackbar Snack
 @inject NavigationManager NavigationManager
 <MudTable @ref="_table"
+          Loading="@_isLoading"
+          LoadingProgressColor="Color.Primary"
           ServerData="@(new Func<TableState, Task<TableData<User>>>(ServerReload))"
           Dense="true"
           Bordered="false"
@@ -39,7 +41,7 @@
         </MudTooltip>
         <MudText>
             <MudChip Class="rounded-0" IconColor="Color.Primary" Variant="Variant.Outlined" Label="true">
-                Selected Curriculum:<MudChip Size="Size.Small"> @_selectedItems.Count </MudChip>
+                Selected Admin :<MudChip Size="Size.Small"> @_selectedItems.Count </MudChip>
             </MudChip>
         </MudText>
     </ToolBarContent>
@@ -54,17 +56,17 @@
     </HeaderContent>
     <RowTemplate>
             
-            <MudTd DataLabel="Role">
+        <MudTd DataLabel="Role">
             <MudChip Class="rounded-br-xl" Variant="Variant.Filled" Color="Color.Error">
-                    <code>@context.Role</code>
-                </MudChip>
-            </MudTd>
-            <MudTd DataLabel="lastname">@context.LastName</MudTd>
-            <MudTd DataLabel="firstname">@context.FirstName</MudTd>
-            <MudTd DataLabel="Email">@context.Email</MudTd>
+                <code>@context.Role</code>
+            </MudChip>
+        </MudTd>
+        <MudTd DataLabel="lastname">@context.LastName</MudTd>
+        <MudTd DataLabel="firstname">@context.FirstName</MudTd>
+        <MudTd DataLabel="Email">@context.Email</MudTd>
         <MudTd DataLabel="Date registered">@context.DateRegistered!.Value.ToShortDateString()</MudTd>
         <MudTd DataLabel="">
-                @if (context.VerifiedAt is null)
+            @if (context.VerifiedAt is null)
             {
                 <MudChip Label="true" Color="Color.Warning" Variant="Variant.Text">
                     not verified
@@ -78,52 +80,20 @@
             }
         </MudTd>
         <MudTh>
-            <MudTooltip Text="Add User" Arrow="true">
+            <MudTooltip Text="Edit Admin" Arrow="true">
                 <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Default" OnClick="@(() => EditAdmin(context.Id))" />
             </MudTooltip>
         </MudTh>
     </RowTemplate>
-    <NoRecordsContent>
-        <MudText>No matching records found</MudText>
-    </NoRecordsContent>
     <LoadingContent>
         <MudText>Loading...</MudText>
     </LoadingContent>
+    <NoRecordsContent>
+        <MudText>No matching records found</MudText>
+    </NoRecordsContent>
     <PagerContent>
         <MudTablePager />
     </PagerContent>
-    <ChildRowContent>
-        @if (context.ShowDocuments)
-        {
-            <MudTr>
-                <td colspan="10">
-                    <MudCard Elevation="0">
-                        <MudCardHeader>
-                            <CardHeaderAvatar>
-                                <MudAvatar Elevation="2" Size="Size.Large" Image="/image/Pup_logo.jpg"></MudAvatar>
-                            </CardHeaderAvatar>
-                            <CardHeaderContent>
-                                <MudText Typo="Typo.body2"> @context.LastName ,@context.FirstName </MudText>
-                                <MudChip Label="true" Variant="Variant.Text"> @context.Email</MudChip>
-                            </CardHeaderContent>
-                            <CardHeaderActions>
-                                <MudChip Label="true" IconColor="Color.Error" Variant="Variant.Text" Size="Size.Medium" Icon="@Icons.Material.Rounded.Pages">
-                                    Student logs
-                                </MudChip>
-                                <MudChip Label="true" IconColor="Color.Warning" Size="Size.Medium" Color="Color.Info" Variant="Variant.Filled" Icon="@Icons.Custom.FileFormats.FileExcel">
-                                    Generate report
-                                </MudChip>
-                            </CardHeaderActions>
-                        </MudCardHeader>
-                        <MudDivider />
-                        <MudCardContent>
-                           
-                        </MudCardContent>
-                    </MudCard>
-                </td>
-            </MudTr>
-        }
-    </ChildRowContent>
 
 </MudTable>
 @code {
@@ -136,8 +106,10 @@
     private IEnumerable<User>? _pagedData;
     private HashSet<User> _selectedItems = new();
     private List<string> _errors = new();
+    private bool _isLoading = true;
     private async Task<TableData<User>> ServerReload(TableState state)
     {
+        _isLoading = true;
         _users = await UserService.GetUserCount();
         _users = _users.Where(u => u.Role == "Administrator");
         _documents = await DocumentService.GetDocumentsForArchivistAsync();
@@ -153,7 +125,6 @@
             return user.Email.Contains(_searchTerm, StringComparison.OrdinalIgnoreCase);
         }).ToArray();
         _totalItems = _users.Count();
-
         _users = state.SortLabel switch
         {
             "lastname" => _users.OrderByDirection(state.SortDirection, o => o.FirstName),
@@ -163,7 +134,7 @@
             "verifiedAt" => _users.OrderByDirection(state.SortDirection, o => o.VerifiedAt),
             _ => _users
         };
-
+        _isLoading = false;
         _pagedData = _users.Skip(state.Page * state.PageSize).Take(state.PageSize).ToArray();
         return new TableData<User>() { TotalItems = _totalItems, Items = _pagedData };
     }

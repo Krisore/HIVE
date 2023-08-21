@@ -12,12 +12,16 @@ namespace HIVE.Shared.Model
         public int Id { get; set; }
         public string Title { get; set; } = string.Empty;
         public string Abstract { get; set; } = string.Empty;
+        public string Status { get; set; }
         public bool IsOpenAccess { get; set; } = true;
         public bool IsActive { get; set; } = true;
         public bool ToReview { get; set; } = true;
         public bool UnApproved { get; set; } = false;
         public bool IsArchived { get; set; } = false;
         public bool IsDeleted { get; set; } = false;
+        public bool IsConfirmForPlagiarism {get; set; }
+        public bool IsConfirmedForGrammarAndStatistic {get; set; }
+        public bool IsAgree { get; set; }
         public DateTime DateUploaded { get; set; } = DateTime.Now;
         public DateTime? DatePublished { get; set; }
         public int CurriculumId { get; set; }
@@ -25,13 +29,13 @@ namespace HIVE.Shared.Model
         public int ReferenceId { get; set; }
         public int FileId { get; set; }
         public int UserId { get; set; }
-        public FileEntry File { get; set; } = new FileEntry();
+        public FileEntry File { get; set; } = new();
         public string UploaderEmail { get; set; } = string.Empty;
         public Curriculum Curriculum { get; set; } = new();
         public Adviser Adviser { get; set; } = new();
         public Reference Reference { get; set; } = new();
-        public List<Topic> Topics { get; set; } = new List<Topic>();
-        public List<Author> Authors { get; set; } = new List<Author>();
+        public List<Topic> Topics { get; set; } = new();
+        public List<Author> Authors { get; set; } = new();
         public Document()
         {
             UpdateIsActive();

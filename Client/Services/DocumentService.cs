@@ -1,4 +1,5 @@
-﻿using System.Net.Http.Headers;
+﻿using System.Net;
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using HIVE.Client.Authentication;
 using HIVE.Client.Services.Interface;
@@ -18,13 +19,13 @@ namespace HIVE.Client.Services
             _customAuthenticationStateProvider = customAuthenticationStateProvider;
         }
         public int DocumentId { get; set; }
-        public List<Document>? Documents { get; set; } = new();
+        public List<Document> Documents { get; set; } = new();
         public Document Document { get; set; } = new();
         public List<Document>? MyDocuments { get; set; } = new();
 
         public async Task<HttpResponseMessage> GetDocumentsAsync()
         {
-            var response = await _client.GetAsync("api/Document");
+            var response = await _client.GetAsync("api/Document/documents");
             return response;
         }
 
@@ -41,7 +42,6 @@ namespace HIVE.Client.Services
                 }
 
                 return Documents!;
-                throw new Exception(message: "Documents are null!");
             }
             catch (Exception ex)
             {
@@ -50,7 +50,7 @@ namespace HIVE.Client.Services
             }
         }
 
-        public async Task<Document> UpdateDocumentAsync(int id, UploadDocumentRequest document)
+        public async Task<HttpResponseMessage> UpdateDocumentAsync(int id, UploadDocumentRequest document)
         {
 
             try
@@ -60,7 +60,7 @@ namespace HIVE.Client.Services
                 {
                     Document = await result.Content.ReadFromJsonAsync<Document>() ?? throw new InvalidOperationException();
                 }
-                return Document;
+                return result;
             }
             catch (Exception ex)
             {
@@ -77,13 +77,17 @@ namespace HIVE.Client.Services
 
         public async Task<List<Document>?> GetAllDocuments()
         {
-            var response = await _client.GetFromJsonAsync<List<Document>>("api/Document");
-            if (response is not null)
-            {
-                Documents = response;
-            }
 
-            return Documents;
+            try
+            {
+                var response = await _client.GetFromJsonAsync<List<Document>>("api/Document/documents");
+                return response;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                throw;
+            }
         }
 
         public async Task<Document> GetDocumentAsyncById(int id)
@@ -121,16 +125,16 @@ namespace HIVE.Client.Services
 
         public async Task<HttpResponseMessage> DeleteDocuments(int id)
         {
-            var response = await _client.DeleteAsync($"api/Document/archivist/delete/{id}");
+            var response = await _client.DeleteAsync($"api/Document/archivist/document/delete/{id}");
             return response;
         }
 
 
-        public async Task<IEnumerable<Document>> GetMyDocumentsAsync(string owner)
+        public async Task<HttpResponseMessage> GetMyDocumentsAsync(string owner)
         {
             var accessToken = await _customAuthenticationStateProvider.GetToken();
             _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
-            var response = await _client.GetFromJsonAsync<List<Document>>($"api/Document/{owner}");
+            var response = await _client.GetAsync($"api/Document/documents/{owner}");
             return  response;
         }
 
@@ -157,9 +161,9 @@ namespace HIVE.Client.Services
             return response;
         }
 
-        public async Task<HttpResponseMessage> RestoreDocument(int id)
+        public async Task<HttpResponseMessage> RestoredDocument(int id)
         {
-            var response = await _client.GetAsync($"api/Document/archivist/document/restore/{id}");
+            var response = await _client.GetAsync($"api/Document/archivist/document/trash/restored/{id}");
             return response;
         }
 
@@ -193,5 +197,10 @@ namespace HIVE.Client.Services
             return response ?? throw new InvalidOperationException();
         }
 
+        public async Task<List<string>> DocumentTitles()
+        {
+            var response = await _client.GetFromJsonAsync<List<string>>("api/Document/titles");
+            return response;
+        }
     }
 }

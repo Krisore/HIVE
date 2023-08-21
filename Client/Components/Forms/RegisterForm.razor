@@ -1,4 +1,4 @@
-﻿
+﻿@page "/register"
 @using System.ComponentModel.DataAnnotations
 @using System.Text.RegularExpressions
 @using Microsoft.AspNetCore.Components
@@ -6,98 +6,115 @@
 @inject NavigationManager NavigationManager
 @inject IDialogService DialogService
 @inject ISnackbar Snack
-<MudForm @ref="_form" Model="_registerUserAccount" @bind-IsValid="@_success" @bind-Errors="@_errors">
-    <MudCardHeader>
-        <CardHeaderAvatar>
-            <MudAvatar Style="height:70px; width:70px;" Image="image/Pup_logo.jpg"></MudAvatar>
-        </CardHeaderAvatar>
-        <CardHeaderContent>
-            <MudText Typo="Typo.body1"> Polytechnic University of the Philippines</MudText>
-            <MudText Typo="Typo.caption"> Biñan Campus</MudText>
-        </CardHeaderContent>
-    </MudCardHeader>
-    <MudDivider Class="mb-1" />
-    <MudCardMedia Style="height: 120px" Image="/image/sample.jpg" />
-    <MudDivider Class="my-1" />
-    <MudCardContent>
-        <MudAlert Severity="Severity.Info" Dense="true" Class="rounded-0 my-2 rounded-t"> Please use gmail account for Verification </MudAlert>
-        <MudTextField T="string"
-                      Class="my-2"
-                      Margin="Margin.Dense"
-                      Label="Username"
-                      Variant="Variant.Outlined"
-                      Required="true" @bind-Value="_registerUserAccount.UserName"
-                      RequiredError="User name is required!" />
-        <div class="d-flex inline">
-            <MudTextField T="string"
-                          Class="my-2 mx-1"
-                          Margin="Margin.Dense"
-                          Label="Firstname"
-                          Variant="Variant.Outlined"
-                          Required="true" @bind-Value="_registerUserAccount.FirstName"
-                          RequiredError="First name is required!" />
-            <MudTextField T="string"
-                          Class="my-2 mx-1"
-                          Margin="Margin.Dense"
-                          Label="Lastname"
-                          Variant="Variant.Outlined"
-                          Required="true" @bind-Value="_registerUserAccount.LastName"
-                          RequiredError="Last name is required!" />
-        </div>
-        <MudTextField T="string"
-                      Class="my-2"
-                      Margin="Margin.Dense"
-                      Label="Email"
-                      For="@(() => _registerUserAccount.Email)"
-                      Variant="Variant.Outlined"
-                      Required="true" @bind-Value="_registerUserAccount.Email"
-                      RequiredError="Email is required!"
-                      Validation="@(new Func<string, IEnumerable<string>>(EmailValidation))" />
-        <MudTextField T="string" @bind-Value="_registerUserAccount.Password"
-                      Class="my-2"
-                      Variant="Variant.Outlined"
-                      Label="Password"
-                      HelperText="Choose a strong password" @ref="_pwField1"
-                      InputType="InputType.Password"
-                      Margin="Margin.Dense"
-                      Validation="@(new Func<string, IEnumerable<string>>(PasswordStrength))" Required="true"
-                      RequiredError="Password is required!" />
-        <MudTextField T="string"
-                      Class="my-2"
-                      @bind-Value="_registerUserAccount.ConfirmPassword"
-                      Variant="Variant.Outlined"
-                      Margin="Margin.Dense"
-                      Label="Confirm Password"
-                      HelperText="Repeat the password"
-                      InputType="InputType.Password"
-                      Validation="@(new Func<string, string>(PasswordMatch))" />
-    </MudCardContent>
-    <MudDivider />
-    <MudCardActions>
-        <div class="ml-auto">
-            <MudButton Class="rounded-0" Variant="Variant.Outlined" OnClick="Cancel"> Cancel </MudButton>
-            <MudButton Class="ml-3 rounded-0" Variant="Variant.Filled" Color="Color.Primary" Disabled="@(!_success)" OnClick="OnHandleSubmit">Register</MudButton>
-        </div>
-    </MudCardActions>
-</MudForm>
+<MudContainer MaxWidth="MaxWidth.Small">
+    <MudForm @ref="_form" Model="_registerUserAccount" @bind-IsValid="@_success" @bind-Errors="@_errors">
+        <MudCard Elevation="4">
+            <MudCardHeader>
+                <CardHeaderAvatar>
+                    <MudAvatar Elevation="2" Style="height: 70px; width: 70px;" Image="image/Pup_logo.jpg"></MudAvatar>
+                </CardHeaderAvatar>
+                <CardHeaderContent>
+                    <MudText Typo="Typo.body1"> Polytechnic University of the Philippines</MudText>
+                    <MudText Typo="Typo.caption"> Biñan Campus</MudText>
+                </CardHeaderContent>
+            </MudCardHeader>
+            <MudDivider Class="mb-1" />
+            <MudCardMedia Style="height: 120px" Image="/image/sample.jpg" />
+            <MudDivider Class="my-1" />
+            <MudCardContent>
+                <MudTextField T="string"
+                              Class="my-2"
+                              Margin="Margin.Dense"
+                              Label="Username"
+                              Variant="Variant.Outlined"
+                              Required="true" @bind-Value="_registerUserAccount.UserName"
+                              RequiredError="User name is required!" />
+                <div class="d-flex inline">
+                    <MudTextField T="string"
+                                  Class="my-2 mx-1"
+                                  Margin="Margin.Dense"
+                                  Label="Firstname"
+                                  Variant="Variant.Outlined"
+                                  Required="true" @bind-Value="_registerUserAccount.FirstName"
+                                  RequiredError="First name is required!" />
+                    <MudTextField T="string"
+                                  Class="my-2 mx-1"
+                                  Margin="Margin.Dense"
+                                  Label="Lastname"
+                                  Variant="Variant.Outlined"
+                                  Required="true" @bind-Value="_registerUserAccount.LastName"
+                                  RequiredError="Last name is required!" />
+                </div>
+                <MudTextField T="string"
+                              Class="my-2"
+                              Margin="Margin.Dense"
+                              Label="Email"
+                              For="@(() => _registerUserAccount.Email)"
+                              Variant="Variant.Outlined"
+                              HelperText="Having trouble with your PUP Web Mail ? contact the webmail@pup.edu.ph for help."
+                              Required="true" @bind-Value="_registerUserAccount.Email"
+                              RequiredError="Email is required!"
+                              Validation="@(new Func<string, IEnumerable<string>>(EmailValidation))" />
+                <MudTextField T="string" @bind-Value="_registerUserAccount.Password"
+                              Class="my-2"
+                              Variant="Variant.Outlined"
+                              Label="Password"
+                              HelperText="Choose a strong password" @ref="_pwField1"
+                              InputType="InputType.Password"
+                              Margin="Margin.Dense"
+                              Validation="@(new Func<string, IEnumerable<string>>(PasswordStrength))" Required="true"
+                              RequiredError="Password is required!" />
+                <MudTextField T="string"
+                              Class="my-2"
+                              @bind-Value="_registerUserAccount.ConfirmPassword"
+                              Variant="Variant.Outlined"
+                              Margin="Margin.Dense"
+                              Label="Confirm Password"
+                              HelperText="Repeat the password"
+                              InputType="InputType.Password"
+                              Validation="@(new Func<string, string>(PasswordMatch))" />
+                <div class="d-flex inline">
+                    <MudCheckBox Dense="true" T="bool" @bind-Checked="LicenseAccepted" Required="true" Color="Color.Primary" UnCheckedColor="Color.Default" Size="Size.Small"/>
+                    <MudChip Label="true" Size="Size.Small" OnClick="OpenTermsAndCondition"> Terms and Condition</MudChip>
+                </div>
+                
+            </MudCardContent>
+            <MudDivider />
+            <MudCardActions>
+                <div class="ml-auto">
+                    <MudButton Class="rounded-0" Variant="Variant.Outlined" OnClick="Cancel"> Cancel </MudButton>
+                    <MudButton Class="ml-3 rounded-0" Variant="Variant.Filled" Color="Color.Primary" Disabled="@(!_success)" OnClick="OnHandleSubmit">Sign Up</MudButton>
+                </div>
+            </MudCardActions>
+        </MudCard>
+    </MudForm>
+</MudContainer>
 @code {
     private UserRegisterRequest _registerUserAccount = new();
     bool _success;
+    private bool LicenseAccepted { get; set; } = false;
     MudForm? _form;
     [CascadingParameter] MudDialogInstance MudDialog { get; set; }
-    private List<string?> _emails = new();
+    private List<string> _emails = new();
 
     MudTextField<string> _pwField1;
 
     private DialogOptions _options = new DialogOptions
-        {
-            DisableBackdropClick = true,
-            CloseOnEscapeKey = false,
-            FullWidth = true,
-            MaxWidth = MaxWidth.Medium,
-            CloseButton = false,
-            Position = DialogPosition.TopCenter
-        };
+    {
+        DisableBackdropClick = true,
+        CloseOnEscapeKey = false,
+        FullWidth = true,
+        MaxWidth = MaxWidth.Medium,
+        CloseButton = false,
+        Position = DialogPosition.TopCenter
+    };
+    private DialogOptions Login = new DialogOptions()
+    {
+        Position = DialogPosition.TopCenter,
+        CloseButton = false,
+        NoHeader = true,
+        DisableBackdropClick = false,
+    };
 
     string[] _errors = { };
 
@@ -125,8 +142,14 @@
                 config.IconColor = Color.Success;
                 config.IconSize = Size.Large;
             });
-            await DialogService.ShowAsync<VerifyForm>("Verify your account");
-            MudDialog.Close(DialogResult.Ok(true));
+          var result =  await DialogService.ShowAsync<VerifyForm>("Verify your account");
+            
+            var login = await result.Result;
+            if (!login.Canceled)
+            {
+                NavigationManager.NavigateTo("/", true);
+            }
+             
         }
     }
     private IEnumerable<string> PasswordStrength(string pw)
@@ -148,9 +171,13 @@
     private IEnumerable<string> EmailValidation(string email)
     {
         var emails = _emails;
-        if (emails != null && emails.Any(e => e.ToLower().Equals(email.ToLower())))
+        if (emails.Any(e => e.ToLower().Equals(email.ToLower())))
         {
             yield return "Email is already taken";
+        }
+        if (email.Contains("pup.edu.ph") == false)
+        {
+            yield return "PUP Web Mail is invalid, contact the webmail@pup.edu.ph";
         }
     }
     private string PasswordMatch(string arg)
@@ -159,5 +186,23 @@
             return "Passwords don't match";
         return null;
     }
-    void Cancel() => MudDialog.Cancel();
+
+    void Cancel() => NavigationManager.NavigateTo("/", true);
+    private readonly DialogOptions _logInDialog = new()
+    {
+        Position = DialogPosition.TopCenter,
+        CloseButton = false,
+        NoHeader = true,
+        DisableBackdropClick = false,
+    };
+
+    async Task OpenTermsAndCondition()
+    {
+        var result = await DialogService.Show<DialogTermsAndCondition>("Terms and Conditions for PUP Hive:").Result;
+        if (!result.Canceled)
+        {
+            LicenseAccepted = (bool)(result.Data ?? false);
+           
+        }
+    }
 }

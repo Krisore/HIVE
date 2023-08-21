@@ -1,10 +1,14 @@
-﻿using HIVE.Server.Repository;
+﻿using HIVE.Server.Data;
+using HIVE.Server.Repository;
 using HIVE.Server.Repository.Interface;
+using HIVE.Server.Services.Interface;
 using HIVE.Shared.Model;
 using HIVE.Shared.Request;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 
 namespace HIVE.Server.Controllers
 {
@@ -17,15 +21,18 @@ namespace HIVE.Server.Controllers
         public DocumentController(IDocumentRepository repository)
         {
             _repository = repository;
+           
         }
-
         private Document Document { get; set; } = new();
-        private List<Document> Documents { get; set; } = new();
-        [HttpGet]
+        [HttpGet("documents")]
         public async Task<ActionResult<List<Document>>> GetDocumentsAsync()
         {
-            Documents = await _repository.GetDocumentsAsync();
-            return Ok(Documents);
+            var response = await _repository.GetDocumentsAsync();
+            if (response.IsNullOrEmpty())
+            {
+                return NotFound(response);
+            }
+            return Ok(response);
         }
         [HttpGet("{id:int}")]
         public async Task<ActionResult<Document>> GetDocumentAsyncById(int id)
@@ -42,7 +49,7 @@ namespace HIVE.Server.Controllers
             return Ok();
         }
         [HttpGet]
-        [Route("{owner}")]
+        [Route("documents/{owner}")]
         [Authorize(Roles = "User")]
         public async Task<ActionResult<List<Document>>> GetMyDocuments(string owner)
         {
@@ -64,7 +71,7 @@ namespace HIVE.Server.Controllers
             return NotFound();
         }
         [HttpPut]
-        [Route("update/{id}")]
+        [Route("update/{id:int}")]
         public async Task<ActionResult<Document>> UpdateDocumentAsync(int id, UploadDocumentRequest document)
         {
             try
@@ -75,8 +82,8 @@ namespace HIVE.Server.Controllers
             catch (Exception ex)
             {
                 Console.WriteLine($"{ex.Message}");
+                throw;
             }
-            return NotFound();
         }
         [HttpGet]
         [Route("Get/{id:int}")]
@@ -118,6 +125,13 @@ namespace HIVE.Server.Controllers
             return Ok();
         }
         [HttpGet]
+        [Route("archivist/document/trash/restored/{id:int}")]
+        public async Task<ActionResult> Restore(int id)
+        {
+            await _repository.RestoreDocument(id);
+            return Ok();
+        }
+        [HttpDelete]
         [Route("archivist/document/delete/{id:int}")]
         public async Task<ActionResult> DeleteAsync(int id)
         {
@@ -129,13 +143,6 @@ namespace HIVE.Server.Controllers
         public async Task<ActionResult> UnArchiveDocument(int id)
         {
             await _repository.UnArchiveDocument(id);
-            return Ok();
-        }
-        [HttpGet]
-        [Route("archivist/document/trash/restore/{id:int}")]
-        public async Task<ActionResult> Restore(int id)
-        {
-            await _repository.RestoreDocument(id);
             return Ok();
         }
         [HttpGet]
@@ -157,6 +164,14 @@ namespace HIVE.Server.Controllers
         public async Task<ActionResult<List<Document>>> GetDocumentsInTrashAsync()
         {
             var response = await _repository.GetTrashedDocumentsAsync();
+            return Ok(response);
+        }
+
+        [HttpGet]
+        [Route("titles")]
+        public async Task<ActionResult<List<string>>> GetTitles()
+        {
+            var response = await _repository.DocumentsTitle();
             return Ok(response);
         }
 

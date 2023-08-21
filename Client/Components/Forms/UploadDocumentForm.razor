@@ -1,5 +1,6 @@
 ﻿@using Microsoft.AspNetCore.Components.Forms
 @inject IDocumentService DocumentService
+@inject IDocumentHistoryService DocumentHistoryService
 @inject IDocumentReferenceService DocumentReferenceService
 @inject ICurriculumService CurriculumService
 @inject IAdviserService AdviserService
@@ -13,6 +14,7 @@
     <Authorized>
         <MudContainer MaxWidth="MaxWidth.Medium">
             <MudCard>
+                <MudForm Model="@RequestDocument" @ref="form" @bind-IsValid="_success">
                 <MudCardHeader>
                     <CardHeaderAvatar>
                         <MudAvatar Color="Color.Primary"> @context.User.Identity.Name[0] </MudAvatar>
@@ -21,19 +23,26 @@
                         <MudText Typo="Typo.body1">@context.User.Identity.Name</MudText>
                         <MudText Typo="Typo.caption"> @DateTime.Now.ToLongDateString()</MudText>
                     </CardHeaderContent>
+                    <CardHeaderActions>
+                        <MudTooltip Text="Document Privacy" Arrow="true">
+                            <MudChip Variant="Variant.Text" Color="Color.Primary" Class="rounded-0 rounded-l-xl"><span>@(RequestDocument.IsOpenAccess ? "Public" : "Private")</span></MudChip>
+                        </MudTooltip>
+                        <MudToggleIconButton @bind-Toggled="@RequestDocument.IsOpenAccess"
+                                             Icon="@Icons.Material.Filled.Lock" Color="@Color.Error" Title="Private"
+                                             ToggledIcon="@Icons.Material.Filled.LockOpen" ToggledColor="@Color.Success" ToggledTitle="Public"/>
+                    </CardHeaderActions>
                 </MudCardHeader>
                 <MudDivider></MudDivider>
-                <MudForm Model="RequestDocument" @bind-IsValid="_success">
-                    <MudCardContent>
-                        <MudAlert Class="my-1" Variant="Variant.Text" Severity="Severity.Normal" Dense="true"> Fill up this form to Publish your Document</MudAlert>
-                        <MudTextField @bind-Value="RequestDocument.Title"
+                <MudCardContent>
+                        <MudTextField T="string"
+                                      @bind-Value="RequestDocument.Title"
                                       For="@(() => RequestDocument.Title)"
-                                      Immediate="true"
                                       Margin="Margin.Dense"
                                       Label="Title"
                                       Variant="Variant.Outlined"
                                       Required="true"
-                                      RequiredError="Title is required"/>
+                                      RequiredError="Title is required"
+                                      Validation="@(new Func<string, IEnumerable<string>>(DocumentValidation))" />
                         <MudTextField @bind-Value="RequestDocument.Abstract"
                                       For="@(() => RequestDocument.Abstract)"
                                       Immediate="true"
@@ -62,21 +71,23 @@
 
                             <MudAutocomplete T="Reference"
                                              Class="mx-1"
-                                             RequiredError="Document Type is Required"
-                                             Label="Document Type"
+                                             CoerceText="true"
+                                             CoerceValue="true"
+                                             RequiredError="Project Type is Required"
+                                             Label="Project Type"
                                              @bind-Value="@_selectedDocumentType"
                                              SearchFunc="@SearchDocumentType" ToStringFunc="@(e => e == null ? null : $"{e.Name}")"
                                              Variant="Variant.Outlined"
                                              Dense="true"
                                              Margin="Margin.Dense"/>
                         </div>
-
-                        <MudDivider Class="my-2"/>
                         <div class="d-flex inline my-2">
 
                             <MudAutocomplete T="Adviser"
                                              Class="mx-1"
                                              Required="true"
+                                             CoerceText="true"
+                                             CoerceValue="true"
                                              RequiredError="Adviser is Required"
                                              Clearable="true"
                                              Label="Project Adviser"
@@ -88,6 +99,8 @@
 
                             <MudAutocomplete T="Curriculum"
                                              Class="mx-1"
+                                             CoerceText="true"
+                                             CoerceValue="true"
                                              RequiredError="Academic Program is Required"
                                              Clearable="true"
                                              Label="Academic Program"
@@ -101,37 +114,45 @@
                         <div class="d-flex inline">
                             <MudDatePicker @bind-Date="RequestDocument.DatePublished"
                                            Required="true"
+                                           AdornmentColor="Color.Primary"
                                            Class="my-2"
+                                           Editable="true"
                                            For="@(() => RequestDocument.DatePublished)"
                                            PickerVariant="PickerVariant.Dialog"
-                                           Label="Date Upload"
+                                           Label="Date published"
+                                           DateFormat="dd.MM.yyyy"
                                            OpenTo="OpenTo.Date"
                                            Orientation="Orientation.Portrait"
                                            Variant="Variant.Outlined"
                                            Margin="Margin.Dense"/>
                             <div class="d-block mt-2 mx-2">
-                                <MudRadioGroup @bind-SelectedOption="RequestDocument.IsOpenAccess" Class="mx-2">
-                                    <MudRadio Size="Size.Small" Option="true" Color="Color.Primary" Dense="true">Public</MudRadio>
-                                    <MudRadio Size="Size.Small" Option="false" Color="Color.Secondary" Dense="false">Private</MudRadio>
-                                </MudRadioGroup>
+                                <MudSelect Margin="Margin.Dense" @bind-Value="RequestDocument.Status" 
+                                           For="@(() => RequestDocument.Status)"
+                                           Required="true"
+                                           AdornmentIcon="@Icons.Custom.Uncategorized.ColorPalette" 
+                                           AdornmentColor="Color.Primary" T="string" Label="Version Status" Variant="Variant.Outlined">
+                                    <MudSelectItem Value="@("Draft")" />
+                                    <MudSelectItem Value="@("Under review")" />
+                                </MudSelect>
                             </div>
                         </div>
                         <MudDivider Class="my-2"/>
-                        <MudAlert Class="my-2" Variant="Variant.Text" Severity="@Severity" Dense="true"> @_text</MudAlert>
                         <div class="d-flex inline">
-                            <MudFileUpload Class="mx-2" T="IBrowserFile" Accept=".pdf" FilesChanged="OnInputFileChange">
-                                <ButtonTemplate Context="john">
-                                    <MudFab HtmlTag="label"
-                                            Color="Color.Primary"
-                                            Icon="@Icons.Material.Filled.FilePresent"
-                                            for="@john"/>
-                                </ButtonTemplate>
-                            </MudFileUpload>
+                            <MudTooltip Text="Upload File" Arrow="true">
+                                <MudFileUpload Class="mx-2" T="IBrowserFile" Accept=".pdf" FilesChanged="OnInputFileChange">
+                                    <ButtonTemplate Context="john">
+                                        <MudFab HtmlTag="label"
+                                                Color="Color.Primary"
+                                                Icon="@Icons.Material.Filled.FilePresent"
+                                                for="@john"/>
+                                    </ButtonTemplate>
+                                </MudFileUpload>
+                            </MudTooltip>
                             @if (Id != null)
                             {
                                 @foreach (var file in Files.Where(f => f.Id == RequestDocument.FileId))
                                 {
-                                    <MudListItem Icon="@Icons.Material.Filled.AttachFile" OnClick="@(()=>OnRemoveFile(file.Id))">
+                                    <MudListItem Icon="@Icons.Material.Filled.AttachFile">
                                         <MudText Typo="Typo.caption"> Old attached File :  @file.FileName</MudText>
                                         <MudChip Color="Color.Error" Variant="Variant.Text" Label="true">
                                             <code>@file.Size bytes</code>
@@ -143,15 +164,35 @@
                             {
                                 <MudListItem Icon="@Icons.Material.Filled.AttachFile" @key="@File">
                                     <MudText Typo="Typo.caption"> New Attached File : @File.Name</MudText>
-                                    <MudChip Color="Color.Error" Variant="Variant.Text" Label="true"> <code>@File.Size bytes</code>
-                                    </MudChip>
+                                    @if (string.IsNullOrWhiteSpace(_isExist))
+                                    {
+                                    <MudChip Color="Color.Error" Variant="Variant.Text" Label="true">
+                                    <code>@File.Size bytes</code>
+                                        </MudChip>
+                                    }
+                                    else
+                                    {
+                                        <MudChip Color="Color.Error" Variant="Variant.Text" Label="true">
+                                            <code>@_isExist</code>
+                                        </MudChip>
+                                    }
                                 </MudListItem>
                             }
                         </div>
+                        <MudDivider Class="my-3" />
+                        <MudCheckBox Dense="true" T="bool" For="@(() => RequestDocument.IsConfirmForPlagiarism)" @bind-Checked="@RequestDocument.IsConfirmForPlagiarism" Required="true" Color="Color.Primary" UnCheckedColor="Color.Default" Size="Size.Small">
+                            <MudText Typo="Typo.caption">I confirm that this document has been checked for plagiarism.</MudText>
+                        </MudCheckBox>
+                        <MudCheckBox Dense="true" T="bool" For="@(() => RequestDocument.IsConfirmedForGrammarAndStatistic)" @bind-Checked="@RequestDocument.IsConfirmedForGrammarAndStatistic" Required="true" Color="Color.Primary" UnCheckedColor="Color.Default" Size="Size.Small">
+                            <MudText Typo="Typo.caption">I confirm that this document has been checked for grammar and statistics.</MudText>
+                        </MudCheckBox>
+                        <MudCheckBox Dense="true" T="bool" For="@(() => RequestDocument.IsAgree)" @bind-Checked="@RequestDocument.IsAgree" Required="true" Color="Color.Primary" UnCheckedColor="Color.Default" Size="Size.Small">
+                            <MudText Typo="Typo.caption">I have read and understood, <MudText Typo="Typo.caption" @onclick="OpenDocumentPolicy" Color="Color.Primary"> <strong><u> the privacy policy for documents. </u> </strong>  </MudText></MudText>
+                        </MudCheckBox>
                     </MudCardContent>
-                    <MudDivider></MudDivider>
+                    <MudDivider DividerType="DividerType.FullWidth"/>
                     <MudCardActions>
-                        <div class="mx-auto">
+                        <div class="ml-auto">
                             <MudButton Class="mx-2 my-2 rounded-0"
                                        ButtonType="ButtonType.Reset"
                                        Variant="Variant.Outlined"
@@ -160,14 +201,27 @@
                                        Disabled="false">
                                 Clear
                             </MudButton>
-                            <MudButton Class="mx-2 my-2 rounded-0"
-                                       Disabled="@(!_success)"
-                                       Variant="Variant.Filled"
-                                       Color="Color.Primary"
-                                       OnClick="HandleSubmit"
-                                       DisableElevation="true">
-                                @_buttonText
-                            </MudButton>
+                           @if (Id is not null)
+                           {
+                               <MudButton Class="mx-2 my-2 rounded-0"
+                                          Variant="Variant.Filled"
+                                          Color="Color.Primary"
+                                          OnClick="HandleSubmit"
+                                          DisableElevation="true">
+                                   @_buttonText
+                               </MudButton>
+                           }
+                           else
+                           {
+                               <MudButton Class="mx-2 my-2 rounded-0"
+                                          Disabled="@(!_success)"
+                                          Variant="Variant.Filled"
+                                          Color="Color.Primary"
+                                          OnClick="HandleSubmit"
+                                          DisableElevation="true">
+                                   @_buttonText
+                               </MudButton>
+                           }
                         </div>
                     </MudCardActions>
                 </MudForm>
@@ -179,11 +233,14 @@
 @code {
 
     private UploadDocumentRequest RequestDocument { get; set; } = new();
+    string[] _formError = { };
     [Parameter]
     public int? Id { get; set; } 
+    private IEnumerable<Document>? Documents { get; set; }
     private Activity _activity = new();
     string _buttonText = "Submit";
     string _userName = string.Empty;
+    private List<string> Titles = new List<string>();
     private List<Reference> Types { get; set; } = new();
     private List<CreateTopic> _selectedTopics = new();
     private List<Topic> _topics = new();
@@ -195,14 +252,24 @@
     private List<string> _errors = new();
     private Document _document = new();
     private string _text = "File must be Portable Document Format";
-    public Severity Severity = Severity.Info;
+    private Severity _severity = Severity.Info;
     bool _success;
+    string _isExist = "";
     MudForm? _form;
     [CascadingParameter]
     public Task<AuthenticationState>? Authenticate { get; set; }
-
+    async Task OpenDocumentPolicy()
+    {
+        var result = await DialogService.Show<DialogDocumentPrivacy>("Privacy policy for documents. 📑").Result;
+        if (!result.Canceled)
+        {
+            RequestDocument.IsAgree = (bool)(result.Data ?? false);
+           
+        }
+    }
     protected override async Task OnParametersSetAsync()
     {
+
         var customAuthStateProvider = (CustomAuthenticationStateProvider)AuthenticationStateProvider;
         Authenticate = customAuthStateProvider.GetAuthenticationStateAsync();
         if (Authenticate != null)
@@ -213,7 +280,6 @@
                 RequestDocument.UploaderEmail = account.User.Identity.Name!;
             }
         }
-        
 
         if (Id != null)
         {
@@ -221,6 +287,10 @@
             var files = await FileService.GetAllFiles();
             Files = files;
             RequestDocument = response;
+            RequestDocument.Topics = response.Topics;
+            _selectedAcademicProgram = await CurriculumService.GetCurriculumById(RequestDocument.CurriculumId);
+            _selectedAdviser = await AdviserService.GetAdviserAsync(RequestDocument.AdviserId);
+            _selectedDocumentType = await DocumentReferenceService.GetReferenceById(RequestDocument.AdviserId);
             var authenticate = await Authenticate;
             if (authenticate.User.Identity is {Name: { } })
             {
@@ -230,12 +300,30 @@
 
 
     }
+    private IEnumerable<string> DocumentValidation(string document)
+    {
+        var documents = Titles;
+        if (documents.Any(d => d.ToLower().Equals(document.ToLower())) && Id is null)
+        {
+            yield return "Document Title is already taken";
+        }
+    }
     private IBrowserFile? File;
     private FileEntry _onFileEntry = new();
-    private Task OnInputFileChange(IBrowserFile? e)
+    MudForm? form;
+    private async Task OnInputFileChange(IBrowserFile? e)
     {
         this.File = e;
-        return Task.CompletedTask;
+        _isExist = "";
+        Files = await FileService.GetAllFiles();
+        if (Files.Any(f => File != null && f.FileName != null && f.FileName.ToLower().Equals(File.Name.ToLower())))
+        {
+            await DialogService.ShowMessageBox(
+                "This file is already uploaded", 
+                "Your file name is already exist.",
+                "Ok");
+            _isExist = "This file is already exist.";
+        }
     }
     private async Task<int> FileUploadAsync()
     {
@@ -267,6 +355,8 @@
                 RequestDocument.UploaderEmail =  account.User.Identity.Name!;
             }
         }
+        var response = await DocumentService.DocumentTitles();
+        Titles = response;
     }
     private async Task<IEnumerable<Reference>> SearchDocumentType(string value)
     {
@@ -324,11 +414,19 @@
                 RequestDocument.ReferenceId = _selectedDocumentType.Id;
                 if (IsValid(RequestDocument))
                 {
-                    var response = await DocumentService.UpdateDocumentAsync(((int)Id), RequestDocument);
+                    var response = await DocumentService.UpdateDocumentAsync(RequestDocument.Id, RequestDocument);
                     Snack.Add("Processing to Author Form", Severity.Info);
-                    await DialogService.ShowMessageBox("Uploaded Successful! ✔️", "You will be navigate to your Profile", "Ok");
+                    await DialogService.ShowMessageBox("Uploaded Successful! ✔️", "You will be navigate to Author form", "Ok");
                     var log =  await ActivityLog.WriteLog($"{RequestDocument.UploaderEmail}", $"Upload a Document Titled: {RequestDocument.Title}", "UPLOAD", "USER");
-                    if (log.IsSuccessStatusCode)
+                    var history = new DocumentHistory
+                    {
+                        Title = "Modified",
+                        ModifiedDate = DateTime.Now,
+                        DocumentId = RequestDocument.Id,
+                        Owner = RequestDocument.UploaderEmail
+                    };
+                    var documentHistory = await DocumentHistoryService.InsertDocumentModified(history);
+                    if (log.IsSuccessStatusCode || documentHistory.IsSuccessStatusCode)
                     {
                         Navigation.NavigateTo($"/document-author/{(int)Id}");
                     }
@@ -392,13 +490,5 @@
         }
         return true;
 
-    }
-    private async void OnRemoveFile(int id)
-    {
-        var result = await FileService.DeleteFileAsync(id);
-        if (result.IsSuccessStatusCode)
-        {
-            StateHasChanged();
-        }
     }
 }

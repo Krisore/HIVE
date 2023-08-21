@@ -3,6 +3,7 @@
 @inject IDialogService DialogService
 @inject IActivityLog ActivityLog
 <MudTable T="Document" ServerData="@(new Func<TableState, Task<TableData<Document>>>(ServerReload))"
+          Loading="@_isLoading" LoadingProgressColor="Color.Primary"
           Dense="true" Hover="true" @ref="_table" Bordered="false" Striped="true" MultiSelection="true" @bind-SelectedItems="_selectedItems">
     <ToolBarContent>
         <MudTextField Variant="Variant.Outlined" T="string" ValueChanged="@(OnSearch)" Placeholder="Search" Adornment="Adornment.End"
@@ -24,16 +25,6 @@
             </MudChip>
         </MudChip>
         <div class="mx-5">
-            <MudTooltip Text="Un-archive Selected Document" Arrow="true">
-                <MudIconButton Class=" mx-2"
-                               Variant="Variant.Text"
-                               DisableElevation="true"
-                               Color="Color.Info"
-                               Size="Size.Medium"
-                               OnClick="Archived"
-                               Icon="@Icons.Material.Filled.Unarchive">
-                </MudIconButton>
-            </MudTooltip>
             <MudTooltip Text="Delete Selected  Document" Arrow="true">
                 <MudIconButton Class=" mx-2"
                                Variant="Variant.Text"
@@ -135,6 +126,7 @@
     private HashSet<Document> _selectedItems = new();
     private HashSet<FileEntry> _selectedFiles = new();
     private List<FileEntry> _files = new();
+    private bool _isLoading = true;
     private string _documentSearch = string.Empty;
     private int _totalItems;
     private int _totalDocuments;
@@ -145,6 +137,7 @@
 
     private async Task<TableData<Document>> ServerReload(TableState state)
     {
+        _isLoading = true;
         IEnumerable<Document> documents = await DocumentService.GetDocumentsInTrash();
         IEnumerable<Document> data = documents;
         data = data.OrderByDescending(d => d.IsActive);
@@ -169,6 +162,7 @@
             "uploaded" => data.OrderByDirection(state.SortDirection, o => o.DateUploaded),
             _ => data
         };
+        _isLoading = false;
         _pagedData = data.Skip(state.Page * state.PageSize).Take(state.PageSize).ToArray();
         return new TableData<Document>() { TotalItems = _totalItems, Items = _pagedData };
 
@@ -216,22 +210,7 @@
             ["Documents"] = _selectedItems
         };
 
-        var dialog = await DialogService.ShowAsync<DialogToDeleteDocuments>("Are you really want to Delete these?", parameter);
-        var result = await dialog.Result;
-        if (!result.Canceled)
-        {
-            await _table.ReloadServerData();
-        }
-        _errors.Clear();
-        _archiveList.Clear();
-    }
-    private async void Archived()
-    {
-        var parameter = new DialogParameters
-        {
-            ["Documents"] = _selectedItems,
-        };
-        var dialog = await DialogService.ShowAsync<DialogToArchive>("Are you really want to archive these?", parameter);
+        var dialog = await DialogService.ShowAsync<DialogeRestoreTrashDocument>("Are you really want to Restore these?", parameter);
         var result = await dialog.Result;
         if (!result.Canceled)
         {

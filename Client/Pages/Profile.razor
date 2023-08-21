@@ -1,5 +1,6 @@
 ﻿
 @page "/profile"
+@using HIVE.Client.Components.Diaolog.UserDialog
 @inject NavigationManager NavigationManager
 @inject ISnackbar Snack
 @inject IDialogService DialogService
@@ -7,15 +8,36 @@
 @inject IUserService UserService
 <AuthorizeView Roles="User">
     <Authorized>
-        <MudContainer MaxWidth="MaxWidth.Large">
-            <MudTabs Centered="true">
-                <MudTabPanel Text="My Publication">
-                    <MyPublication UserId="@_userId" />
-                </MudTabPanel>
-                <MudTabPanel Text="Profile">
-                    <MyAccount/>
-                </MudTabPanel>
-            </MudTabs>
+        <MudContainer MaxWidth="MaxWidth.ExtraExtraLarge">
+            <MudCard>
+                <MudCardHeader>
+                    <CardHeaderAvatar>
+                        <MudAvatar Elevation="2" Size="Size.Large" Color="Color.Primary">
+                            @context.User.Identity.Name.ToUpper().ToCharArray()[0]
+                        </MudAvatar>
+                    </CardHeaderAvatar>
+                    <CardHeaderContent>
+                        <MudText Typo="Typo.body2">@User.LastName, @User.FirstName</MudText>
+                        <MudText Typo="Typo.caption">@context.User.Identity.Name</MudText>
+                    </CardHeaderContent>
+                    <CardHeaderActions>
+                        <MudTooltip Text="Account Setting" Arrow="true">
+                            <MudIconButton Icon="@Icons.Material.Filled.ManageAccounts" OnClick="@(() => EditUserAccount(_userId))" />
+                        </MudTooltip>
+                    </CardHeaderActions>
+                </MudCardHeader>
+                <MudDivider Class="my-2"/>
+                <MudCardContent>
+                    <MudTabs Centered="false">
+                        <MudTabPanel Text="My Document" Icon="@Icons.Material.Filled.SnippetFolder">
+                            <MyPublication UserId="@_userId"/>
+                        </MudTabPanel>
+                        <MudTabPanel Text="My Bin" Icon="@Icons.Material.Rounded.FolderDelete">
+                            <MyTrash Username="@context.User.Identity.Name"/>
+                        </MudTabPanel>
+                    </MudTabs>
+                </MudCardContent>
+            </MudCard>
         </MudContainer>
     </Authorized>
     <NotAuthorized>
@@ -27,5 +49,31 @@
     public Task<AuthenticationState>? Authenticate { get; set; }
     private User User { get; set; } = new();
     private int _userId;
+    protected override async Task OnInitializedAsync()
+    {
+        if (Authenticate != null)
+        {
+            var authenticatedUser = await Authenticate;
+            if (authenticatedUser.User.Identity != null)
+            {
+                var email = authenticatedUser.User.Identity?.Name!;
+                User =  await UserService.MyAccount(email);
+            }
+        }
+    }
+
+    private async void EditUserAccount(int id )
+    {
+        var parameter = new DialogParameters
+        {
+            ["User"] = User,
+        };
+        var dialog = await DialogService.ShowAsync<EditUser>("Account Setting", parameter);
+        var result = await dialog.Result;
+        if (!result.Canceled)
+        {
+           NavigationManager.NavigateTo("/profile", true);
+        }
+    }
 
 }

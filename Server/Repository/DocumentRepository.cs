@@ -8,33 +8,44 @@ using System.Reflection.Metadata;
 using System.Transactions;
 using HIVE.Server.Services.Interface;
 using Document = HIVE.Shared.Model.Document;
+using System.Xml.Linq;
+using HIVE.Server.Migrations;
 
 namespace HIVE.Server.Repository
 {
     public class DocumentRepository : IDocumentRepository
     {
         private readonly DataContext _context;
-        private readonly IFileManager _fileManager;
+        private readonly IAzureStorageHelper _azureStorageHelper;
         private readonly IDocumentService _documentService;
 
-        public DocumentRepository(DataContext context, IFileManager fileManager, IDocumentService documentService)
+        public DocumentRepository(DataContext context, IAzureStorageHelper azureStorageHelper, IDocumentService documentService)
         {
             _context = context;
-            _fileManager = fileManager;
+            _azureStorageHelper = azureStorageHelper;
             _documentService = documentService;
         }
         public UploadDocumentRequest DataTransferObjectDocument { get; set; } = new UploadDocumentRequest();
         public async Task<List<Document>> GetDocumentsForArchivist()
         {
-            var response = await _context.Documents.Where(d => d.IsArchived == false && d.IsDeleted == false)
-                .Include(a => a.Adviser)
-                .Include(t => t.Topics)
-                .Include(a => a.Curriculum)
-                .Include(d => d.Reference)
-                .Include(a => a.Authors)
-                .Include(f => f.File)
-                .ToListAsync();
-            return response;
+            try
+            {
+                var response = await _context.Documents.Where(d => d.IsArchived == false && d.IsDeleted == false)
+                    .Include(a => a.Authors)
+                    .Include(a => a.Adviser)
+                    .Include(t => t.Topics)
+                    .Include(a => a.Reference)
+                    .Include(d => d.Curriculum)
+                    .Include(f => f.File)
+                    .ToListAsync();
+                return response;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Mabe the documents is null {ex.HelpLink}");
+                ex.HelpLink = "Please contact: kristiandizon.enore@gmail.com";
+                throw;
+            }
         }
         public async Task ArchiveDocument(int id)
         {
@@ -51,7 +62,7 @@ namespace HIVE.Server.Repository
             if (response is not null)
             {
                 _context.Documents.Remove(response);
-                await _fileManager.DeleteFileAsync(response.Id);
+                await _azureStorageHelper.DeleteFileAsync(response.Id, _azureStorageHelper.ContainerName);
             }
             await  _context.SaveChangesAsync();
         }
@@ -63,7 +74,6 @@ namespace HIVE.Server.Repository
         public async Task RestoreDocument(int id)
         {
             await _documentService.Restore(id);
-
         }
         public async Task<List<Document>> GetArchivedDocumentsAsync()
         {
@@ -118,14 +128,12 @@ namespace HIVE.Server.Repository
             try
             {
                 var document = await _context.Documents.FindAsync(id);
-                if (document == null)
+                if (document != null)
                 {
-                    throw new NullReferenceException(message: "Null occured");
+                    document.IsDeleted = true;
+                    _context.Documents.Remove(document);
+                    await _azureStorageHelper.DeleteFileAsync(document.FileId, _azureStorageHelper.ContainerName);
                 }
-
-                document.IsDeleted = true;
-                _context.Documents.Remove(document);
-                await _fileManager.DeleteFileAsync(document.FileId);
                 await _context.SaveChangesAsync();
             }
             catch (Exception e)
@@ -136,21 +144,37 @@ namespace HIVE.Server.Repository
 
         }
 
+        public async Task<List<string>> DocumentsTitle()
+        {
+            var response = await _context.Documents.Select(d => d.Title).ToListAsync();
+            return response;
+        }
         public async Task<List<Document>> GetDocumentsAsync()
         {
-            var response = await _context.Documents
-                .Where(d => d.ToReview == false
-                            && d.UnApproved == false
-                            && d.IsActive == true
-                            && d.IsArchived == false
-                            && d.IsDeleted == false)
-                .Include(t => t.Topics)
-                .Include(a => a.Authors).Include(f => f.File)
-                .Include(a => a.Curriculum)
-                .Include(d => d.Reference)
-                .Include(a => a.Authors)
-                .ToListAsync();
-            return response;
+            try
+            {
+                var response = await _context.Documents
+                    .Where(d => d.ToReview == false
+                                && d.UnApproved == false
+                                && d.IsActive == true
+                                && d.IsArchived == false
+                                && d.IsDeleted == false)
+                    .Include(t => t.Topics)
+                    .Include(a => a.Authors)
+                    .Include(f => f.File)
+                    .Include(a => a.Curriculum)
+                    .Include(d => d.Reference)
+                    .Include(a => a.Authors)
+                    .ToListAsync();
+                return response;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Mabe the documents is null {ex.HelpLink}");
+                ex.HelpLink = "Please contact: kristiandizon.enore@gmail.com";
+                throw;
+            }
+            
         }
 
        
@@ -187,12 +211,25 @@ namespace HIVE.Server.Repository
                 CurriculumId = request.CurriculumId,
                 ReferenceId = request.ReferenceId,
                 UploaderEmail = request.UploaderEmail,
+                Status = request.Status,
                 Adviser = adviser,
                 Curriculum = curriculum,
                 Reference = reference,
                 FileId = reference.Id,
                 File = file,
+                IsAgree = request.IsAgree,
+                IsConfirmedForGrammarAndStatistic = request.IsConfirmedForGrammarAndStatistic,
+                IsConfirmForPlagiarism = request.IsConfirmForPlagiarism,
             };
+            var tenYearsAgo = DateTime.Now.AddYears(-10);
+            if (document.DatePublished.HasValue && document.DatePublished < tenYearsAgo)
+            {
+                document.IsActive = false;
+            }
+            else
+            {
+                document.IsActive = true;
+            }
             foreach (var topic in request.Topics)
             {
                 if (topic.Name != null)
@@ -214,58 +251,64 @@ namespace HIVE.Server.Repository
 
         public async Task<Document> EditDocumentAsync(int id, UploadDocumentRequest document)
         {
-
-            var dbDocument = await _context.Documents.Include(t => t.Topics)
+            try
+            {
+                var dbDocument = await _context.Documents.Include(t => t.Topics)
                 .Include(d => d.Reference)
                 .Include(a => a.Authors).FirstOrDefaultAsync(d => d.Id == id);
 
-            dbDocument.Id = document.Id;
-            dbDocument.Title = document.Title;
-            dbDocument.Abstract = document.Abstract;
-            dbDocument.DatePublished = document.DatePublished;
-            dbDocument.CurriculumId = document.CurriculumId;
-            dbDocument.AdviserId = document.AdviserId;
-            dbDocument.ReferenceId = document.ReferenceId;
-            dbDocument.UploaderEmail = document.UploaderEmail;
-            var tenYearsAgo = DateTime.Now.AddYears(-10);
-            if (dbDocument.DatePublished.HasValue && dbDocument.DatePublished < tenYearsAgo)
-            {
-                dbDocument.IsActive = false;
-            }
-            else
-            {
-                dbDocument.IsActive = true;
-            }
-
-            var file = await _context.FileEntries.FindAsync(document.FileId);
-            if (file != null)
-            {
-                dbDocument.File = file;
-            }
-
-            foreach (var newTopic in document.Topics)
-            {
-                if (newTopic.Name != null)
+                if (dbDocument != null)
                 {
-                    var topicTrans = new Topic()
+                    dbDocument.Title = document.Title;
+                    dbDocument.Abstract = document.Abstract;
+                    dbDocument.Status = document.Status;
+                    dbDocument.DatePublished = document.DatePublished;
+                    dbDocument.CurriculumId = document.CurriculumId;
+                    dbDocument.AdviserId = document.AdviserId;
+                    dbDocument.ReferenceId = document.ReferenceId;
+                    dbDocument.UploaderEmail = document.UploaderEmail;
+                    dbDocument.IsAgree = document.IsAgree;
+                    dbDocument.IsConfirmForPlagiarism = document.IsConfirmForPlagiarism;
+                    dbDocument.IsConfirmedForGrammarAndStatistic = document.IsConfirmedForGrammarAndStatistic;
+                    var tenYearsAgo = DateTime.Now.AddYears(-10);
+                    if (dbDocument.DatePublished.HasValue && dbDocument.DatePublished < tenYearsAgo)
                     {
-                        Name = newTopic.Name
-                    };
-                    var topic = await _context.Topics
-                        .Where(t => t.Name.Contains(topicTrans.Name, StringComparison.OrdinalIgnoreCase))
-                        .FirstOrDefaultAsync();
-                    if (topic != null)
+                        dbDocument.IsActive = false;
+                    }
+                    else
                     {
-                        dbDocument.Topics.Add(topicTrans);
+                        dbDocument.IsActive = true;
                     }
 
-                    topic.Documents.Add(dbDocument);
+                    var file = await _context.FileEntries.FindAsync(document.FileId);
+                    if (file != null)
+                    {
+                        dbDocument.File = file;
+                    }
+
+                    foreach (var topic in document.Topics)
+                    {
+                        if (topic.Name != null)
+                        {
+                            var addTopic = await _context.Topics.FirstOrDefaultAsync(t => t.Name == topic.Name);
+                            if (addTopic == null)
+                            {
+                                addTopic = new Topic { Name = topic.Name };
+                                _context.Topics.Add(addTopic);
+                            }
+                            dbDocument.Topics.Add(addTopic);
+                        }
+                    }
+
+                    await _context.SaveChangesAsync();
                 }
-
+                return dbDocument!;
             }
-            await _context.SaveChangesAsync();
-            return dbDocument;
-
+            catch (Exception ex)
+            {
+                Console.WriteLine($"{ex.Message}");
+                throw;
+            }
         }
         public async Task<UploadDocumentRequest> GetDocumentDataTransferAsync(int id)
         {
@@ -280,12 +323,16 @@ namespace HIVE.Server.Repository
             {
                 Title = document.Title,
                 Abstract = document.Abstract,
+                Status = document.Status,
                 DatePublished = document.DatePublished,
                 CurriculumId = document.CurriculumId,
                 AdviserId = document.AdviserId,
                 ReferenceId = document.ReferenceId,
                 IsActive = document.IsActive,
                 IsOpenAccess = document.IsOpenAccess,
+                IsAgree = document.IsAgree,
+                IsConfirmedForGrammarAndStatistic = document.IsConfirmedForGrammarAndStatistic,
+                IsConfirmForPlagiarism = document.IsConfirmForPlagiarism,
             };
             var file = await _context.FileEntries.FindAsync(document.FileId);
             if (file != null)

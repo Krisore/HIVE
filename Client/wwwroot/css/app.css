@@ -1,3 +1,6 @@
+html {
+    margin: 0;
+}
 h1:focus {
     outline: none;
 }

@@ -29,7 +29,7 @@
                       Variant="Variant.Outlined"
                       Label="Email"
                       Required="true"
-                      RequiredError="Adviser name is required!">
+                      RequiredError="Adviser email is required!">
         </MudTextField>
     </MudCardContent>
     <MudDivider DividerType="DividerType.FullWidth" />
@@ -47,20 +47,29 @@
                        Size="Size.Medium"
                        Class="rounded-0"
                        OnClick="OnHandleSubmit">
-                @(AdviserId is not 0 ? "Edit" : "Add")
+                @(AdviserId is not 0 ? "Update" : "Add")
             </MudButton>
         </div>
     </MudCardActions>
 </MudForm>
 @code {
-    [CascadingParameter] public MudDialogInstance Dialog { get; set; }
+
+    [CascadingParameter]
+    public MudDialogInstance Dialog { get; set; }
+
     [CascadingParameter]
     Task<AuthenticationState>? Authenticate { get; set; }
-    [Parameter] public string? Username { get; set; }
-    [Parameter] public int AdviserId { get; set; } = new();
+
+    [Parameter]
+    public string? Username { get; set; }
+
+    [Parameter]
+    public int AdviserId { get; set; } = new();
+
     private Adviser _adviser = new();
     private string? Actor { get; set; }
     private string? Role { get; set; }
+
     protected override async Task OnParametersSetAsync()
     {
         if (AdviserId is not 0)
@@ -106,7 +115,7 @@
                 var response = await AdviserService.AddAdviserAsync(_adviser); // Make it this to update
                 if (response.IsSuccessStatusCode)
                 {
-                    var log = await ActivityLog.WriteLog($"{Actor}", $"Add a curriculum name: [{_adviser.Name}]", "INSERT", $"{Role}");
+                    var log = await ActivityLog.WriteLog($"{Actor}", $"Add a adviser name: [{_adviser.Name}]", "INSERT", $"{Role}");
                     if (log.IsSuccessStatusCode)
                     {
                         Snack.Add("Adviser program added", Severity.Success);
@@ -127,7 +136,7 @@
     private async Task<bool> IsValidAsync()
     {
         var advisers = await AdviserService.GetAdvisersAsync();
-        return advisers.Any(c => c.Name.ToLower().Equals(_adviser.Name.ToLower())
-                                 || c.Email.ToLower().Equals(_adviser.Email.ToLower()));
+        return advisers.Any(c => c.Name.ToLower().Equals(_adviser.Name.ToLower()));
     }
+
 }

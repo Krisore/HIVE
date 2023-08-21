@@ -11,7 +11,7 @@
                 {
                     <li>
                         <MudText Typo="Typo.caption" Align="Align.Justify">
-                            🤙 @document.Title
+                             @document.Title
                         </MudText>
                     </li>
                     <MudDivider Class="my-1" />
@@ -24,8 +24,8 @@
         </MudContainer>
     </DialogContent>
     <DialogActions>
-        <MudButton Variant="Variant.Text" Color="Color.Error" OnClick="OnCancel"> Cancel </MudButton>
-        <MudButton Variant="Variant.Filled" Color="Color.Error" OnClick="OnOkay"> REstore </MudButton>
+        <MudButton Variant="Variant.Text" Color="Color.Default" OnClick="OnCancel"> Cancel </MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Success" OnClick="OnOkay"> Restore </MudButton>
     </DialogActions>
 </MudDialog>
 @code {
@@ -59,7 +59,7 @@
         {
             try
             {
-                var response = await DocumentService.RestoreDocument(document.Id);
+                var response = await DocumentService.RestoredDocument(document.Id);
                 if (response.IsSuccessStatusCode)
                 {
                     await ActivityLog.WriteLog($"{Actor}",

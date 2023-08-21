@@ -1,4 +1,5 @@
-﻿
+﻿@using Microsoft.VisualBasic.CompilerServices
+
 @inject NavigationManager NavigationManager
 @inject IDocumentService DocumentService
 @inject IActivityLog ActivityLog
@@ -23,7 +24,7 @@
                     </MudAvatar>
                 </CardHeaderAvatar>
                 <CardHeaderContent>
-                    <MudText Typo="Typo.body1">@context.User.Identity.Name</MudText>
+                    <MudText Typo="Typo.body1">@context.User.Identity?.Name</MudText>
                     <MudText Typo="Typo.body2">@_document.Curriculum.Name</MudText>
                 </CardHeaderContent>
                 <CardHeaderActions>
@@ -45,7 +46,7 @@
                     <strong>@_document.Title</strong>
                     <cite>
                         (
-                        @if (_document.DatePublished != null)
+                        @if (_document.DatePublished is not null)
                         {
                             @(_document.DatePublished.Value.Year)
                         }

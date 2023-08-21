@@ -22,22 +22,22 @@
         <a href="/">
             <MudCardHeader>
                 <CardHeaderAvatar>
-                        <MudAvatar Size="Size.Medium" Elevation="2" Image="image/Pup_logo.jpg"/>
-                    </CardHeaderAvatar>
-                    <CardHeaderContent>
-                        @if (IsDarkMode)
-                        {
-                            <MudText Typo="Typo.body2" Color="Color.Default">
-                                Polytechnic University of the Philippines
-                            </MudText>
-                        }
-                        else
-                        {
-                            <MudText Typo="Typo.body2" Color="Color.Dark">
-                                Polytechnic University of the Philippines
-                            </MudText>
-                        }
-                    </CardHeaderContent>
+                    <MudAvatar Size="Size.Medium" Elevation="2" Image="image/Pup_logo.jpg"/>
+                </CardHeaderAvatar>
+                <CardHeaderContent>
+                    @if (IsDarkMode)
+                    {
+                        <MudText Typo="Typo.body2" Color="Color.Default">
+                            Polytechnic University of the Philippines
+                        </MudText>
+                    }
+                    else
+                    {
+                        <MudText Typo="Typo.body2" Color="Color.Dark">
+                            Polytechnic University of the Philippines
+                        </MudText>
+                    }
+                </CardHeaderContent>
             </MudCardHeader>
         </a>
         <MudSpacer/>
@@ -46,20 +46,49 @@
                 <MudButton Size="Size.Small" Href="/upload-document" StartIcon="@Icons.Material.Filled.Add" Class="rounded-0 my-2 mx-2" Variant="Variant.Outlined" Disabled="false" DisableElevation="true">
                     UPLOAD
                 </MudButton>
-                <MudMenu Dense="true" Class="my-2 mx-1">
+                <MudDivider Class="mx-3" Vertical="true"></MudDivider>
+                <MudMenu Dense="true" Class="ml-auto">
                     <ActivatorContent>
-                        <div class="d-inline">
-                            <MudChip Variant="Variant.Filled" Class="ml-2 rounded-0" Size="Size.Medium" Label="true" Color="Color.Primary">@context.User.Identity.Name </MudChip>
-                        </div>
+                        <MudTooltip Text="@context.User.Identity.Name" Arrow="true">
+                            <MudAvatar Size="Size.Medium" Elevation="2" Color="Color.Primary">
+                                @context.User.Identity.Name.ToUpper().ToCharArray()[0]
+                            </MudAvatar>
+                        </MudTooltip>
                     </ActivatorContent>
                     <ChildContent>
-                        <MudMenuItem>My account</MudMenuItem>
-                        <MudMenuItem OnClick="Logout" >Sign Out</MudMenuItem>
+                        <MudCardHeader>
+                            <CardHeaderAvatar>
+                                <MudBadge Dot="true" Overlap="true" Color="Color.Success">
+                                    <MudAvatar Size="Size.Large" Elevation="2" Color="Color.Primary">
+                                        @context.User.Identity.Name.ToUpper().ToCharArray()[0]
+                                    </MudAvatar>
+                                </MudBadge>
+                            </CardHeaderAvatar>
+                            <CardHeaderContent>
+                                <MudText Typo="Typo.body2"> Enore, Kristian Paul</MudText>
+                                <MudText Typo="Typo.caption">@context.User.Identity.Name</MudText>
+                            </CardHeaderContent>
+                            <CardHeaderActions>
+                                <MudToggleIconButton @bind-Toggled="@IsDarkMode"
+                                                     Class="mx-3"
+                                                     Icon="@Icons.Material.Sharp.DarkMode"
+                                                     Color="Color.Dark"
+                                                     Title="Go to Dark Mode"
+                                                     ToggledIcon="@Icons.Material.Sharp.LightMode"
+                                                     ToggledColor="@Color.Success"
+                                                     Edge="Edge.End"
+                                                     Size="Size.Small"
+                                                     ToggledSize="Size.Small"
+                                                     ToggledTitle="Go to Light Mode" />
+                            </CardHeaderActions>
+                        </MudCardHeader>
+                        <MudDivider DividerType="DividerType.Middle"/>
+                        <MudMenuItem Href="/profile" Icon="@Icons.Material.Filled.AccountBox"> Profile </MudMenuItem>
+                        <MudDivider DividerType="DividerType.Middle"/>
+                        <MudMenuItem OnClick="Logout" Icon="@Icons.Material.Filled.Logout">Sign out</MudMenuItem>
                     </ChildContent>
                 </MudMenu>
             </Authorized>
-        </AuthorizeView>
-        <AuthorizeView>
             <NotAuthorized>
                 <MudButton Href="/" Size="Size.Large" Class="rounded-0 mr-3 my-2" 
                            Variant="Variant.Text" Color="Color.Default" 
@@ -72,19 +101,19 @@
                 <MudButton OnClick="@((e) => BeginLogin(_logInDialog))" Size="Size.Small" Class="rounded-0" Variant="Variant.Filled" Color="Color.Primary" DisableElevation="true">
                     SIGN IN
                 </MudButton>
+                <MudToggleIconButton @bind-Toggled="@IsDarkMode"
+                                     Class="mx-3"
+                                     Icon="@Icons.Material.Sharp.DarkMode"
+                                     Color="Color.Dark"
+                                     Title="Go to Dark Mode"
+                                     ToggledIcon="@Icons.Material.Sharp.LightMode"
+                                     ToggledColor="@Color.Success"
+                                     Edge="Edge.End"
+                                     Size="Size.Small"
+                                     ToggledSize="Size.Small"
+                                     ToggledTitle="Go to Light Mode"/>
             </NotAuthorized>
         </AuthorizeView>
-        <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.MoreVert"/>
-        <MudToggleIconButton @bind-Toggled="@IsDarkMode"
-                             Icon="@Icons.Material.Sharp.DarkMode"
-                             Color="Color.Dark"
-                             Title="Go to Dark Mode"
-                             ToggledIcon="@Icons.Material.Sharp.LightMode"
-                             ToggledColor="@Color.Success"
-                             Edge="Edge.End"
-                             Size="Size.Small"
-                             ToggledSize="Size.Small"
-                             ToggledTitle="Go to Light Mode"/>
     </MudAppBar>
     <MudDrawer @bind-Open="IsDrawerOpen" ClipMode="DrawerClipMode.Always" Elevation="1" Variant="DrawerVariant.Responsive">
         <AuthorizeView Roles="User">
@@ -97,7 +126,7 @@
                 <div class="my-2">
                     <SortTree/>
                 </div>
-                    <MudDivider DividerType="DividerType.Middle" />
+                <MudDivider DividerType="DividerType.Middle" />
             </Authorized>
         </AuthorizeView>
     </MudDrawer>
@@ -109,11 +138,13 @@
         </MudContainer>
     </MudMainContent>
     <MudScrollToTop>
-        <MudFab Color="Color.Primary" Icon="@Icons.Material.Filled.KeyboardArrowUp" Size="Size.Small" />
+        <MudFab Color="Color.Secondary" Icon="@Icons.Material.Filled.KeyboardArrowUp" Size="Size.Small" />
     </MudScrollToTop>
 </MudLayout>
+<FooterLayout />
 @code
 {
+    string Name = "K";
     private bool IsDrawerOpen { get; set; }
     private bool IsDarkMode { get; set; }
 

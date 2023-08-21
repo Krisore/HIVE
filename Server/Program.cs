@@ -9,7 +9,9 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using HIVE.Server.Repository.Interface;
 using HIVE.Server.Repository;
+using HIVE.Shared.Model;
 using Microsoft.Extensions.Azure;
+using Microsoft.Extensions.Configuration;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<DataContext>(options =>
@@ -22,11 +24,13 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IActivityLog, ActivityLog>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IReferenceService, ReferenceService>();
-builder.Services.AddScoped<IFileManager, FileManager>();
+builder.Services.AddScoped<IAzureStorageHelper, AzureStorageHelper>();
 builder.Services.AddScoped<IDocumentRepository, DocumentRepository>();
 builder.Services.AddScoped<ICurriculumService, CurriculumService>();
 builder.Services.AddScoped<IAdviserService, AdviserService>();
 builder.Services.AddScoped<IDocumentService, DocumentService>();
+builder.Services.AddScoped<IDocumentHistoryService, DocumentHistoryService>();
+builder.Services.Configure<EmailSetting>(builder.Configuration.GetSection("EmailSetting"));
 builder.Services.AddAuthentication(o =>
 {
     o.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -43,10 +47,11 @@ builder.Services.AddAuthentication(o =>
         ValidateAudience = false
     };
 });
+
 builder.Services.AddAzureClients(clientBuilder =>
 {
-    clientBuilder.AddBlobServiceClient(builder.Configuration["ConnectionStrings:DefaultConnections:blob"], preferMsi: true);
-    clientBuilder.AddQueueServiceClient(builder.Configuration["ConnectionStrings:DefaultConnections:queue"], preferMsi: true);
+    clientBuilder.AddBlobServiceClient(builder.Configuration["StorageConnectionString:blob"], preferMsi: true);
+    clientBuilder.AddQueueServiceClient(builder.Configuration["StorageConnectionString:queue"], preferMsi: true);
 });
 var app = builder.Build();
 

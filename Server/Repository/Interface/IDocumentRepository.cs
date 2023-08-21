@@ -9,6 +9,7 @@ namespace HIVE.Server.Repository.Interface
         Task<List<Document>> GetDocumentsAsync();
         Task<List<Document>> GetArchivedDocumentsAsync();
         Task<List<Document>> GetTrashedDocumentsAsync();
+        Task<List<string>> DocumentsTitle();
         Task<IEnumerable<Document>> GetMyDocumentsAsync(string owner);
         Task DeleteAsync(int id);
         Task<Document> GetDocumentAsyncById(int id);

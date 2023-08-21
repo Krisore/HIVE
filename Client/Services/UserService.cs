@@ -1,4 +1,5 @@
-﻿using HIVE.Client.Authentication;
+﻿using System.Net;
+using HIVE.Client.Authentication;
 using HIVE.Shared.Model;
 using HIVE.Shared.Request;
 using Microsoft.AspNetCore.Components;
@@ -35,6 +36,16 @@ namespace HIVE.Client.Services
             return response;
         }
 
+        public async Task<bool> CheckEmail(string email)
+        {
+            var response = await _client.GetAsync($"api/User/{email}");
+            if (response.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                return true;
+            }
+            return false;
+         
+        }
         public async Task<List<User>> GetUserCount()
         {
             var accessToken = await _customAuthenticationStateProvider.GetToken();
@@ -79,7 +90,11 @@ namespace HIVE.Client.Services
             var response = await _client.PutAsJsonAsync($"api/User/update/admin/{id}", request);
             return response;
         }
-
+        public async Task<HttpResponseMessage> UpdateUserAccount(int id, User request)
+        {
+            var response = await _client.PutAsJsonAsync($"api/User/update/user/{id}", request);
+            return response;
+        }
         public async Task<HttpResponseMessage> VerifyAsync(string token)
         {
             var accessToken = await _customAuthenticationStateProvider.GetToken();

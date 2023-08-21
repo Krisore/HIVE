@@ -15,7 +15,6 @@ namespace HIVE.Server.Controllers
         {
             _activity = activity;
         }
-
         [HttpPost]
         [Route("write")]
         public async Task<ActionResult<Activity>> Write(Activity activity)
@@ -23,7 +22,6 @@ namespace HIVE.Server.Controllers
             var response = await _activity.InsertLog(activity);
             return Ok(response);
         }
-
         [HttpGet]
         [Route("logs")]
         public async Task<ActionResult<List<Activity>>> GetLogs()

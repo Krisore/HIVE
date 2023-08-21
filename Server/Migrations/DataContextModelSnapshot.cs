@@ -159,7 +159,16 @@ namespace HIVE.Server.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
+                    b.Property<bool>("IsAgree")
+                        .HasColumnType("bit");
+
                     b.Property<bool>("IsArchived")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsConfirmForPlagiarism")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsConfirmedForGrammarAndStatistic")
                         .HasColumnType("bit");
 
                     b.Property<bool>("IsDeleted")
@@ -170,6 +179,10 @@ namespace HIVE.Server.Migrations
 
                     b.Property<int>("ReferenceId")
                         .HasColumnType("int");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Title")
                         .IsRequired()
@@ -199,6 +212,32 @@ namespace HIVE.Server.Migrations
                     b.HasIndex("ReferenceId");
 
                     b.ToTable("Documents");
+                });
+
+            modelBuilder.Entity("HIVE.Shared.Model.DocumentHistory", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("DocumentId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("ModifiedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Owner")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Title")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("DocumentHistories");
                 });
 
             modelBuilder.Entity("HIVE.Shared.Model.FileEntry", b =>

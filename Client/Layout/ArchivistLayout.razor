@@ -12,28 +12,27 @@
 <MudLayout>
     <AuthorizeView>
          <MudAppBar Dense="false" Elevation="1">
-            <a href="/dashboard">
-                <MudAvatar Variant="Variant.Filled" Color="Color.Primary"
-                           Size="Size.Large" Elevation="2" Image="image/Pup_logo.jpg" />
-            </a>
+             <MudCardHeader>
+                 <CardHeaderAvatar>
+                     <a href="/dashboard">
+                         <MudAvatar Variant="Variant.Filled" Color="Color.Primary"
+                                    Size="Size.Large" Elevation="2" Image="image/Pup_logo.jpg"/>
+                     </a>
+                 </CardHeaderAvatar>
+                 <CardHeaderContent>
+                    @if (IsDarkMode)
+                    {
+                        <MudText Typo="Typo.body2" Color="Color.Default"> Polytechnic University of the Philippines </MudText>
+                    }
+                    else
+                    {
+                        <MudText Typo = "Typo.body2" Color = "Color.Dark" > Polytechnic University of the Philippines </MudText>
+                    }
+                 </CardHeaderContent>
+             </MudCardHeader>
              <MudSpacer/>
-             <MudMenu Dense="true" Class="my-2 mx-1">
-                 <ActivatorContent>
-                     <div class="d-inline">
-                        <MudTooltip Text="@context.User.Identity.Name">
-                            <MudAvatar Variant="Variant.Filled" Color="Color.Primary" Elevation="2">
-                                @context.User.Identity.Name.ToUpper()[0]
-                            </MudAvatar>
-                        </MudTooltip>
-                     </div>
-                 </ActivatorContent>
-                 <ChildContent>
-                     <MudMenuItem>My account</MudMenuItem>
-                     <MudMenuItem OnClick="Logout" >Sign Out</MudMenuItem>
-                 </ChildContent>
-             </MudMenu>
-            <MudIconButton Icon="@Icons.Material.Filled.MoreVert" />
-            <MudToggleIconButton @bind-Toggled="@IsDarkMode"
+             <MudChip Variant="Variant.Text" Class="ml-auto rounded-0" Size="Size.Medium" Label="true" Color="Color.Primary">@context.User.Identity.Name </MudChip>
+             <MudToggleIconButton @bind-Toggled="@IsDarkMode"
                                  Size="Size.Small"
                                  Icon="@Icons.Material.Sharp.DarkMode"
                                  Color="Color.Dark"
@@ -44,11 +43,12 @@
                                  ToggledSize="Size.Small" />
          </MudAppBar>
     <MudDrawer PreserveOpenState="true" @bind-Open="@IsDrawerOpen" ClipMode="DrawerClipMode.Docked" Elevation="1">
-        <MudDivider DividerType="DividerType.Middle"/>
+        <MudDivider Class="mt-3" DividerType="DividerType.Middle"/>
+        <div class="d-flext block my-2  mx-auto justify-center align-center">
+            <MudChip Class="mx-auto" Text="ADMINISTRATOR" Color="Color.Primary" Variant="Variant.Filled" />
+        </div>
         <div class="my-2 mx-4">
             <ArchivistNavMenu/>
-            <MudDivider DividerType="DividerType.Middle" />
-            <MudDivider DividerType="DividerType.Middle" />
         </div>
     </MudDrawer>
     <MudMainContent >

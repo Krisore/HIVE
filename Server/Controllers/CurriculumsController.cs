@@ -27,7 +27,7 @@ namespace HIVE.Server.Controllers
             return Ok(result);
         }
         [HttpGet("{id:int}")]
-        public async Task<ActionResult<IEnumerable<Curriculum>>> GetCurriculumById(int id)
+        public async Task<ActionResult<Curriculum>> GetCurriculumById(int id)
         {
             var result = await _curriculumService.GetCurriculumById(id);
             return Ok(result);
@@ -38,7 +38,7 @@ namespace HIVE.Server.Controllers
             var academics = await _context.Curriculums.ToListAsync();
             return Ok(academics);
         }
-        [HttpPost]
+        [HttpPost("create")]
         public async Task<ActionResult> AddAcademicProgramAsync(Curriculum curriculum)
         {
             var newProgram = new Curriculum()

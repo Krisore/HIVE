@@ -1,6 +1,5 @@
 ﻿using HIVE.Server.Data;
 using HIVE.Shared.Model;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -37,7 +36,7 @@ namespace HIVE.Server.Controllers
             }
             await _context.SaveChangesAsync();
         }
-        [HttpDelete("{id}")]
+        [HttpDelete("{id:int}")]
         public async Task DeleteAuthor(int id)
         {
             try

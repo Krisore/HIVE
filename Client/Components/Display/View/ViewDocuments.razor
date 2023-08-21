@@ -1,4 +1,5 @@
 ﻿@using System.Globalization
+@using System.Net
 @using MudBlazor
 @inject IDocumentService DocumentService
 @inject IAuthorService AuthorService
@@ -7,11 +8,12 @@
 @inject IFileService FileService
 @inject ITopicService TopicService
 @inject IJSRuntime JsRuntime
+@inject NavigationManager NavigationManager
 @inject IDocumentReferenceService DocumentReference
 @inject IDialogService DialogService
 <style>
     .selected {
-        background-color: #b2f7ef !important;
+        background-color: #fccece !important;
     }
 
     .selected > td {
@@ -28,9 +30,9 @@
           Hover="true"
           Elevation="0"
           Bordered="true"
+          Loading="@isLoading" LoadingProgressColor="Color.Primary"
           Dense="true"
           Breakpoint="Breakpoint.Sm"
-          LoadingProgressColor="Color.Info"
           OnRowClick="RowClickEvent"
           RowClassFunc="@SelectedRowClassFunc"
           T="Document">
@@ -44,35 +46,30 @@
             <div class="d-flex inline">
                @if (string.IsNullOrWhiteSpace(SearchTerm))
                {
-                   <MudChip Color="Color.Primary" Size="Size.Large" Variant="Variant.Text" Label="true"><code>Total Documents: @((long)_table.GetFilteredItemsCount())</code></MudChip>
+                   <MudChip Color="Color.Primary" Size="Size.Large" Variant="Variant.Text" Label="true">
+                       <code>Total Documents: @((long)_table.GetFilteredItemsCount())</code>
+                   </MudChip>
                }
                else
                {
                    <MudChip Color="Color.Primary" Size="Size.Large" Variant="Variant.Text" Label="true"><code>Results: @((long)_table.GetFilteredItemsCount())</code></MudChip>
                }
-                <MudDateRangePicker Class="rounded-0 mx-1" Clearable="true" Variant="Variant.Outlined"  Margin="Margin.Dense" @ref="_picker" Label="From" @bind-DateRange="_dateRange" AutoClose="true">
-                    <PickerActions>
-                        <MudButton Variant="Variant.Text" Class="mr-auto align-self-start" OnClick="@(() => _picker.Clear())">Clear</MudButton>
-                        <MudButton Variant="Variant.Outlined" OnClick="@(() => _picker.Close(false))">Cancel</MudButton>
-                        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(() => _picker.Close())">Ok</MudButton>
-                    </PickerActions>
-                </MudDateRangePicker>
             </div>
         </MudTh>
     </HeaderContent>
     <RowTemplate>
         <MudTd>
            
-            <ViewDocumentCard Document="@context" SearchTerm="@SearchTerm"/>
+            <ViewDocumentCard Document="@context" SearchTerm="@SearchTerm" Files="@_files" Advisers="_advisers" Programs="_programs" />
             
         </MudTd>
     </RowTemplate>
-    <NoRecordsContent>
-        <p> no records found </p>
-    </NoRecordsContent>
     <LoadingContent>
-        <LoadingComponentResult />
+        <LoadingCard/>
     </LoadingContent>
+    <NoRecordsContent>
+        No Result Found 😣
+    </NoRecordsContent>
     <PagerContent>
         <div class="d-flex flex-column align-center">
             <MudPagination SelectedChanged="PageChanged" Rectangular="true" Variant="Variant.Text" Count="@((_table.GetFilteredItemsCount() + _table.RowsPerPage - 1) / _table.RowsPerPage)" Class="pa-4"/>
@@ -100,34 +97,52 @@
     private int _selectedRowNumber = -1;
     private readonly List<string> _clickedEvents = new();
     private bool isLoading = false;
-   
+
     protected override async Task OnParametersSetAsync()
     {
-        isLoading = true;
-        await Task.Delay(300);
-        IEnumerable<Document>? Documents = await DocumentService.GetAllDocuments();
-        if (string.IsNullOrWhiteSpace(SearchTerm))
+        try
         {
-            _documents = Documents.ToList();
+            isLoading = true;
+            await Task.Delay(300);
+            IEnumerable<Document>? documents = new List<Document>();
+            var result = await DocumentService.GetDocumentsAsync();
+            if (result.IsSuccessStatusCode)
+            {
+                documents = await result.Content.ReadFromJsonAsync<IEnumerable<Document>>();
+            }
+            else
+            {
+                documents.DefaultIfEmpty();
+            }
+
+            if (string.IsNullOrWhiteSpace(SearchTerm))
+            {
+                _documents = documents.ToList();
+            }
+            else
+            {
+                _documents = documents.Where(d => d.Title.Contains(SearchTerm, StringComparison.OrdinalIgnoreCase)
+                                                      || d.Abstract.Contains(SearchTerm, StringComparison.OrdinalIgnoreCase)
+                                                      || d.DatePublished.Value.Year.ToString().Contains(SearchTerm.ToString().ToLower())
+                                                      || d.Authors.Any(a => a.Name.ToLower().Contains(SearchTerm.ToLower()) 
+                                                      || d.Reference.Name.ToLower().Contains(SearchTerm.ToLower())
+                                                      || d.Curriculum.Name.ToLower().Contains(SearchTerm.ToLower())
+                                                      || d.Curriculum.Alt.ToLower().Contains(SearchTerm.ToLower())
+                                                      || d.Topics.Any(t => t.Name.ToLower().Contains(SearchTerm.ToLower())))).ToList();
+            }
+
         }
-        else
+        catch (Exception e)
         {
-            if (Documents != null)
-                _documents = Documents.Where(d => d.Title.Contains(SearchTerm, StringComparison.OrdinalIgnoreCase)
-                                       || d.Abstract.Contains(SearchTerm, StringComparison.OrdinalIgnoreCase)
-                                       || d.DatePublished.Value.Year.ToString().Contains(SearchTerm.ToString().ToLower())
-                                       || d.Authors.Any(a => a.Name.ToLower().Contains(SearchTerm.ToLower())
-                                       || d.Reference.Name.ToLower().Contains(SearchTerm.ToLower())
-                                       || d.Curriculum.Name.ToLower().Contains(SearchTerm.ToLower())
-                                       || d.Curriculum.Alt.ToLower().Contains(SearchTerm.ToLower())
-                                       || d.Topics.Any(t => t.Name.ToLower().Contains(SearchTerm.ToLower())))).ToList();
+            Console.WriteLine(e);
+            throw;
         }
-        //get list of the following 
-        //_files = await FileService.GetAllFiles();
+        ////get list of the following 
+        _files = await FileService.GetAllFiles();
         //_programs = await ProgramService.GetProgramsAsync();
         //_advisers = await AdviserService.GetAdvisersAsync();
         _authors = await AuthorService.GetAllAuthorAsync();
-        //isLoading = false;
+        isLoading = false;
     }
 
     private void PageChanged(int i)

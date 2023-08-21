@@ -4,29 +4,11 @@
 @inject IActivityLog ActivityLog
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject NavigationManager NavigationManager
-<MudTable MultiSelection="true"  @bind-SelectedItems="_selectedItems"  Elevation="1" Dense="true" @ref="_table" ServerData="@(new Func<TableState, Task<TableData<Document>>>(ServerReload))">
-    <ToolBarContent>
-        <MudChip Label="true" T="Document" Class="d-block " Variant="Variant.Text"> <code> Selected Document: <strong> (@_selectedItems.Count) </strong></code></MudChip>
-        <div class="mx-5">
-            <MudTooltip Text="Reload Table" Arrow="true">
-                <MudIconButton OnClick="@(()=> _table.ReloadServerData())"
-                               Variant="Variant.Text"
-                               DisableElevation="true"
-                               Color="Color.Success"
-                               Size="Size.Medium"
-                               Icon="@Icons.Material.Filled.Sync" />
-            </MudTooltip>
 
-            <MudTooltip Text="Delete Selected Document" Arrow="true">
-                <MudIconButton OnClick="OnDeleteAsync"
-                               Variant="Variant.Text"
-                               DisableElevation="true"
-                               Size="Size.Medium"
-                               Icon="@Icons.Material.Filled.Delete" Color="Color.Error" />
-            </MudTooltip>
-        </div>
-        <MudSpacer />
-        <MudButton Variant="Variant.Outlined" Href="/upload-document" Class="rounded-0 mx-2" StartIcon="@Icons.Material.Filled.Add" Size="Size.Medium"> Add New </MudButton>
+<MudTable MultiSelection="true" @bind-SelectedItems="_selectedItems"
+          Loading="@_isloading" LoadingProgressColor="Color.Primary" Bordered="true"
+          Elevation="0" Dense="true" @ref="_table" ServerData="@(new Func<TableState, Task<TableData<Document>>>(ServerReload))">
+    <ToolBarContent>
         <MudTextField Variant="Variant.Outlined" T="string" ValueChanged="@(OnSearch)" Placeholder="Search" Adornment="Adornment.End"
                       AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0" Margin="Margin.Dense"></MudTextField>
         @if (!string.IsNullOrWhiteSpace(searchTerm))
@@ -35,26 +17,55 @@
                 result: @searchTerm (@_table.GetFilteredItemsCount())
             </MudChip>
         }
+        <MudSpacer/>
+        <div class="mx-5">
+            <MudTooltip Text="Reload Table" Arrow="true">
+                <MudIconButton OnClick="@(() => _table.ReloadServerData())"
+                               Variant="Variant.Text"
+                               DisableElevation="false"
+                               Color="Color.Info"
+                               Size="Size.Medium"
+                               Icon="@Icons.Material.Filled.Sync" />
+            </MudTooltip>
+            <MudTooltip Text="Add new document" Arrow="true">
+                <MudIconButton Variant="Variant.Text" 
+                               Href="/upload-document" 
+                               Icon="@Icons.Material.Filled.CreateNewFolder" 
+                               Size="Size.Medium" />
+            </MudTooltip>
+            <MudTooltip Text="Move selected document to bin" Arrow="true">
+                <MudBadge Overlap="true" Content="@_selectedItems.Count" Color="Color.Error" Bordered="true">
+                    <MudIconButton OnClick="OnDeleteAsync"
+                                   Variant="Variant.Text"
+                                   DisableElevation="false"
+                                   Size="Size.Medium"
+                                   Icon="@Icons.Material.Filled.FolderDelete" Color="Color.Error" />
+                </MudBadge>
+                </MudTooltip>
+        </div>
     </ToolBarContent>
     <HeaderContent>
         <MudTh> Detail </MudTh>
         <MudTh><MudTableSortLabel SortLabel="title" T="Document">Title</MudTableSortLabel></MudTh>
-        <MudTh><MudTableSortLabel SortLabel="curriculum" T="Document">Academic program </MudTableSortLabel></MudTh>
         <MudTh><MudTableSortLabel SortLabel="adviser" T="Document">Adviser </MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel SortLabel="topic" T="Document">Topic </MudTableSortLabel></MudTh>
         <MudTh><MudTableSortLabel SortLabel="documentStatus" T="Document">Document status</MudTableSortLabel></MudTh>
         <MudTh><MudTableSortLabel SortLabel="year" T="Document">Year</MudTableSortLabel></MudTh>
         <MudTh><MudTableSortLabel SortLabel="status" T="Document">Status</MudTableSortLabel></MudTh>
-        <MudTh>Edit</MudTh>
+        <MudTh></MudTh>
     </HeaderContent>
     <RowTemplate>
-        
+
         <MudTd> <MudTooltip Text="See the details"><MudButton Variant="Variant.Outlined" Size="Size.Small" OnClick="@(() => OnReview(context.Id))"> 🗃️ </MudButton></MudTooltip></MudTd>
-        <MudTd DataLabel="Title">@context.Title</MudTd>
-        <MudTd DataLabel="Adviser"> @context.Adviser.Name</MudTd>
-        <MudTd DataLabel="Program">
-
-            <MudText Typo="Typo.body2"> <code> @(context.Curriculum.Alt)</code></MudText>
-
+        <MudTd DataLabel="Title"><MudText Typo="Typo.caption">@context.Title</MudText></MudTd>
+        <MudTd DataLabel="Adviser"> <MudText Typo="Typo.caption">@context.Adviser.Name</MudText></MudTd>
+        <MudTd DataLabel="Topic">
+            <div class="d-inline flex">
+                @foreach (var topic in context.Topics)
+                {
+                    <MudChip Text="@topic.Name" Variant="Variant.Outlined" Size="Size.Small" Color="Color.Info"/>
+                }
+            </div>
         </MudTd>
         <MudTd DataLabel="documentYear">
             @if (context.ToReview)
@@ -68,23 +79,47 @@
         </MudTd>
         <MudTd DataLabel="Year">@context.DatePublished.Value.Year</MudTd>
         <MudTd DataLabel="Status">
-            @if (context.IsActive)
+            @if (context.Status.Contains("Draft"))
             {
-                <MudChip Variant="Variant.Text" Color="Color.Success" Size="Size.Small"> active </MudChip>
+                <MudChip Variant="Variant.Text" Color="Color.Info" Size="Size.Small"> draft </MudChip>
             }
             else
             {
-                <MudChip Variant="Variant.Text" Color="Color.Error" Size="Size.Small"> in-active </MudChip>
+                if (context.IsActive)
+                {
+                    <MudChip Variant="Variant.Text" Color="Color.Success" Size="Size.Small"> active </MudChip>
+                }
+                else
+                {
+                    <MudChip Variant="Variant.Text" Color="Color.Success" Size="Size.Small"> in-active </MudChip>
+                }
             }
         </MudTd>
         <MudTd>
-            <MudTooltip Text="Edit Selected Document" Arrow="true">
-                <MudIconButton Variant="Variant.Text"
-                               DisableElevation="false"
-                               Size="Size.Medium"
-                               Icon="@Icons.Material.Filled.Edit"
-                               OnClick="@(() => OnEditAsync(context.Id))"/>
-            </MudTooltip>
+            <div class="d-flex inline">
+                <MudTooltip Text="Edit Document" Arrow="true">
+                    <MudIconButton Variant="Variant.Text"
+                                   DisableElevation="false"
+                                   Size="Size.Small"
+                                   Icon="@Icons.Material.Filled.Edit"
+                                   OnClick="@(() => OnEditAsync(context.Id))"/>
+                </MudTooltip>
+                <MudTooltip Text="Edit logs" Arrow="true">
+                    <MudIconButton Variant="Variant.Text"
+                                   DisableElevation="false"
+                                   Size="Size.Small"
+                                   Icon="@Icons.Material.Filled.Notes"
+                                   OnClick="@(() => ViewDocumentLogs(context.Id))"/>
+                </MudTooltip>
+                <MudTooltip Text="Move to bin" Arrow="true">
+                    <MudIconButton Variant="Variant.Text"
+                                   DisableElevation="false"
+                                   Color="Color.Error"
+                                   Size="Size.Small"
+                                   Icon="@Icons.Material.Filled.FolderDelete"
+                                   OnClick="@(() => MoveToTrash(context.Id))" />
+                </MudTooltip>
+            </div>
         </MudTd>
     </RowTemplate>
     <NoRecordsContent>
@@ -105,6 +140,7 @@
     public int id { get; set; }
     private IEnumerable<Document> _pagedData;
     private int _totalItems;
+    private bool _isloading = true;
     private string searchTerm = string.Empty;
     private string _userName = string.Empty;
     [CascadingParameter]
@@ -113,17 +149,34 @@
 
     private async Task<TableData<Document>> ServerReload(TableState state)
     {
+        _isloading = true;
         var customAuthStateProvider = (CustomAuthenticationStateProvider)AuthenticationStateProvider;
         Authenticate = customAuthStateProvider.GetAuthenticationStateAsync();
         if (Authenticate != null)
         {
-            var account = await Authenticate;
-            var email = account.User.Identity?.Name;
-            if (email != null)
+            try
             {
-                _userName = email;
-                var response = await DocumentService.GetMyDocumentsAsync(email);
-                Documents = response;
+                var account = await Authenticate;
+                var email = account.User.Identity?.Name;
+                if (email != null)
+                {
+                    _userName = email;
+                    var response = await DocumentService.GetMyDocumentsAsync(email);
+                    if (response.IsSuccessStatusCode)
+                    {
+                        Documents = (await response.Content.ReadFromJsonAsync<List<Document>>())!;
+                        if (Documents is null)
+                        {
+                            NavigationManager.NavigateTo(NavigationManager.BaseUri, true);
+                        }
+                    }
+                
+                }
+            }
+            catch (Exception exception)
+            {
+                Console.WriteLine($"Something went wrong");
+                throw;
             }
         }
         await Task.Delay(300);
@@ -148,11 +201,12 @@
             {
             "title" => data.OrderByDirection(state.SortDirection, o => o.Title),
             "c" => data.OrderByDirection(state.SortDirection, o => o.Adviser.Name),
-            "curriculum" => data.OrderByDirection(state.SortDirection, o => o.Curriculum.Alt),
+            "topic" => data.OrderByDirection(state.SortDirection, o => o.Curriculum.Alt),
             "year" => data.OrderByDirection(state.SortDirection, o => o.DatePublished),
             "status" => data.OrderByDirection(state.SortDirection, o => o.IsActive),
             _ => data
             };
+        _isloading = false;
         _pagedData = data.Skip(state.Page * state.PageSize).Take(state.PageSize).ToArray();
         return new TableData<Document>() { TotalItems = _totalItems, Items = _pagedData };
     }
@@ -163,9 +217,31 @@
     }
     private async void OnDeleteAsync()
     {
-        foreach (var document in _selectedItems)
+        var parameter = new DialogParameters
+            {
+                ["Documents"] = _selectedItems
+            };
+
+        var dialog = await DialogService.ShowAsync<DialogMoveToTrash>("Are you really want to move  these to trash?", parameter);
+        var result = await dialog.Result;
+        if (!result.Canceled)
         {
-            await DocumentService.GetDeleteDocumentById(document.Id);
+            await _table.ReloadServerData();
+        }
+    }
+
+    private async void MoveToTrash(int id)
+    {
+        
+        var parameter = new DialogParameters
+        {
+            ["DocumentId"] = id
+        };
+
+        var dialog = await DialogService.ShowAsync<DialogMoveToTrash>("Are you really want to move  these to trash?", parameter);
+        var result = await dialog.Result;
+        if (!result.Canceled)
+        {
             await _table.ReloadServerData();
         }
     }
@@ -178,6 +254,30 @@
         }
     }
 
+    private async void ViewDocumentLogs(int id)
+    {
+        var option = new DialogOptions
+        {
+            NoHeader = false,
+            MaxWidth = MaxWidth.Medium,
+            CloseOnEscapeKey = true,
+            CloseButton = true,
+            Position = DialogPosition.TopCenter
+
+        };
+        var parameter = new DialogParameters
+        {
+            ["DocumentId"] = id
+        };
+        try
+        {
+            await DialogService.ShowAsync<DialogDocumentHistories>("Document Logs", parameter, option);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"{ex.Message}");
+        }
+    }
     private async void OnReview(int id)
     {
         var option = new DialogOptions

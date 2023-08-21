@@ -10,23 +10,25 @@ namespace HIVE.Server.Controllers
     [ApiController]
     public class FileController : ControllerBase
     {
-        private readonly IFileManager _fileManager;
+        private readonly IAzureStorageHelper _azureStorageHelper;
+        private readonly string _containerName;
 
-        public FileController(IFileManager fileManager)
+        public FileController(IAzureStorageHelper azureStorageHelper)
         {
-            _fileManager = fileManager;
+            _azureStorageHelper = azureStorageHelper;
+            _containerName = "puphive";
         }
         [HttpPost]
         public async Task<ActionResult<FileEntry>> UploadFileAsync(List<IFormFile> files)
         {
-            var response = await _fileManager.UploadFileAsync(files);
+            var response = await _azureStorageHelper.UploadFileAsync(files, _containerName, true);
             return Ok(response);
         }
         [HttpGet("{fileName}")]
         public async Task<IActionResult> DownloadFileAsync(string fileName)
         {
-            var uploadResult = await _fileManager.DownloadFileAsync(fileName);
-            var container = new BlobContainerClient("DefaultEndpointsProtocol=https;AccountName=puparch;AccountKey=ggiTXy86V3PzvZoDLvjSM9EiKIViz0WG1tPWxh16YTSg4NP2TqQBqMF+2/LUSKw/wnuW53rgsqEU+ASt5LmhUQ==;BlobEndpoint=https://puparch.blob.core.windows.net/;TableEndpoint=https://puparch.table.core.windows.net/;QueueEndpoint=https://puparch.queue.core.windows.net/;FileEndpoint=https://puparch.file.core.windows.net/", "pupstored");
+            var uploadResult = await _azureStorageHelper.DownloadFileAsync(fileName);
+            var container = _azureStorageHelper.OpenContainer(_containerName);
             var blob = container.GetBlobClient(fileName);
             var stream = await blob.DownloadAsync();
             return File(stream.Value.Content, uploadResult.ContentType, fileName);
@@ -34,19 +36,19 @@ namespace HIVE.Server.Controllers
         [HttpGet]
         public async Task<ActionResult<List<FileEntry>>> GetFilesAsync()
         {
-            var files = await _fileManager.GetFiles();
+            var files = await _azureStorageHelper.GetFiles();
             return Ok(files);
         }
         [HttpDelete("{id:int}")]
         public async Task<IActionResult> DeleteFileAsync(int id)
         {
-            await _fileManager.DeleteFileAsync(id);
+            await _azureStorageHelper.DeleteFileAsync(id, _containerName);
             return Ok();
         }
         [HttpGet("{id:int}")]
         public async Task<ActionResult<FileEntry>> GetFileById(int id)
         {
-            var file = await _fileManager.GetFileId(id);
+            var file = await _azureStorageHelper.GetFileId(id);
             return Ok(file);
         }
     }

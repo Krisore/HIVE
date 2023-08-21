@@ -47,7 +47,7 @@
             </MudCardContent>
             <MudDivider DividerType="DividerType.FullWidth" />
             <MudCardActions>
-                <MudButton Class="rounded-0" OnClick="@(() => DownloadFileAsync(Document.File.FileName, Document.File.FileName, Document.Title))"
+                <MudButton Class="rounded-0" OnClick="@(() => DownloadFileAsync(_file.FileName, _file.StoreFileName, Document.Title))"
                                Size="Size.Small"
                                StartIcon="@Icons.Material.Filled.Download"
                                Variant="@Variant.Filled"
@@ -128,9 +128,29 @@
 @code {
 
     [Parameter]
-    public Document Document { get; set; }
+    public Document Document { get; set; } = new Document();
     [Parameter]
     public string SearchTerm { get; set; }
+    [Parameter] public List<FileEntry> Files { get; set; } = new ();
+    [Parameter] public List<Adviser> Advisers { get; set; } = new();
+    [Parameter] public List<Curriculum> Programs { get; set; } = new();
+    private List<Topic> _topics = new();
+    private FileEntry _file = new();
+    private List<Author> _authors = new();
+    private Curriculum _program = new();
+    private Adviser _adviser = new();
+    private Reference _documentType = new();
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _topics = Document.Topics;
+        _documentType = Document.Reference;
+        _adviser = Advisers.FirstOrDefault(a => a.Id == Document.AdviserId)!;
+        _program = Programs.FirstOrDefault(a => a.Id == Document.CurriculumId)!;
+        _file = Files.FirstOrDefault(a => a.Id == Document.FileId)!;
+        
+    }
+
     private async Task DownloadFileAsync(string fileName, string storeFileName, string documentTitle)
     {
         var parameters = new DialogParameters

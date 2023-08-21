@@ -23,7 +23,6 @@ namespace HIVE.Server.Services
             var user = await _context.Users.FirstOrDefaultAsync(x => x.Email.Equals(email));
             return user;
         }
-
         public async Task DeleteUser(int id)
         {
             var response = await _context.Users.FirstOrDefaultAsync(d => d.Id == id);
@@ -32,12 +31,11 @@ namespace HIVE.Server.Services
                 var sendVerification = new SendMail
                 {
                     To = response.Email,
-                    Subject = $"PUP ARCHIVE :  Deletion of account of {response.LastName}, {response.FirstName}",
-                    Body = $"<strong> Hello {response.Email}, Your account has been deleted </strong>"
+                    Subject = $"PUP ARCHIVE :  Account Deleted! 😣 <br/>",
+                    Body = $"<strong> Hello {response.LastName}, {response.FirstName} email: {response.Email} <br/> Your account has been deleted </strong>"
                 };
                 _emailService.SendEmail(sendVerification);
                 _context.Users.Remove(response);
-
                 await _context.SaveChangesAsync();
             }
         }
@@ -105,37 +103,37 @@ namespace HIVE.Server.Services
             {
                 To = user.Email,
                 Subject = "PUP ARCHIVE : Email Verification Code",
-                Body = $"<strong> Verification code: </strong> <code>{user.VerificationToken}</code>"
+                Body = $" Hello {user.LastName}, {user.FirstName}, You have been registered as Administrator of PUP HIVE <br><strong> Verification code: </strong> <code>{user.VerificationToken}</code>"
             };
             _emailService.SendEmail(sendVerification);
             _context.Users.Add(user);
             await  _context.SaveChangesAsync();
-
         }
         public async Task UpdateAdminAccount(int id, User request)
         {
-            CreatePasswordHash(request.Password, out byte[] passwordHash, out byte[] passwordSalt);
-            var user = new User()
+            string password = request.Password;
+            CreatePasswordHash(password, out byte[] passwordHash, out byte[] passwordSalt);
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == id);
+            if (user != null)
             {
-                UserName = request.UserName,
-                FirstName = request.FirstName,
-                LastName = request.LastName,
-                Email = request.Email,
-                Role = request.Role,
-                DateRegistered = DateTime.Now,
-                PasswordHash = passwordHash,
-                PasswordSalt = passwordSalt,
-                VerificationToken = CreateRandomToken()
-            };
-            var sendVerification = new SendMail
-            {
-                To = user.Email,
-                Subject = "PUP ARCHIVE : Email Verification Code",
-                Body = $"<strong> Verification code: </strong> <code>{user.VerificationToken}</code>"
-            };
-            _emailService.SendEmail(sendVerification);
-            _context.Users.Add(user);
-            await _context.SaveChangesAsync();
+                user.UserName = request.UserName;
+                user.FirstName = request.FirstName;
+                user.LastName = request.LastName;
+                user.Role = request.Role;
+                user.Email = request.Email;
+                user.DateRegistered = DateTime.Now;
+                user.PasswordHash = passwordHash;
+                user.PasswordSalt = passwordSalt;
+                user.VerificationToken = CreateRandomToken();
+                var sendVerification = new SendMail
+                {
+                    To = user.Email,
+                    Subject = "PUP ARCHIVE : Account Update Notification",
+                    Body = $" You're Account has been modified"
+                };
+                _emailService.SendEmail(sendVerification);
+                await _context.SaveChangesAsync();
+            }
 
         }
         public async Task<string?> UpdateUser(int id, UserRegisterRequest request)
@@ -164,6 +162,33 @@ namespace HIVE.Server.Services
             return user.Email;
         }
 
+        public async Task UpdateStudentAccount(int id, User request)
+        {
+            string password = request.Password;
+            CreatePasswordHash(password, out byte[] passwordHash, out byte[] passwordSalt);
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == id);
+            if (user != null)
+            {
+                user.UserName = request.UserName;
+                user.FirstName = request.FirstName;
+                user.LastName = request.LastName;
+                user.Role = request.Role;
+                user.Email = request.Email;
+                user.DateRegistered = DateTime.Now;
+                user.PasswordHash = passwordHash;
+                user.PasswordSalt = passwordSalt;
+                user.VerificationToken = CreateRandomToken();
+                var sendVerification = new SendMail
+                {
+                    To = user.Email,
+                    Subject = "PUP ARCHIVE : Account Update Notification",
+                    Body = $" You're Account has been modified"
+                };
+                _emailService.SendEmail(sendVerification);
+                await _context.SaveChangesAsync();
+            }
+        }
+
         public async Task<string> Verify(string token)
         {
             var user = await _context.Users.FirstOrDefaultAsync(u => u.VerificationToken.Equals(token));
@@ -181,7 +206,6 @@ namespace HIVE.Server.Services
             var result = await _context.Users.ToListAsync();
             return result;
         }
-
         public async Task<string> ForgotPasswordAsync(string email)
         {
             var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
@@ -195,7 +219,7 @@ namespace HIVE.Server.Services
             var sendVerification = new SendMail
             {
                 To = user.Email,
-                Subject = " PUP ARCHIVE : Reset password Code",
+                Subject = " PUP ARCHIVE : Reset password token",
                 Body = $"<strong> Reset code: </strong> <code>{user.PasswordResetToken}</code> \n <b> Expiration: {user.ResetTokenExpires.Value.ToLongDateString()} at {user.ResetTokenExpires.Value.ToLongTimeString()} </b>"
             };
             _emailService.SendEmail(sendVerification);
@@ -208,7 +232,6 @@ namespace HIVE.Server.Services
             {
                 return string.Empty;
             }
-
             if (request.Password != null)
             {
                 CreatePasswordHash(request.Password, out byte[] passwordHash, out byte[] passwordSalt);
@@ -235,7 +258,7 @@ namespace HIVE.Server.Services
         }
         private string CreateRandomToken()
         {
-            return Convert.ToHexString(RandomNumberGenerator.GetBytes(24));
+            return Convert.ToHexString(RandomNumberGenerator.GetBytes(6));
         }
     }
 }

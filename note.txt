@@ -1,0 +1,3 @@
+Data Source=tcp:pup-hive.database.windows.net,1433;Initial Catalog=HIVE.Server_db;User Id=krisore@pup-hive;Password=|^^v1296isTian:|
+
+Note : Just Employ all connectiong string for Smooth deployment
