@@ -13,7 +13,7 @@ namespace HIVE.Client.Services.Interface
         Task<List<Document>> GetDocumentsForArchivistAsync();
         Task<HttpResponseMessage> UpdateDocumentAsync(int id, UploadDocumentRequest document);
         Task<UploadDocumentRequest> GetDocumentByDataTransfer(int id);
-        Task<List<Document>> GetAllDocuments();
+        Task<List<Document>?> GetAllDocuments();
         Task<HttpResponseMessage> MoveToTrash(int id);
         Task<HttpResponseMessage> UpdateStatusDocumentAsync(int id);
         Task<Document> GetDocumentAsyncById(int id);

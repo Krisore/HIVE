@@ -1,4 +1,5 @@
-﻿using System.Net.Http.Headers;
+﻿using System.Net;
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using HIVE.Client.Authentication;
 using HIVE.Client.Services.Interface;
@@ -18,7 +19,7 @@ namespace HIVE.Client.Services
             _customAuthenticationStateProvider = customAuthenticationStateProvider;
         }
         public int DocumentId { get; set; }
-        public List<Document>? Documents { get; set; } = new();
+        public List<Document> Documents { get; set; } = new();
         public Document Document { get; set; } = new();
         public List<Document>? MyDocuments { get; set; } = new();
 
@@ -41,7 +42,6 @@ namespace HIVE.Client.Services
                 }
 
                 return Documents!;
-                throw new Exception(message: "Documents are null!");
             }
             catch (Exception ex)
             {
@@ -75,17 +75,17 @@ namespace HIVE.Client.Services
             return response;
         }
 
-        public async Task<List<Document>> GetAllDocuments()
+        public async Task<List<Document>?> GetAllDocuments()
         {
+
             try
             {
                 var response = await _client.GetFromJsonAsync<List<Document>>("api/Document/documents");
                 return response;
-                
             }
-            catch (Exception ex)
+            catch (Exception e)
             {
-                Console.WriteLine($"{ex.Message}, {ex.HelpLink}");
+                Console.WriteLine(e);
                 throw;
             }
         }

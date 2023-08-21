@@ -104,7 +104,17 @@
         {
             isLoading = true;
             await Task.Delay(300);
-            IEnumerable<Document> documents = await DocumentService.GetAllDocuments();
+            IEnumerable<Document>? documents = new List<Document>();
+            var result = await DocumentService.GetDocumentsAsync();
+            if (result.IsSuccessStatusCode)
+            {
+                documents = await result.Content.ReadFromJsonAsync<IEnumerable<Document>>();
+            }
+            else
+            {
+                documents.DefaultIfEmpty();
+            }
+
             if (string.IsNullOrWhiteSpace(SearchTerm))
             {
                 _documents = documents.ToList();

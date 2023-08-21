@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 
 namespace HIVE.Server.Controllers
 {
@@ -27,6 +28,10 @@ namespace HIVE.Server.Controllers
         public async Task<ActionResult<List<Document>>> GetDocumentsAsync()
         {
             var response = await _repository.GetDocumentsAsync();
+            if (response.IsNullOrEmpty())
+            {
+                return NotFound(response);
+            }
             return Ok(response);
         }
         [HttpGet("{id:int}")]

@@ -16,13 +16,13 @@ namespace HIVE.Server.Repository
     public class DocumentRepository : IDocumentRepository
     {
         private readonly DataContext _context;
-        private readonly IFileManager _fileManager;
+        private readonly IAzureStorageHelper _azureStorageHelper;
         private readonly IDocumentService _documentService;
 
-        public DocumentRepository(DataContext context, IFileManager fileManager, IDocumentService documentService)
+        public DocumentRepository(DataContext context, IAzureStorageHelper azureStorageHelper, IDocumentService documentService)
         {
             _context = context;
-            _fileManager = fileManager;
+            _azureStorageHelper = azureStorageHelper;
             _documentService = documentService;
         }
         public UploadDocumentRequest DataTransferObjectDocument { get; set; } = new UploadDocumentRequest();
@@ -62,7 +62,7 @@ namespace HIVE.Server.Repository
             if (response is not null)
             {
                 _context.Documents.Remove(response);
-                await _fileManager.DeleteFileAsync(response.Id);
+                await _azureStorageHelper.DeleteFileAsync(response.Id, _azureStorageHelper.ContainerName);
             }
             await  _context.SaveChangesAsync();
         }
@@ -132,7 +132,7 @@ namespace HIVE.Server.Repository
                 {
                     document.IsDeleted = true;
                     _context.Documents.Remove(document);
-                    await _fileManager.DeleteFileAsync(document.FileId);
+                    await _azureStorageHelper.DeleteFileAsync(document.FileId, _azureStorageHelper.ContainerName);
                 }
                 await _context.SaveChangesAsync();
             }
