@@ -250,13 +250,14 @@ namespace HIVE.Server.Services
             var emails = users.Select(user => user.Email).ToList();
             return emails.ToList();
         }
-        private void CreatePasswordHash(string password, out byte[] passwordHash, out byte[] passwordSalt)
+        private static void CreatePasswordHash(string password, out byte[] passwordHash, out byte[] passwordSalt)
         {
             using var hmac = new HMACSHA512();
             passwordSalt = hmac.Key;
             passwordHash = hmac.ComputeHash(System.Text.Encoding.UTF8.GetBytes(password));
         }
-        private string CreateRandomToken()
+
+        public string CreateRandomToken()
         {
             return Convert.ToHexString(RandomNumberGenerator.GetBytes(6));
         }
